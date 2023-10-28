@@ -7,5 +7,11 @@ version = '1.0.0-SNAPSHOT'
 description = 'Allows Gade Gui Interactive capabilities from a standalone app'
 
 dependencies {
-  implementation("se.alipsa.swing-yearmonth-picker:1.0.0-SNAPSHOT")
+  compileOnly 'org.apache.groovy:groovy-all:4.0.15'
+  implementation("se.alipsa:swing-yearmonth-picker:1.0.0-SNAPSHOT")
+}
+
+repositories {
+  mavenLocal()
+  mavenCentral()
 }
