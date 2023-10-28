@@ -1,0 +1,11 @@
+plugins {
+  id 'groovy'
+}
+
+group = 'se.alipsa.groovy'
+version = '1.0.0-SNAPSHOT'
+description = 'Allows Gade Gui Interactive capabilities from a standalone app'
+
+dependencies {
+  implementation("se.alipsa.swing-yearmonth-picker:1.0.0-SNAPSHOT")
+}
