@@ -1,17 +1,69 @@
 plugins {
-  id 'groovy'
+    //id 'java'
+    id 'groovy'
 }
 
-group = 'se.alipsa.groovy'
+group = 'se.alipsa'
 version = '1.0.0-SNAPSHOT'
 description = 'Allows Gade Gui Interactive capabilities from a standalone app'
 
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(17))
+    }
+    withSourcesJar()
+    withJavadocJar()
+}
+
 dependencies {
+
+  def tikaVersion = '2.9.0'
+  def tablesawVersion = "0.43.1"
+
   compileOnly 'org.apache.groovy:groovy-all:4.0.15'
-  implementation("se.alipsa:swing-yearmonth-picker:1.0.0-SNAPSHOT")
+  implementation "org.apache.tika:tika-core:${tikaVersion}"
+  implementation "org.apache.tika:tika-parsers-standard-package:${tikaVersion}"
+  implementation "org.apache.tika:tika-parser-text-module:${tikaVersion}"
+
+  implementation "tech.tablesaw:tablesaw-core:${tablesawVersion}"
+  implementation "tech.tablesaw:tablesaw-jsplot:${tablesawVersion}"
+  implementation "tech.tablesaw:tablesaw-excel:${tablesawVersion}"
+  //implementation "tech.tablesaw:tablesaw-json:${tablesawVersion}"
+  implementation "tech.tablesaw:tablesaw-html:${tablesawVersion}"
+  //implementation "tech.tablesaw:tablesaw-aggregate:${tablesawVersion}"
+  implementation "se.alipsa.tablesaw:tablesaw-charts:1.0.0-SNAPSHOT"
+  implementation 'com.vladsch.flexmark:flexmark-all:0.64.8'
+
+  implementation 'se.alipsa.groovy:matrix:1.1.3-SNAPSHOT'
+  implementation 'se.alipsa.groovy:matrix-charts:1.0.0-SNAPSHOT'
+  implementation "se.alipsa:swing-yearmonth-picker:1.0.0-SNAPSHOT"
+
+  implementation 'com.github.lgooddatepicker:LGoodDatePicker:11.2.1'
 }
 
 repositories {
-  mavenLocal()
-  mavenCentral()
+    // Use Maven Central for resolving dependencies.
+    mavenCentral()
+    if (version.contains('SNAPSHOT')) {
+        // Slows down the build (a lot), use only if local SNAPSHOTS are needed
+        mavenLocal()
+    }
+}
+
+def fatJarContainer = tasks.register('fatJar', Jar) {
+  dependsOn(classes)
+  archiveBaseName = project.name + '-fat'
+  duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+  from {
+    configurations.runtimeClasspath.collect {
+      it.isDirectory() ? it : zipTree(it)
+    }
+  }
+  exclude 'META-INF/*.RSA', 'META-INF/*.SF', 'META-INF/*.DSA'
+  with jar
+}
+
+
+jar {
+  dependsOn fatJarContainer
 }
