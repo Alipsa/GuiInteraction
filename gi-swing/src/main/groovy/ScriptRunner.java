@@ -1,5 +1,5 @@
 import org.codehaus.groovy.jsr223.GroovyScriptEngineImpl;
-import se.alipsa.gi.InOut;
+import se.alipsa.gi.swing.InOut;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;

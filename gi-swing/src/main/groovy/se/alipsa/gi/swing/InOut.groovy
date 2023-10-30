@@ -1,4 +1,4 @@
-package se.alipsa.gi
+package se.alipsa.gi.swing
 
 import com.github.lgooddatepicker.components.DatePicker
 import com.vladsch.flexmark.ext.tables.TablesExtension
@@ -6,13 +6,12 @@ import com.vladsch.flexmark.html.HtmlRenderer
 import com.vladsch.flexmark.parser.Parser
 import com.vladsch.flexmark.util.data.MutableDataSet
 import org.apache.tika.Tika
+import se.alipsa.gi.GuiInteraction
 import se.alipsa.groovy.charts.Chart
-import se.alipsa.groovy.charts.Plot
 import se.alipsa.groovy.matrix.Matrix
 import se.alipsa.symp.YearMonthPicker
 import tech.tablesaw.api.Table
 import tech.tablesaw.plotly.components.Figure
-import tech.tablesaw.plotly.components.Page
 
 import javax.swing.table.DefaultTableCellRenderer
 import java.awt.BorderLayout
@@ -25,9 +24,18 @@ import javax.swing.filechooser.FileNameExtensionFilter
 
 class InOut implements GuiInteraction {
 
-  private MutableDataSet flexmarkOptions;
-  private Parser markdownParser;
-  private HtmlRenderer htmlRenderer;
+  private MutableDataSet flexmarkOptions
+  private Parser markdownParser
+  private HtmlRenderer htmlRenderer
+
+  InOut() {
+    // This is needed due to timing issues to ensure swing UI starts properly
+    // Note: attempts with invokeLater to start the EDT did not work on MacOs
+    JFrame frame = new JFrame()
+    frame.setVisible(true)
+    frame.setVisible(false)
+    frame.dispose()
+  }
 
   File projectFile(String path) {
     return new File(System.getProperty("user.dir", "."), path)

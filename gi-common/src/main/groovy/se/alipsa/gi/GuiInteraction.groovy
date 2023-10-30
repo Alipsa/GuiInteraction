@@ -1,10 +1,5 @@
 package se.alipsa.gi;
 
-import se.alipsa.groovy.matrix.Matrix;
-
-import tech.tablesaw.api.Table;
-import tech.tablesaw.plotly.components.Figure;
-
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
@@ -79,9 +74,9 @@ public interface GuiInteraction {
 
   void view(String html, String... title);
 
-  void view(Table table, String... title);
+  void view(tech.tablesaw.api.Table table, String... title);
 
-  void view(Matrix tableMatrix, String... title);
+  void view(se.alipsa.groovy.matrix.Matrix tableMatrix, String... title);
 
   void view(List<List<?>> matrix, String... title);
 
@@ -93,7 +88,7 @@ public interface GuiInteraction {
 
   void display(JComponent swingComponent, String... title);
 
-  void display(Figure figure, String... titleOpt);
+  void display(tech.tablesaw.plotly.components.Figure figure, String... titleOpt);
 
   void display(se.alipsa.groovy.charts.Chart chart, String... titleOpt);
 

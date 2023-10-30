@@ -1,10 +1,10 @@
 import java.time.LocalDate
 import java.time.YearMonth
 
-def io = new se.alipsa.gi.InOut()
+def io = new se.alipsa.gi.swing.InOut()
 
-//def file = io.chooseFile("Choose a file", ".", "Pick a file please!" )
-//println("File chosen was $file")
+def file = io.chooseFile("Choose a file", ".", "Pick a file please!" )
+println("File chosen was $file")
 
 //def ym = io.promptYearMonth("Pick a yearmonth")
 //println("You picked $ym")
@@ -84,6 +84,7 @@ Matrix matrix = Matrix.create(
 )
 io.view(matrix)
 */
+
 /*
 def rowList = [
     [1, "Foo", 123.23],
