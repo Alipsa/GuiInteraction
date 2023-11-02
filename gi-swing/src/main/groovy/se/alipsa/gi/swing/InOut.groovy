@@ -1,12 +1,7 @@
 package se.alipsa.gi.swing
 
 import com.github.lgooddatepicker.components.DatePicker
-import com.vladsch.flexmark.ext.tables.TablesExtension
-import com.vladsch.flexmark.html.HtmlRenderer
-import com.vladsch.flexmark.parser.Parser
-import com.vladsch.flexmark.util.data.MutableDataSet
-import org.apache.tika.Tika
-import se.alipsa.gi.GuiInteraction
+import se.alipsa.gi.AbstractInOut
 import se.alipsa.groovy.charts.Chart
 import se.alipsa.groovy.matrix.Matrix
 import se.alipsa.symp.YearMonthPicker
@@ -16,17 +11,12 @@ import tech.tablesaw.plotly.components.Figure
 import javax.swing.table.DefaultTableCellRenderer
 import java.awt.BorderLayout
 import java.awt.FlowLayout
-import java.nio.file.Paths
 import java.time.LocalDate
 import java.time.YearMonth
 import javax.swing.*
 import javax.swing.filechooser.FileNameExtensionFilter
 
-class InOut implements GuiInteraction {
-
-  private MutableDataSet flexmarkOptions
-  private Parser markdownParser
-  private HtmlRenderer htmlRenderer
+class InOut extends AbstractInOut {
 
   InOut() {
     // This is needed due to timing issues to ensure swing UI starts properly
@@ -35,10 +25,6 @@ class InOut implements GuiInteraction {
     frame.setVisible(true)
     frame.setVisible(false)
     frame.dispose()
-  }
-
-  File projectFile(String path) {
-    return new File(System.getProperty("user.dir", "."), path)
   }
 
   File chooseFile(String title, File initialDirectory, String description, String... extensions) {
@@ -78,85 +64,6 @@ class InOut implements GuiInteraction {
     return chooseDir(title, new File(initialDirectory))
   }
 
-  @Override
-  boolean urlExists(String urlString, int timeout) {
-      try {
-        URL url = new URL(urlString)
-        HttpURLConnection con = (HttpURLConnection) url.openConnection()
-        HttpURLConnection.setFollowRedirects(false)
-        con.setRequestMethod("HEAD")
-        con.setConnectTimeout(timeout)
-        int responseCode = con.getResponseCode()
-        return responseCode == 200
-      } catch (RuntimeException | IOException e) {
-        return false;
-      }
-  }
-
-  @Override
-  String getContentType(String fileName) throws IOException {
-    return getContentType(new File(fileName));
-  }
-
-  @Override
-  String getContentType(File file) throws IOException {
-    String fileName = file.getAbsolutePath();
-    if (!file.exists()) {
-      URL url = getResourceUrl(fileName);
-      if (url != null) {
-        try {
-          file = Paths.get(url.toURI()).toFile();
-        } catch (URISyntaxException e) {
-          // Ignore, the URI comes from the classloader so cannot have a syntax issue
-        }
-      }
-    }
-    if (!file.exists()) {
-      throw new FileNotFoundException("contentType: " + fileName + " does not exist!");
-    }
-    Tika tika = new Tika();
-    return tika.detect(file);
-  }
-
-  /**
-   * Find a resource using available class loaders.
-   * It will also load resources/files from the
-   * absolute path of the file system (not only the classpath's).
-   *
-   * @param resource the path to the resource
-   * @return the URL representation of the resource
-   */
-  @Override
-  URL getResourceUrl(String resource) {
-    final List<ClassLoader> classLoaders = new ArrayList<>()
-    classLoaders.add(Thread.currentThread().getContextClassLoader())
-    classLoaders.add(InOut.class.getClassLoader())
-
-    for (ClassLoader classLoader : classLoaders) {
-      final URL url = getResourceWith(classLoader, resource)
-      if (url != null) {
-        return url
-      }
-    }
-
-    final URL systemResource = ClassLoader.getSystemResource(resource)
-    if (systemResource != null) {
-      return systemResource
-    } else {
-      try {
-        return new File(resource).toURI().toURL()
-      } catch (MalformedURLException e) {
-        return null
-      }
-    }
-  }
-
-  private URL getResourceWith(ClassLoader classLoader, String resource) {
-    if (classLoader != null) {
-      return classLoader.getResource(resource)
-    }
-    return null
-  }
 
   @Override
   YearMonth promptYearMonth(String message) {
@@ -211,14 +118,6 @@ class InOut implements GuiInteraction {
   }
 
   @Override
-  String prompt(Map<String, Object> namedParams) {
-    return prompt(String.valueOf(namedParams.getOrDefault("title", "")),
-        String.valueOf(namedParams.getOrDefault("headerText", "")),
-        String.valueOf(namedParams.getOrDefault("message", "")),
-        String.valueOf(namedParams.getOrDefault("defaultValue", "")))
-  }
-
-  @Override
   String prompt(String message) {
     return JOptionPane.showInputDialog(message)
   }
@@ -257,11 +156,6 @@ class InOut implements GuiInteraction {
     f.setSize(800, 600)
     f.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE)
     f.setVisible(true)
-  }
-
-  @Override
-  void viewMarkdown(String markdown, String... title) {
-    view(getHtmlRenderer().render(getMarkdownParser().parse(markdown)), title)
   }
 
   @Override
@@ -339,6 +233,7 @@ class InOut implements GuiInteraction {
     f.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE)
     f.setVisible(true)
   }
+
   @Override
   void view(List<List<?>> matrix, String... title) {
     Vector rows = new Vector(matrix.size())
@@ -364,17 +259,11 @@ class InOut implements GuiInteraction {
   }
 
   @Override
-  void view(Integer o, String... title) {
-    println("${title.length > 0 ? title[0] + ': ' : ""}Update count: $o updated rows")
-  }
-
-  @Override
   void display(String fileName, String... title) {
     File file = new File(fileName)
-    Tika tika = new Tika()
     if (file.exists()) {
       try {
-        String contentType = tika.detect(file);
+        String contentType = getContentType(file)
         if ("image/svg+xml".equals(contentType)) {
           System.err.println("Sorry, no support for viewing SVG files (yet)")
           return
@@ -425,26 +314,5 @@ class InOut implements GuiInteraction {
   void display(tech.tablesaw.chart.Chart chart, String... titleOpt) {
     display(tech.tablesaw.chart.Plot.jsPlot(chart), titleOpt)
   }
-
-  private Parser getMarkdownParser() {
-    if (markdownParser == null) {
-      markdownParser = Parser.builder(getFlexmarkOptions()).build();
-    }
-    return markdownParser;
-  }
-
-  private HtmlRenderer getHtmlRenderer() {
-    if (htmlRenderer == null) {
-      htmlRenderer = HtmlRenderer.builder(getFlexmarkOptions()).build();
-    }
-    return htmlRenderer;
-  }
-
-  MutableDataSet getFlexmarkOptions() {
-    if (flexmarkOptions == null) flexmarkOptions = new MutableDataSet();
-    flexmarkOptions.set(Parser.EXTENSIONS, List.of(TablesExtension.create()));
-    return flexmarkOptions;
-  }
-
 
 }

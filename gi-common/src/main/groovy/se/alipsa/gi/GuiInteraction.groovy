@@ -1,18 +1,13 @@
-package se.alipsa.gi;
+package se.alipsa.gi
 
-import java.io.File;
-import java.io.IOException;
-import java.net.URL;
 import java.time.LocalDate;
 import java.time.YearMonth;
-import java.util.List;
-import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import javax.swing.*;
 
 public interface GuiInteraction {
 
-  File projectFile(String path);
+  File projectFile(String path)
 
   File chooseFile(String title, File initialDirectory, String description, String... extensions);
   File chooseFile(String title, String initialDirectory, String description, String... extensions);
@@ -20,13 +15,21 @@ public interface GuiInteraction {
   File chooseDir(String title, File initialDirectory);
   File chooseDir(String title, String initialDirectory);
 
-  boolean urlExists(String urlString, int timeout);
+  boolean urlExists(String urlString, int timeout)
 
-  String getContentType(String fileName) throws IOException;
+  String getContentType(String fileName) throws IOException
 
-  String getContentType(File file)  throws IOException;
+  String getContentType(File file) throws IOException
 
-  URL getResourceUrl(String resource);
+  /**
+   * Find a resource using available class loaders.
+   * It will also load resources/files from the
+   * absolute path of the file system (not only the classpath's).
+   *
+   * @param resource the path to the resource
+   * @return the URL representation of the resource
+   */
+  URL getResourceUrl(String resource)
 
   YearMonth promptYearMonth(String message);
 
@@ -52,7 +55,7 @@ public interface GuiInteraction {
    * @throws ExecutionException if a threading issue occurs
    * @throws InterruptedException if a threading interrupt issue occurs
    */
-  String prompt(Map<String, Object> namedParams);
+  String prompt(Map<String, Object> namedParams)
 
   String prompt(String message);
 
