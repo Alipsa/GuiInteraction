@@ -31,7 +31,7 @@ dependencies {
     implementation "org.apache.tika:tika-parsers-standard-package:${tikaVersion}"
     implementation "org.apache.tika:tika-parser-text-module:${tikaVersion}"
 
-    implementation 'se.alipsa.groovy:matrix:1.1.3-SNAPSHOT'
+    implementation 'se.alipsa.groovy:matrix-core:1.1.3-SNAPSHOT'
     implementation 'se.alipsa.groovy:matrix-charts:1.0.0-SNAPSHOT'
 
     implementation "tech.tablesaw:tablesaw-core:${tablesawVersion}"
