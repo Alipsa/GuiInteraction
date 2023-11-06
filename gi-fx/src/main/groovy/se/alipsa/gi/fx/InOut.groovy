@@ -56,8 +56,18 @@ class InOut extends AbstractInOut {
                 chooser.setInitialDirectory(initialDirectory)
             }
             if (extensions.length > 0) {
+                List<String> ext = new ArrayList<>();
+                for (String e : extensions) {
+                    if (e.startsWith("*.")) {
+                        ext.add(e);
+                    } else if (e.startsWith(".")) {
+                        ext.add("*" + e);
+                    } else {
+                        ext.add("*." + e);
+                    }
+                }
                 chooser.getExtensionFilters().addAll(
-                        new FileChooser.ExtensionFilter(description, extensions)
+                        new FileChooser.ExtensionFilter(description, ext)
                 )
             }
             return chooser.showOpenDialog(ownerWindow)

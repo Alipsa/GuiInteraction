@@ -33,7 +33,17 @@ class InOut extends AbstractInOut {
     fc.setFileSelectionMode(JFileChooser.FILES_ONLY)
     if (extensions.length > 0) {
       fc.setAcceptAllFileFilterUsed(false)
-      FileNameExtensionFilter filter = new FileNameExtensionFilter(String.join(",", extensions) +" files", extensions)
+      List<String> ext = []
+      extensions.each {
+        if (it.startsWith('*.')) {
+          ext.add(it.substring(2))
+        } else if (it.startsWith('.')) {
+          ext.add(it.substring(1))
+        } else {
+          ext.add(it)
+        }
+      }
+      FileNameExtensionFilter filter = new FileNameExtensionFilter(String.join(",", ext) +" files", ext as String[])
       fc.addChoosableFileFilter(filter)
     }
     int resultVal = fc.showOpenDialog(null)

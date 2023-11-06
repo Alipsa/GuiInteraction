@@ -2,10 +2,11 @@ import java.time.LocalDate
 import java.time.YearMonth
 
 //def io = new se.alipsa.gi.swing.InOut()
-def io = new se.alipsa.gi.fx.InOut()
+//def io = new se.alipsa.gi.fx.InOut()
+def io = new se.alipsa.gi.txt.InOut()
 
-//def file = io.chooseFile("Choose a file", ".", "Pick a file please!" )
-//println("File chosen was $file")
+def file = io.chooseFile("Choose a file", ".", "Pick a file please!" )
+println("File chosen was $file")
 
 //def ym = io.promptYearMonth("Pick a yearmonth")
 //println("You picked $ym")
@@ -118,6 +119,7 @@ io.view(rowList, 'List of lists example')
 //io.display(io.projectFile("src/test/resources/svgplot.svg"))
 //io.display(io.projectFile("src/test/resources/areachart2.png"))
 
+/*
 import se.alipsa.groovy.matrix.*
 import se.alipsa.groovy.charts.*
 import static se.alipsa.groovy.matrix.ListConverter.*
@@ -131,7 +133,9 @@ empData = Matrix.create(
 
 chart = AreaChart.create("Salaries", empData, "emp_name", "salary")
 io.display(chart, "Matrix charts areachart")
+*/
 
+/*
 import tech.tablesaw.api.*
 empData = Table.create(
         IntColumn.create('emp_id', 1..5 as int[]),
@@ -141,3 +145,4 @@ empData = Table.create(
 )
 chart = tech.tablesaw.chart.AreaChart.create("Salaries", empData, "emp_name", "salary")
 io.display(chart, "tablesaw areachart")
+*/
