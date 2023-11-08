@@ -1,6 +1,7 @@
 package se.alipsa.gi.fx
 
 import javafx.application.Platform
+import javafx.collections.ObservableList
 import javafx.embed.swing.JFXPanel
 import javafx.embed.swing.SwingNode
 import javafx.scene.Node
@@ -37,6 +38,7 @@ import java.util.concurrent.FutureTask
 class InOut extends AbstractInOut {
 
     Window ownerWindow = null
+    ObservableList<String> styleSheetUrls = null
 
     InOut() {
         new JFXPanel()
@@ -45,6 +47,11 @@ class InOut extends AbstractInOut {
     InOut(Window owner) {
         this()
         ownerWindow = owner
+    }
+
+    InOut(Window owner, ObservableList<String> styleSheets) {
+        this(owner)
+        setStyleSheetUrls(styleSheets)
     }
 
     @Override
@@ -118,6 +125,9 @@ class InOut extends AbstractInOut {
             });
             dialog.setResizable(true)
             dialog.getDialogPane().getScene().getWindow().sizeToScene()
+            if (styleSheetUrls != null) {
+                dialog.getDialogPane().getStylesheets().addAll(styleSheetUrls)
+            }
             return dialog.showAndWait().orElse(null)
         });
         Platform.runLater(task)
@@ -132,10 +142,10 @@ class InOut extends AbstractInOut {
             FlowPane content = new FlowPane()
             content.setHgap(5)
             content.getChildren().add(new Label(message))
-            YearMonthPicker picker = new YearMonthPicker(from, to, initial, Locale.getDefault(), "yyyy-MM");
+            YearMonthPicker picker = new YearMonthPicker(from, to, initial, Locale.getDefault(), "yyyy-MM")
             content.getChildren().add(picker)
             dialog.getDialogPane().setContent(content)
-            dialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
+            dialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL)
             dialog.setResultConverter(buttonType -> {
                 if (buttonType == ButtonType.OK) {
                     return picker.getValue()
@@ -144,6 +154,9 @@ class InOut extends AbstractInOut {
             })
             dialog.setResizable(true)
             dialog.getDialogPane().getScene().getWindow().sizeToScene()
+            if (styleSheetUrls != null) {
+                dialog.getDialogPane().getStylesheets().addAll(styleSheetUrls)
+            }
             return dialog.showAndWait().orElse(null)
         })
         Platform.runLater(task)
@@ -175,6 +188,9 @@ class InOut extends AbstractInOut {
             });
             dialog.setResizable(true)
             dialog.getDialogPane().getScene().getWindow().sizeToScene()
+            if (styleSheetUrls != null) {
+                dialog.getDialogPane().getStylesheets().addAll(styleSheetUrls)
+            }
             return dialog.showAndWait().orElse(null)
         });
         Platform.runLater(task)
@@ -195,6 +211,10 @@ class InOut extends AbstractInOut {
             dialog.setHeaderText(headerText)
             dialog.setContentText(message)
             dialog.setResizable(true)
+            dialog.getDialogPane().getScene().getWindow().sizeToScene()
+            if (styleSheetUrls != null) {
+                dialog.getDialogPane().getStylesheets().addAll(styleSheetUrls)
+            }
             return dialog.showAndWait().orElse(null)
         })
         Platform.runLater(task)
@@ -206,8 +226,12 @@ class InOut extends AbstractInOut {
         FutureTask<String> task = new FutureTask<>(() -> {
             PasswordDialog dialog = new PasswordDialog(title, message)
             dialog.setResizable(true)
+            dialog.getDialogPane().getScene().getWindow().sizeToScene()
+            if (styleSheetUrls != null) {
+                dialog.getDialogPane().getStylesheets().addAll(styleSheetUrls)
+            }
             return dialog.showAndWait().orElse(null)
-        });
+        })
         Platform.runLater(task)
         return task.get()
     }
@@ -235,6 +259,10 @@ class InOut extends AbstractInOut {
             dialog.setHeaderText(headerText)
             dialog.setContentText(message)
             dialog.setResizable(true)
+            dialog.getDialogPane().getScene().getWindow().sizeToScene()
+            if (styleSheetUrls != null) {
+                dialog.getDialogPane().getStylesheets().addAll(styleSheetUrls)
+            }
             return dialog.showAndWait().orElse(null)
         })
         Platform.runLater(task)
@@ -272,7 +300,7 @@ class InOut extends AbstractInOut {
         URL url = FileUtils.getResourceUrl(fileName);
         if (url == null) {
             System.err.println("Cannot display image, Failed to find $fileName")
-            return;
+            return
         }
         File file = new File(fileName);
         if (file.exists()) {
@@ -291,7 +319,7 @@ class InOut extends AbstractInOut {
             }
         }
         Image img = new Image(url.toExternalForm())
-        display(img, title);
+        display(img, title)
     }
 
     void display(Image img, String... title) {
@@ -381,4 +409,7 @@ class InOut extends AbstractInOut {
         }
     }
 
+    void setStyleSheetUrls(ObservableList<String> styleSheetUrls) {
+        this.styleSheetUrls = styleSheetUrls
+    }
 }

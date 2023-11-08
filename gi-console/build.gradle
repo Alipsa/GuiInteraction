@@ -1,5 +1,6 @@
 plugins {
     id 'groovy'
+    id 'maven-publish'
 }
 
 group = 'se.alipsa'
@@ -9,6 +10,8 @@ java {
     toolchain {
         languageVersion.set(JavaLanguageVersion.of(17))
     }
+    withSourcesJar()
+    withJavadocJar()
 }
 
 repositories {
@@ -42,7 +45,7 @@ test {
 
 def fatJarContainer = tasks.register('fatJar', Jar) {
     dependsOn(classes)
-    archiveBaseName = project.name + '-fat'
+    archiveClassifier = 'fatjar'
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
     from {
         configurations.runtimeClasspath.collect {
@@ -56,4 +59,35 @@ def fatJarContainer = tasks.register('fatJar', Jar) {
 
 jar {
     dependsOn fatJarContainer
+}
+
+publishing {
+    publications {
+        maven(MavenPublication) {
+            from components.java
+            artifacts = [jar, fatJarContainer, javadocJar, sourcesJar]
+            pom {
+                name = 'Gade standalone UI interaction library for the console'
+                description = "${project.description}"
+                url = "https://github.com/Alipsa/GuiInteraction/gi-console"
+                licenses {
+                    license {
+                        name = 'MIT License'
+                        url = 'https://raw.githubusercontent.com/Alipsa/GuiInteraction/main/LICENSE'
+                    }
+                }
+                developers {
+                    developer {
+                        id = 'perNyfelt'
+                        name = 'Per Nyfelt'
+                    }
+                }
+                scm {
+                    url = 'https://github.com/Alipsa/GuiInteraction/tree/main'
+                    connection = 'scm:git:https://github.com/Alipsa/GuiInteraction.git'
+                    developerConnection = 'scm:git:https://github.com/Alipsa/GuiInteraction.git'
+                }
+            }
+        }
+    }
 }

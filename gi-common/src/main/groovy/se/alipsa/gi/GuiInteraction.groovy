@@ -18,10 +18,9 @@ public interface GuiInteraction {
   boolean urlExists(String urlString, int timeout)
 
   String getContentType(String fileName) throws IOException
-
   String getContentType(File file) throws IOException
 
-  /**
+  /**@
    * Find a resource using available class loaders.
    * It will also load resources/files from the
    * absolute path of the file system (not only the classpath's).
@@ -31,17 +30,7 @@ public interface GuiInteraction {
    */
   URL getResourceUrl(String resource)
 
-  YearMonth promptYearMonth(String message);
-
-  YearMonth promptYearMonth(String title, String message, YearMonth from, YearMonth to, YearMonth initial);
-
-  LocalDate promptDate(String title, String message, LocalDate defaultValue);
-
-  Object promptSelect(String title, String headerText, String message, List<Object> options, Object defaultValue);
-
-  public String promptPassword(String title, String message);
-
-  /**
+  /**@
    * A prompt method with support for named parameters i Groovy.
    * Example usage:
    * applicationId =  io.prompt(
@@ -65,35 +54,35 @@ public interface GuiInteraction {
 
   String prompt(String title, String headerText, String message, String defaultValue);
 
-  /**
+  YearMonth promptYearMonth(String message);
+
+  YearMonth promptYearMonth(String title, String message, YearMonth from, YearMonth to, YearMonth initial);
+
+  LocalDate promptDate(String title, String message, LocalDate defaultValue);
+
+  Object promptSelect(String title, String headerText, String message, List<Object> options, Object defaultValue);
+
+  String promptPassword(String title, String message);
+
+  /**@
    * View file content in a browser
    *
    * @param file
    * @param title
    */
   void view(File file, String... title);
+  void view(String html, String... title);
+  void view(tech.tablesaw.api.Table table, String... title);
+  void view(se.alipsa.groovy.matrix.Matrix tableMatrix, String... title);
+  void view(List<List<?>> matrix, String... title);
+  void view(Integer o, String... title);
 
   void viewMarkdown(String markdown, String... title);
 
-  void view(String html, String... title);
-
-  void view(tech.tablesaw.api.Table table, String... title);
-
-  void view(se.alipsa.groovy.matrix.Matrix tableMatrix, String... title);
-
-  void view(List<List<?>> matrix, String... title);
-
-  void view(Integer o, String... title);
-
   void display(String fileName, String... title);
-
   void display(File file, String... title);
-
   void display(JComponent swingComponent, String... title);
-
   void display(tech.tablesaw.plotly.components.Figure figure, String... titleOpt);
-
   void display(se.alipsa.groovy.charts.Chart chart, String... titleOpt);
-
-  void display(tech.tablesaw.chart.Chart chart, String... titleOpt);
+  void display(tech.tablesaw.chart.Chart chart, String... titleOpt)
 }

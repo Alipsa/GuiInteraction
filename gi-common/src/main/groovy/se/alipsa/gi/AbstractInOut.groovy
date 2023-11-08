@@ -6,6 +6,9 @@ import com.vladsch.flexmark.util.data.MutableDataSet
 import com.vladsch.flexmark.ext.tables.TablesExtension
 import org.apache.tika.Tika
 
+import java.lang.reflect.Method
+import java.lang.reflect.Modifier
+import java.lang.reflect.Parameter
 import java.nio.file.Paths;
 
 abstract class AbstractInOut implements GuiInteraction {
@@ -124,4 +127,5 @@ abstract class AbstractInOut implements GuiInteraction {
   void view(Integer o, String... title) {
     println("${title.length > 0 ? title[0] + ': ' : ""}Update count: $o updated rows")
   }
+
 }

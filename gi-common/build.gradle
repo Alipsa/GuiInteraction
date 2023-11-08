@@ -1,6 +1,7 @@
 plugins {
     id 'groovy'
     id 'java-library'
+    id 'maven-publish'
 }
 
 group = 'se.alipsa'
@@ -10,6 +11,8 @@ java {
     toolchain {
         languageVersion.set(JavaLanguageVersion.of(17))
     }
+    withSourcesJar()
+    withJavadocJar()
 }
 
 repositories {
@@ -46,4 +49,39 @@ dependencies {
 
 test {
     useJUnitPlatform()
+}
+
+jar {
+    dependsOn classes
+}
+
+publishing {
+    publications {
+        maven(MavenPublication) {
+            from components.java
+            artifacts = [jar, javadocJar, sourcesJar]
+            pom {
+                name = 'Gade standalone GUI interaction library'
+                description = "${project.description}"
+                url = "https://github.com/Alipsa/GuiInteraction"
+                licenses {
+                    license {
+                        name = 'MIT License'
+                        url = 'https://raw.githubusercontent.com/Alipsa/GuiInteraction/main/LICENSE'
+                    }
+                }
+                developers {
+                    developer {
+                        id = 'perNyfelt'
+                        name = 'Per Nyfelt'
+                    }
+                }
+                scm {
+                    url = 'https://github.com/Alipsa/GuiInteraction/tree/main'
+                    connection = 'scm:git:https://github.com/Alipsa/GuiInteraction.git'
+                    developerConnection = 'scm:git:https://github.com/Alipsa/GuiInteraction.git'
+                }
+            }
+        }
+    }
 }
