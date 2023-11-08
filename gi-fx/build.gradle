@@ -38,7 +38,7 @@ dependencies {
     } else if (os.isMacOsX()) {
         qualifier = 'mac-aarch64'
     }
-    def javaFxVersion = '20'
+    def javaFxVersion = '20.0.2'
     def groovyVersion = '4.0.15'
     def tablesawVersion = "0.43.1"
 
@@ -56,7 +56,7 @@ dependencies {
     compileOnly "org.openjfx:javafx-swing:${javaFxVersion}:$qualifier"
     compileOnly "org.openjfx:javafx-web:${javaFxVersion}:$qualifier"
 
-    testImplementation platform('org.junit:junit-bom:5.9.1')
+    testImplementation platform('org.junit:junit-bom:5.10.1')
     testImplementation 'org.junit.jupiter:junit-jupiter'
     testImplementation "org.openjfx:javafx-graphics:${javaFxVersion}:$qualifier"
     testImplementation "org.openjfx:javafx-base:${javaFxVersion}:$qualifier"
