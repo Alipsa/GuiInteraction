@@ -26,9 +26,6 @@ import se.alipsa.groovy.charts.Plot
 import se.alipsa.groovy.matrix.Grid
 import se.alipsa.groovy.matrix.Matrix
 import se.alipsa.ymp.YearMonthPicker
-import tech.tablesaw.api.Table
-import tech.tablesaw.plotly.components.Figure
-import tech.tablesaw.plotly.components.Page
 
 import javax.swing.JComponent
 import java.time.LocalDate
@@ -358,25 +355,6 @@ class InOut extends AbstractInOut {
     }
 
     @Override
-    void display(tech.tablesaw.chart.Chart chart, String... titleOpt) {
-        String title = titleOpt.length > 0 ? titleOpt[0] : chart.class.simpleName
-        display(tech.tablesaw.chart.Plot.jfx(chart), title)
-    }
-
-    @Override
-    void display(Figure figure, String... titleOpt) {
-        String title = titleOpt.length > 0 ? titleOpt[0] : figure.class.simpleName
-        Page page = Page.pageBuilder(figure, "target").build()
-        String output = page.asJavascript()
-        Platform.runLater(() -> {
-            WebView webView = new WebView()
-            webView.getEngine().setJavaScriptEnabled(true)
-            webView.getEngine().loadContent(output)
-            display(webView, title)
-        });
-    }
-
-    @Override
     void view(List<List<?>> matrix, String... title) {
         Platform.runLater {
             Viewer.viewTable(matrix as Grid, title)
@@ -387,13 +365,6 @@ class InOut extends AbstractInOut {
     void view(Matrix matrix, String... title) {
         Platform.runLater {
             Viewer.viewTable(matrix, title)
-        }
-    }
-
-    @Override
-    void view(Table table, String... title) {
-        Platform.runLater {
-            Viewer.viewTable(table, title)
         }
     }
 

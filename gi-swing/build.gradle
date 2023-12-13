@@ -13,7 +13,7 @@ description = 'Allows Gade Gui Interactive capabilities from a standalone app'
 
 java {
     toolchain {
-        languageVersion.set(JavaLanguageVersion.of(17))
+        languageVersion.set(JavaLanguageVersion.of(21))
     }
     withSourcesJar()
     withJavadocJar()
@@ -24,14 +24,6 @@ dependencies {
 
   implementation project(':gi-common')
   compileOnly 'org.apache.groovy:groovy-all:4.0.15'
-
-  implementation "tech.tablesaw:tablesaw-core:${tablesawVersion}"
-  implementation "tech.tablesaw:tablesaw-jsplot:${tablesawVersion}"
-  //implementation "tech.tablesaw:tablesaw-excel:${tablesawVersion}"
-  //implementation "tech.tablesaw:tablesaw-json:${tablesawVersion}"
-  implementation "tech.tablesaw:tablesaw-html:${tablesawVersion}"
-  //implementation "tech.tablesaw:tablesaw-aggregate:${tablesawVersion}"
-  implementation "se.alipsa.tablesaw:tablesaw-charts:1.0.0-SNAPSHOT"
 
   implementation 'se.alipsa.groovy:matrix-core:1.1.3-SNAPSHOT'
   implementation 'se.alipsa.groovy:matrix-charts:1.0.0-SNAPSHOT'

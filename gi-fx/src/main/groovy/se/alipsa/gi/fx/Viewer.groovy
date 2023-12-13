@@ -34,7 +34,6 @@ import org.w3c.dom.Document
 import se.alipsa.gi.FileUtils
 import se.alipsa.groovy.matrix.Grid
 import se.alipsa.groovy.matrix.Matrix
-import tech.tablesaw.api.Table
 
 import javax.xml.transform.OutputKeys
 import javax.xml.transform.Transformer
@@ -186,13 +185,6 @@ class Viewer {
         }
     }
 
-    static void viewTable(Table table, String... title) {
-        List<String> types = new ArrayList<>()
-        table.types().forEach(t -> types.add(t.name()))
-        String tit = title.length > 0 ? title[0] : table.name()
-        viewTable(table.columnNames(), toRowList(table), types, tit)
-    }
-
     static void viewTable(Matrix tableMatrix, String... title) {
         String tit = title.length > 0 ? title[0] : tableMatrix.name
         viewTable(tableMatrix.columnNames(), tableMatrix.rowList(), tableMatrix.columnTypeNames(), tit)
@@ -341,21 +333,5 @@ class Viewer {
         final ClipboardContent clipboardContent = new ClipboardContent()
         clipboardContent.putString(strb.toString())
         Clipboard.getSystemClipboard().setContent(clipboardContent)
-    }
-
-    private static List toRowList(Table table) {
-        List rows = new ArrayList(table.rowCount())
-        int columnCount = table.columnCount()
-        boolean firstRow = true
-        table.each {
-            Vector row = new Vector()
-            for (int i = 0; i<columnCount; i++) {
-                Object val = it.getObject(i)
-                row.add(String.valueOf(val))
-            }
-            rows.add(row)
-            firstRow = false
-        }
-        return rows
     }
 }

@@ -5,8 +5,6 @@ import se.alipsa.gi.AbstractInOut
 import se.alipsa.groovy.charts.Chart
 import se.alipsa.groovy.matrix.Matrix
 import se.alipsa.symp.YearMonthPicker
-import tech.tablesaw.api.Table
-import tech.tablesaw.plotly.components.Figure
 
 import javax.swing.table.DefaultTableCellRenderer
 import java.awt.BorderLayout
@@ -182,30 +180,6 @@ class InOut extends AbstractInOut {
   }
 
   @Override
-  void view(Table table, String... title) {
-    Vector rows = new Vector(table.rowCount())
-    int columnCount = table.columnCount()
-    def rightAlign = []
-    boolean firstRow = true
-    table.each {
-      Vector row = new Vector()
-      for (int i = 0; i<columnCount; i++) {
-        Object val = it.getObject(i)
-        row.add(String.valueOf(val))
-        if (firstRow) {
-          rightAlign << (val instanceof Number)
-        }
-      }
-      rows.add(row)
-      firstRow = false
-    }
-
-    JTable jTable = new JTable(rows, table.columnNames() as Vector)
-    def name = title.length > 0 ? title[0] : table.name()
-    viewTable(jTable, rightAlign, name)
-  }
-
-  @Override
   void view(Matrix tableMatrix, String... title) {
     Vector rows = new Vector(tableMatrix.rowCount())
     def rightAlign = []
@@ -311,18 +285,8 @@ class InOut extends AbstractInOut {
   }
 
   @Override
-  void display(Figure figure, String... titleOpt) {
-    tech.tablesaw.plotly.Plot.show(figure, "target")
-  }
-
-  @Override
   void display(Chart chart, String... titleOpt) {
     System.err.println("Sorry displaying charts is not yet implemented")
-  }
-
-  @Override
-  void display(tech.tablesaw.chart.Chart chart, String... titleOpt) {
-    display(tech.tablesaw.chart.Plot.jsPlot(chart), titleOpt)
   }
 
 }

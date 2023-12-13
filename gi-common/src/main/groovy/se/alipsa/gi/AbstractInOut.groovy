@@ -6,9 +6,6 @@ import com.vladsch.flexmark.util.data.MutableDataSet
 import com.vladsch.flexmark.ext.tables.TablesExtension
 import org.apache.tika.Tika
 
-import java.lang.reflect.Method
-import java.lang.reflect.Modifier
-import java.lang.reflect.Parameter
 import java.nio.file.Paths;
 
 abstract class AbstractInOut implements GuiInteraction {

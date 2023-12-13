@@ -19,7 +19,7 @@ repositories {
 
 java {
     toolchain {
-        languageVersion.set(JavaLanguageVersion.of(17))
+        languageVersion.set(JavaLanguageVersion.of(21))
     }
     withSourcesJar()
     withJavadocJar()
@@ -46,9 +46,6 @@ dependencies {
     implementation 'se.alipsa:fx-yearmonth-picker:1.1.0'
     implementation 'se.alipsa.groovy:matrix-core:1.1.3-SNAPSHOT'
     implementation 'se.alipsa.groovy:matrix-charts:1.0.0-SNAPSHOT'
-    implementation "tech.tablesaw:tablesaw-core:${tablesawVersion}"
-    implementation "tech.tablesaw:tablesaw-jsplot:${tablesawVersion}"
-    implementation "se.alipsa.tablesaw:tablesaw-charts:1.0.0-SNAPSHOT"
     compileOnly "org.apache.groovy:groovy:${groovyVersion}"
     compileOnly "org.openjfx:javafx-graphics:${javaFxVersion}:$qualifier"
     compileOnly "org.openjfx:javafx-base:${javaFxVersion}:$qualifier"

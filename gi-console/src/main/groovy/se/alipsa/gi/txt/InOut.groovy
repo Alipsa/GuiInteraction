@@ -1,6 +1,7 @@
 package se.alipsa.gi.txt
 
 import se.alipsa.gi.AbstractInOut
+import se.alipsa.groovy.matrix.Matrix
 import tech.tablesaw.chart.Chart
 
 import javax.swing.JComponent
@@ -93,13 +94,9 @@ class InOut extends AbstractInOut {
 
     }
 
-    @Override
-    void view(tech.tablesaw.api.Table table, String... title) {
-
-    }
 
     @Override
-    void view(se.alipsa.groovy.matrix.Matrix tableMatrix, String... title) {
+    void view(Matrix tableMatrix, String... title) {
 
     }
 
@@ -123,18 +120,9 @@ class InOut extends AbstractInOut {
 
     }
 
-    @Override
-    void display(tech.tablesaw.plotly.components.Figure figure, String... titleOpt) {
-
-    }
 
     @Override
     void display(se.alipsa.groovy.charts.Chart chart, String... titleOpt) {
-
-    }
-
-    @Override
-    void display(Chart chart, String... titleOpt) {
 
     }
 }

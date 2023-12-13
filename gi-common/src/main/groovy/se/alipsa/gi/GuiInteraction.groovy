@@ -1,11 +1,14 @@
 package se.alipsa.gi
 
+import se.alipsa.groovy.charts.Chart
+import se.alipsa.groovy.matrix.Matrix
+
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.util.concurrent.ExecutionException;
 import javax.swing.*;
 
-public interface GuiInteraction {
+interface GuiInteraction {
 
   File projectFile(String path)
 
@@ -72,8 +75,7 @@ public interface GuiInteraction {
    */
   void view(File file, String... title);
   void view(String html, String... title);
-  void view(tech.tablesaw.api.Table table, String... title);
-  void view(se.alipsa.groovy.matrix.Matrix tableMatrix, String... title);
+  void view(Matrix tableMatrix, String... title);
   void view(List<List<?>> matrix, String... title);
   void view(Integer o, String... title);
 
@@ -82,7 +84,5 @@ public interface GuiInteraction {
   void display(String fileName, String... title);
   void display(File file, String... title);
   void display(JComponent swingComponent, String... title);
-  void display(tech.tablesaw.plotly.components.Figure figure, String... titleOpt);
-  void display(se.alipsa.groovy.charts.Chart chart, String... titleOpt);
-  void display(tech.tablesaw.chart.Chart chart, String... titleOpt)
+  void display(Chart chart, String... titleOpt);
 }
