@@ -28,7 +28,7 @@ dependencies {
     def tablesawVersion = "0.43.1"
     def tikaVersion = '2.9.1'
 
-    compileOnly 'org.apache.groovy:groovy:4.0.15'
+    compileOnly 'org.apache.groovy:groovy:4.0.22'
 
     implementation "org.apache.tika:tika-core:${tikaVersion}"
     implementation "org.apache.tika:tika-parsers-standard-package:${tikaVersion}"

@@ -55,7 +55,7 @@ class InOut extends AbstractInOut {
     }
 
     @Override
-    Object promptSelect(String title, String headerText, String message, List<Object> options, Object defaultValue) {
+    Object promptSelect(String title, String headerText, String message, Collection<Object> options, Object defaultValue) {
         return null
     }
 

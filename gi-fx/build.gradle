@@ -39,7 +39,7 @@ dependencies {
         qualifier = 'mac-aarch64'
     }
     def javaFxVersion = '20.0.2'
-    def groovyVersion = '4.0.15'
+    def groovyVersion = '4.0.22'
     def tablesawVersion = "0.43.1"
 
     api project(':gi-common')

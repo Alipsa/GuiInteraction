@@ -63,7 +63,7 @@ interface GuiInteraction {
 
   LocalDate promptDate(String title, String message, LocalDate defaultValue);
 
-  Object promptSelect(String title, String headerText, String message, List<Object> options, Object defaultValue);
+  Object promptSelect(String title, String headerText, String message, Collection<Object> options, Object defaultValue);
 
   String promptPassword(String title, String message);
 

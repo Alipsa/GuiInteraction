@@ -102,7 +102,7 @@ class InOut extends AbstractInOut {
   }
 
   @Override
-  Object promptSelect(String title, String headerText, String message, List<Object> options, Object defaultValue) {
+  Object promptSelect(String title, String headerText, String message, Collection<Object> options, Object defaultValue) {
     JPanel content = new JPanel(new BorderLayout())
     content.add(new JLabel(headerText), BorderLayout.NORTH)
     JPanel messagePanel = new JPanel(new FlowLayout())
