@@ -194,16 +194,18 @@ class InOut extends AbstractInOut {
         return task.get()
     }
 
+
     @Override
     Object promptSelect(String title, String headerText, String message, Collection<Object> options, Object defaultValue) {
-        int defaultIndex = options.indexOf(defaultValue)
+        List opt = options as List
+        int defaultIndex = opt.indexOf(defaultValue)
         if (defaultIndex == -1) {
             defaultIndex = 0 // if we cannot find a match, choose the first item as the default
         }
 
         final int index = defaultIndex;
         FutureTask<Object> task = new FutureTask<>(() -> {
-            ChoiceDialog<Object> dialog = new ChoiceDialog<>(options.get(index), options)
+            ChoiceDialog<Object> dialog = new ChoiceDialog<>(opt.get(index), options)
             dialog.setTitle(title)
             dialog.setHeaderText(headerText)
             dialog.setContentText(message)

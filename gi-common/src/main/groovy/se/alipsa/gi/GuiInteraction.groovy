@@ -65,6 +65,8 @@ interface GuiInteraction {
 
   Object promptSelect(String title, String headerText, String message, Collection<Object> options, Object defaultValue);
 
+  Object promptSelect(String message, Collection<Object> options);
+
   String promptPassword(String title, String message);
 
   /**@

@@ -125,4 +125,8 @@ abstract class AbstractInOut implements GuiInteraction {
     println("${title.length > 0 ? title[0] + ': ' : ""}Update count: $o updated rows")
   }
 
+  @Override
+  Object promptSelect(String message, Collection<Object> options) {
+    return promptSelect(message, "", message, options, options.iterator().next())
+  }
 }
