@@ -25,6 +25,10 @@ java {
     withJavadocJar()
 }
 
+tasks.withType(JavaCompile) {
+    options.encoding = 'UTF-8'
+    options.compilerArgs << '-parameters'
+}
 
 dependencies {
     org.gradle.internal.os.OperatingSystem os = org.gradle.internal.os.OperatingSystem.current()

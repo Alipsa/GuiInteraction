@@ -15,6 +15,11 @@ java {
     withJavadocJar()
 }
 
+tasks.withType(JavaCompile) {
+    options.encoding = 'UTF-8'
+    options.compilerArgs << '-parameters'
+}
+
 repositories {
     // Use Maven Central for resolving dependencies.
     mavenCentral()
