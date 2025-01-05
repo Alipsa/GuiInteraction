@@ -28,10 +28,10 @@ dependencies {
   def tablesawVersion = "0.43.1"
 
   implementation project(':gi-common')
-  compileOnly 'org.apache.groovy:groovy-all:4.0.15'
+  compileOnly 'org.apache.groovy:groovy-all:4.0.24'
 
-  implementation 'se.alipsa.groovy:matrix-core:1.1.3-SNAPSHOT'
-  implementation 'se.alipsa.groovy:matrix-charts:1.0.0-SNAPSHOT'
+  implementation 'se.alipsa.matrix:matrix-core:2.2.0-SNAPSHOT'
+  implementation 'se.alipsa.matrix:matrix-charts:1.0.0-SNAPSHOT'
   implementation "se.alipsa:swing-yearmonth-picker:1.0.0-SNAPSHOT"
 
   implementation 'com.github.lgooddatepicker:LGoodDatePicker:11.2.1'

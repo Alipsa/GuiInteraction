@@ -2,8 +2,8 @@ package se.alipsa.gi.swing
 
 import com.github.lgooddatepicker.components.DatePicker
 import se.alipsa.gi.AbstractInOut
-import se.alipsa.groovy.charts.Chart
-import se.alipsa.groovy.matrix.Matrix
+import se.alipsa.matrix.charts.Chart
+import se.alipsa.matrix.core.Matrix
 import se.alipsa.symp.YearMonthPicker
 
 import javax.swing.table.DefaultTableCellRenderer

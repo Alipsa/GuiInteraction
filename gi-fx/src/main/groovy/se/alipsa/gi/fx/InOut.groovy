@@ -21,10 +21,10 @@ import javafx.stage.FileChooser
 import javafx.stage.Modality
 import javafx.stage.Window
 import se.alipsa.gi.*
-import se.alipsa.groovy.charts.Chart
-import se.alipsa.groovy.charts.Plot
-import se.alipsa.groovy.matrix.Grid
-import se.alipsa.groovy.matrix.Matrix
+import se.alipsa.matrix.charts.Chart
+import se.alipsa.matrix.charts.Plot
+import se.alipsa.matrix.core.Grid
+import se.alipsa.matrix.core.Matrix
 import se.alipsa.ymp.YearMonthPicker
 
 import javax.swing.JComponent

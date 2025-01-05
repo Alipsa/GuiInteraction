@@ -1,7 +1,7 @@
 package se.alipsa.gi.txt
 
 import se.alipsa.gi.AbstractInOut
-import se.alipsa.groovy.matrix.Matrix
+import se.alipsa.matrix.core.Matrix
 import tech.tablesaw.chart.Chart
 
 import javax.swing.JComponent
@@ -122,7 +122,7 @@ class InOut extends AbstractInOut {
 
 
     @Override
-    void display(se.alipsa.groovy.charts.Chart chart, String... titleOpt) {
+    void display(se.alipsa.matrix.charts.Chart chart, String... titleOpt) {
 
     }
 }

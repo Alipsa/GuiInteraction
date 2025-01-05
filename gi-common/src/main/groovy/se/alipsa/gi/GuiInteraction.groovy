@@ -1,7 +1,7 @@
 package se.alipsa.gi
 
-import se.alipsa.groovy.charts.Chart
-import se.alipsa.groovy.matrix.Matrix
+import se.alipsa.matrix.charts.Chart
+import se.alipsa.matrix.core.Matrix
 
 import java.time.LocalDate;
 import java.time.YearMonth;

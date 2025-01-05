@@ -32,8 +32,8 @@ import javafx.stage.FileChooser
 import javafx.stage.Modality
 import org.w3c.dom.Document
 import se.alipsa.gi.FileUtils
-import se.alipsa.groovy.matrix.Grid
-import se.alipsa.groovy.matrix.Matrix
+import se.alipsa.matrix.core.Grid
+import se.alipsa.matrix.core.Matrix
 
 import javax.xml.transform.OutputKeys
 import javax.xml.transform.Transformer
