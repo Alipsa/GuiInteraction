@@ -1,8 +1,8 @@
 package se.alipsa.gi.txt
 
 import se.alipsa.gi.AbstractInOut
+import se.alipsa.matrix.charts.Chart
 import se.alipsa.matrix.core.Matrix
-import tech.tablesaw.chart.Chart
 
 import javax.swing.JComponent
 import java.time.LocalDate
@@ -122,7 +122,7 @@ class InOut extends AbstractInOut {
 
 
     @Override
-    void display(se.alipsa.matrix.charts.Chart chart, String... titleOpt) {
+    void display(Chart chart, String... titleOpt) {
 
     }
 }

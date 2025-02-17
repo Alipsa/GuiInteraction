@@ -4,7 +4,7 @@ plugins {
     id 'java-library'
     id 'maven-publish'
     id 'signing'
-    id "com.github.ben-manes.versions" version "0.49.0"
+    id "com.github.ben-manes.versions" version "0.51.0"
 }
 
 group = 'se.alipsa'
@@ -28,10 +28,10 @@ dependencies {
   def tablesawVersion = "0.43.1"
 
   implementation project(':gi-common')
-  compileOnly 'org.apache.groovy:groovy-all:4.0.24'
-
-  implementation 'se.alipsa.matrix:matrix-core:2.2.0'
-  implementation 'se.alipsa.matrix:matrix-charts:1.0.0-SNAPSHOT'
+  compileOnly 'org.apache.groovy:groovy-all:4.0.25'
+  implementation(platform("se.alipsa.matrix:matrix-bom:1.1.1"))
+  implementation 'se.alipsa.matrix:matrix-core'
+  implementation 'se.alipsa.matrix:matrix-charts'
   implementation "se.alipsa:swing-yearmonth-picker:1.0.0-SNAPSHOT"
 
   implementation 'com.github.lgooddatepicker:LGoodDatePicker:11.2.1'

@@ -32,14 +32,14 @@ repositories {
 dependencies {
     def tikaVersion = '3.0.0-BETA'
 
-    compileOnly 'org.apache.groovy:groovy:4.0.24'
+    compileOnly 'org.apache.groovy:groovy:4.0.25'
 
     implementation "org.apache.tika:tika-core:${tikaVersion}"
     implementation "org.apache.tika:tika-parsers-standard-package:${tikaVersion}"
     implementation "org.apache.tika:tika-parser-text-module:${tikaVersion}"
-
-    implementation 'se.alipsa.matrix:matrix-core:2.2.0'
-    implementation 'se.alipsa.matrix:matrix-charts:1.0.0-SNAPSHOT'
+    implementation(platform("se.alipsa.matrix:matrix-bom:1.1.1"))
+    implementation 'se.alipsa.matrix:matrix-core'
+    implementation 'se.alipsa.matrix:matrix-charts'
 
     api 'com.vladsch.flexmark:flexmark-all:0.64.8'
 

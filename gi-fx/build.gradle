@@ -43,13 +43,14 @@ dependencies {
         qualifier = 'mac-aarch64'
     }
     def javaFxVersion = '20.0.2'
-    def groovyVersion = '4.0.24'
+    def groovyVersion = '4.0.25'
     def tablesawVersion = "0.43.1"
 
     api project(':gi-common')
     implementation 'se.alipsa:fx-yearmonth-picker:1.1.0'
-    implementation 'se.alipsa.matrix:matrix-core:2.2.0'
-    implementation 'se.alipsa.matrix:matrix-charts:1.0.0-SNAPSHOT'
+    implementation(platform("se.alipsa.matrix:matrix-bom:1.1.1"))
+    implementation 'se.alipsa.matrix:matrix-core'
+    implementation 'se.alipsa.matrix:matrix-charts'
     compileOnly "org.apache.groovy:groovy:${groovyVersion}"
     compileOnly "org.openjfx:javafx-graphics:${javaFxVersion}:$qualifier"
     compileOnly "org.openjfx:javafx-base:${javaFxVersion}:$qualifier"
