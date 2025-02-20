@@ -41,6 +41,7 @@ dependencies {
     implementation 'se.alipsa.matrix:matrix-core'
     implementation 'se.alipsa.matrix:matrix-charts'
 
+    // TODO: change to commmonmark to be consistent with GMD
     api 'com.vladsch.flexmark:flexmark-all:0.64.8'
 
     testImplementation platform('org.junit:junit-bom:5.10.1')
