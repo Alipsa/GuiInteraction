@@ -28,7 +28,6 @@ import javafx.scene.text.Text
 import javafx.scene.web.WebEngine
 import javafx.scene.web.WebHistory
 import javafx.scene.web.WebView
-import javafx.stage.FileChooser
 import javafx.stage.Modality
 import org.w3c.dom.Document
 import se.alipsa.gi.FileUtils
