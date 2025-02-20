@@ -25,11 +25,10 @@ tasks.withType(JavaCompile) {
 }
 
 dependencies {
-  def tablesawVersion = "0.43.1"
 
   implementation project(':gi-common')
   compileOnly 'org.apache.groovy:groovy-all:4.0.25'
-  implementation(platform("se.alipsa.matrix:matrix-bom:1.1.1"))
+  implementation(platform("se.alipsa.matrix:matrix-bom:1.1.2-SNAPSHOT"))
   implementation 'se.alipsa.matrix:matrix-core'
   implementation 'se.alipsa.matrix:matrix-charts'
   implementation "se.alipsa:swing-yearmonth-picker:1.0.0-SNAPSHOT"

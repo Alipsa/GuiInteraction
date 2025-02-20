@@ -44,11 +44,10 @@ dependencies {
     }
     def javaFxVersion = '20.0.2'
     def groovyVersion = '4.0.25'
-    def tablesawVersion = "0.43.1"
 
     api project(':gi-common')
     implementation 'se.alipsa:fx-yearmonth-picker:1.1.0'
-    implementation(platform("se.alipsa.matrix:matrix-bom:1.1.1"))
+    implementation(platform("se.alipsa.matrix:matrix-bom:1.1.2-SNAPSHOT"))
     implementation 'se.alipsa.matrix:matrix-core'
     implementation 'se.alipsa.matrix:matrix-charts'
     compileOnly "org.apache.groovy:groovy:${groovyVersion}"
