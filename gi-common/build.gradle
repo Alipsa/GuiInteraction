@@ -30,17 +30,18 @@ repositories {
 }
 
 dependencies {
-    def tikaVersion = '3.0.0-BETA'
+    def tikaVersion = '3.1.0'
 
     compileOnly 'org.apache.groovy:groovy:4.0.25'
 
     implementation "org.apache.tika:tika-core:${tikaVersion}"
     implementation "org.apache.tika:tika-parsers-standard-package:${tikaVersion}"
     implementation "org.apache.tika:tika-parser-text-module:${tikaVersion}"
-    implementation(platform("se.alipsa.matrix:matrix-bom:1.1.1"))
+    implementation(platform("se.alipsa.matrix:matrix-bom:1.1.2-SNAPSHOT"))
     implementation 'se.alipsa.matrix:matrix-core'
     implementation 'se.alipsa.matrix:matrix-charts'
 
+    // TODO: change to commmonmark to be consistent with GMD
     api 'com.vladsch.flexmark:flexmark-all:0.64.8'
 
     testImplementation platform('org.junit:junit-bom:5.10.1')
