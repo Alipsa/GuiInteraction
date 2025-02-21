@@ -31,7 +31,7 @@ dependencies {
   implementation(platform("se.alipsa.matrix:matrix-bom:1.1.2-SNAPSHOT"))
   implementation 'se.alipsa.matrix:matrix-core'
   implementation 'se.alipsa.matrix:matrix-charts'
-  implementation "se.alipsa:swing-yearmonth-picker:1.0.0-SNAPSHOT"
+  implementation "se.alipsa:swing-yearmonth-picker:1.0.0"
 
   implementation 'com.github.lgooddatepicker:LGoodDatePicker:11.2.1'
 }
