@@ -3,7 +3,7 @@ plugins {
     id 'maven-publish'
 }
 
-group = 'se.alipsa'
+group = 'se.alipsa.gi'
 version = '1.0.0-SNAPSHOT'
 
 java {
@@ -33,7 +33,7 @@ dependencies {
 
     implementation project(':gi-common')
     compileOnly "org.apache.groovy:groovy:${groovyVersion}"
-    implementation(platform("se.alipsa.matrix:matrix-bom:1.1.2-SNAPSHOT"))
+    implementation(platform("se.alipsa.matrix:matrix-bom:1.1.2"))
     implementation 'se.alipsa.matrix:matrix-core'
     implementation 'se.alipsa.matrix:matrix-charts'
     testImplementation platform('org.junit:junit-bom:5.10.1')

@@ -4,7 +4,7 @@ plugins {
     id 'maven-publish'
 }
 
-group = 'se.alipsa'
+group = 'se.alipsa.gi'
 version = '1.0.0-SNAPSHOT'
 description = 'Allows Gade Gui Interactive capabilities from a javafx standalone app'
 
@@ -47,7 +47,7 @@ dependencies {
 
     api project(':gi-common')
     implementation 'se.alipsa:fx-yearmonth-picker:1.1.0'
-    implementation(platform("se.alipsa.matrix:matrix-bom:1.1.2-SNAPSHOT"))
+    implementation(platform("se.alipsa.matrix:matrix-bom:1.1.2"))
     implementation 'se.alipsa.matrix:matrix-core'
     implementation 'se.alipsa.matrix:matrix-charts'
     compileOnly "org.apache.groovy:groovy:${groovyVersion}"

@@ -4,7 +4,7 @@ plugins {
     id 'maven-publish'
 }
 
-group = 'se.alipsa'
+group = 'se.alipsa.gi'
 version = '1.0.0-SNAPSHOT'
 
 java {
@@ -37,7 +37,7 @@ dependencies {
     implementation "org.apache.tika:tika-core:${tikaVersion}"
     implementation "org.apache.tika:tika-parsers-standard-package:${tikaVersion}"
     implementation "org.apache.tika:tika-parser-text-module:${tikaVersion}"
-    implementation(platform("se.alipsa.matrix:matrix-bom:1.1.2-SNAPSHOT"))
+    implementation(platform("se.alipsa.matrix:matrix-bom:1.1.2"))
     implementation 'se.alipsa.matrix:matrix-core'
     implementation 'se.alipsa.matrix:matrix-charts'
 
