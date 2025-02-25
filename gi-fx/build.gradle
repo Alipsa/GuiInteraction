@@ -47,9 +47,6 @@ dependencies {
 
     api project(':gi-common')
     implementation 'se.alipsa:fx-yearmonth-picker:1.1.0'
-    implementation(platform("se.alipsa.matrix:matrix-bom:1.1.2-SNAPSHOT"))
-    implementation 'se.alipsa.matrix:matrix-core'
-    implementation 'se.alipsa.matrix:matrix-charts'
     compileOnly "org.apache.groovy:groovy:${groovyVersion}"
     compileOnly "org.openjfx:javafx-graphics:${javaFxVersion}:$qualifier"
     compileOnly "org.openjfx:javafx-base:${javaFxVersion}:$qualifier"

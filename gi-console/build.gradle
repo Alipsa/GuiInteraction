@@ -34,9 +34,6 @@ dependencies {
 
     implementation project(':gi-common')
     compileOnly "org.apache.groovy:groovy:${groovyVersion}"
-    implementation(platform("se.alipsa.matrix:matrix-bom:1.1.2-SNAPSHOT"))
-    implementation 'se.alipsa.matrix:matrix-core'
-    implementation 'se.alipsa.matrix:matrix-charts'
     //implementation "tech.tablesaw:tablesaw-core:${tablesawVersion}"
     //implementation "tech.tablesaw:tablesaw-jsplot:${tablesawVersion}"
     //implementation "se.alipsa.tablesaw:tablesaw-charts:1.0.0-SNAPSHOT"
