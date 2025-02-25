@@ -295,7 +295,6 @@ class Viewer {
     private static boolean shouldRightAlign(String type) {
         if (type == null) return false
         boolean isNumeric = false
-        // All tablesaw numbers columns are NUMBER, we already cover that in NUMERIC_TYPES
         if (NUMERIC_TYPES.contains(type.toUpperCase())) {
             isNumeric = true
         }

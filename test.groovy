@@ -83,15 +83,7 @@ io.viewMarkdown("""# example title
 """, 'Markdown example')
 */
 
-/*
-import tech.tablesaw.api.*
-Table table = Table.create("Tablesaw Example",
-    IntColumn.create("id", [1,2,3] as int[]),
-    StringColumn.create("name", ["Foo", "Bar", "Baz"] as String[]),
-    DoubleColumn.create("expense", [123.23, 212.31, 12.1] as double[])
-)
-io.view(table)
-*/
+
 /*
 import se.alipsa.groovy.matrix.Matrix
 Matrix matrix = Matrix.create(
@@ -133,16 +125,4 @@ empData = Matrix.create(
 
 chart = AreaChart.create("Salaries", empData, "emp_name", "salary")
 io.display(chart, "Matrix charts areachart")
-*/
-
-/*
-import tech.tablesaw.api.*
-empData = Table.create(
-        IntColumn.create('emp_id', 1..5 as int[]),
-        StringColumn.create('emp_name', ["Rick","Dan","Michelle","Ryan","Gary"]),
-        DoubleColumn.create('salary', [623.3,515.2,611.0,729.0,843.25]),
-        DateColumn.create('start_date', toLocalDates("2012-01-01", "2013-09-23", "2014-11-15", "2014-05-11", "2015-03-27"))
-)
-chart = tech.tablesaw.chart.AreaChart.create("Salaries", empData, "emp_name", "salary")
-io.display(chart, "tablesaw areachart")
 */

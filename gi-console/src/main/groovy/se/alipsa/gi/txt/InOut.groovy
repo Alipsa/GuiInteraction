@@ -31,27 +31,32 @@ class InOut extends AbstractInOut {
 
     @Override
     File chooseDir(String title, File initialDirectory) {
-        return null
+        String filePath = read("$title")
+        return new File(filePath)
     }
 
     @Override
     File chooseDir(String title, String initialDirectory) {
-        return null
+        String filePath = read("$title")
+        return new File(filePath)
     }
 
     @Override
     YearMonth promptYearMonth(String message) {
-        return null
+        String yearMonth = read(message)
+        return YearMonth.parse(yearMonth)
     }
 
     @Override
     YearMonth promptYearMonth(String title, String message, YearMonth from, YearMonth to, YearMonth initial) {
-        return null
+        String yearMonth = read("title: $message")
+        return YearMonth.parse(yearMonth)
     }
 
     @Override
     LocalDate promptDate(String title, String message, LocalDate defaultValue) {
-        return null
+        String yearMonth = read("title: $message")
+        return LocalDate.parse(yearMonth)
     }
 
     @Override

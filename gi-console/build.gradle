@@ -3,7 +3,7 @@ plugins {
     id 'maven-publish'
 }
 
-group = 'se.alipsa'
+group = 'se.alipsa.gi'
 version = '1.0.0-SNAPSHOT'
 
 java {
@@ -29,14 +29,10 @@ repositories {
 }
 
 dependencies {
-    def tablesawVersion = "0.43.1"
     def groovyVersion = '4.0.25'
 
     implementation project(':gi-common')
     compileOnly "org.apache.groovy:groovy:${groovyVersion}"
-    //implementation "tech.tablesaw:tablesaw-core:${tablesawVersion}"
-    //implementation "tech.tablesaw:tablesaw-jsplot:${tablesawVersion}"
-    //implementation "se.alipsa.tablesaw:tablesaw-charts:1.0.0-SNAPSHOT"
     testImplementation platform('org.junit:junit-bom:5.10.1')
     testImplementation 'org.junit.jupiter:junit-jupiter'
 }

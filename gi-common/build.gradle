@@ -4,7 +4,7 @@ plugins {
     id 'maven-publish'
 }
 
-group = 'se.alipsa'
+group = 'se.alipsa.gi'
 version = '1.0.0-SNAPSHOT'
 
 java {
