@@ -9,7 +9,7 @@ version = '1.0.0-SNAPSHOT'
 
 java {
     toolchain {
-        languageVersion.set(JavaLanguageVersion.of(17))
+        languageVersion.set(JavaLanguageVersion.of(21))
     }
     withSourcesJar()
     withJavadocJar()
@@ -37,7 +37,7 @@ dependencies {
     implementation "org.apache.tika:tika-core:${tikaVersion}"
     implementation "org.apache.tika:tika-parsers-standard-package:${tikaVersion}"
     implementation "org.apache.tika:tika-parser-text-module:${tikaVersion}"
-    api (platform("se.alipsa.matrix:matrix-bom:1.1.3-SNAPSHOT"))
+    api (platform("se.alipsa.matrix:matrix-bom:2.0.0-SNAPSHOT"))
     api 'se.alipsa.matrix:matrix-core'
     api 'se.alipsa.matrix:matrix-charts'
 
