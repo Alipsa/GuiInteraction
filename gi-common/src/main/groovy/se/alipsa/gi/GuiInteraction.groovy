@@ -3,10 +3,10 @@ package se.alipsa.gi
 import se.alipsa.matrix.charts.Chart
 import se.alipsa.matrix.core.Matrix
 
+import javax.swing.JComponent
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.util.concurrent.ExecutionException;
-import javax.swing.*;
 
 interface GuiInteraction {
 
@@ -87,4 +87,10 @@ interface GuiInteraction {
   void display(File file, String... title);
   void display(JComponent swingComponent, String... title);
   void display(Chart chart, String... titleOpt);
+
+  void saveToClipboard(String string) ;
+  void saveToClipboard(File file);
+  String getFromClipboard() throws Exception;
+  File getFileFromClipboard() throws Exception;
+
 }

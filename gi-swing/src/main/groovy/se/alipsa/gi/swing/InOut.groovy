@@ -1,6 +1,10 @@
 package se.alipsa.gi.swing
 
 import com.github.lgooddatepicker.components.DatePicker
+
+import java.awt.Image
+import java.awt.Toolkit
+import java.awt.datatransfer.Clipboard
 import se.alipsa.gi.AbstractInOut
 import se.alipsa.matrix.charts.Chart
 import se.alipsa.matrix.core.Matrix
@@ -9,12 +13,18 @@ import se.alipsa.symp.YearMonthPicker
 import javax.swing.table.DefaultTableCellRenderer
 import java.awt.BorderLayout
 import java.awt.FlowLayout
+import java.awt.datatransfer.DataFlavor
+import java.awt.datatransfer.StringSelection
 import java.time.LocalDate
 import java.time.YearMonth
 import javax.swing.*
 import javax.swing.filechooser.FileNameExtensionFilter
+import java.util.concurrent.ExecutionException
+import java.util.concurrent.FutureTask
 
 class InOut extends AbstractInOut {
+
+  Clipboard clipboard
 
   InOut() {
     // This is needed due to timing issues to ensure swing UI starts properly
@@ -287,6 +297,44 @@ class InOut extends AbstractInOut {
   @Override
   void display(Chart chart, String... titleOpt) {
     System.err.println("Sorry displaying charts is not yet implemented")
+  }
+
+  void saveToClipboard(String string) {
+    getClipboard().setContents(new StringSelection(string), null)
+  }
+
+  /* TODO: figure out a way to do this */
+  void saveToClipboard(File file) {
+   throw new RuntimeException("Not yet implemented!")
+  }
+
+  void saveToClipboard(Image img) {
+    getClipboard().setContents(new ImageTransferable(img), null)
+  }
+
+  String getFromClipboard() throws ExecutionException, InterruptedException {
+    getClipboard().getData(DataFlavor.stringFlavor)
+  }
+
+  File getFileFromClipboard() throws ExecutionException, InterruptedException {
+    List<File> files = getClipboard().getData(DataFlavor.javaFileListFlavor) as List<File>
+    files?.getFirst()
+  }
+
+  Image getImageFromClipboard() throws ExecutionException, InterruptedException {
+    getClipboard().getData(DataFlavor.imageFlavor) as Image
+  }
+
+  Object getFromClipboard(DataFlavor format)
+      throws ExecutionException, InterruptedException {
+    getClipboard().getData(format)
+  }
+
+  private Clipboard getClipboard() {
+    if (clipboard == null) {
+      clipboard = Toolkit.getDefaultToolkit().getSystemClipboard()
+    }
+    return clipboard
   }
 
 }

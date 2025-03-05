@@ -14,6 +14,9 @@ import javafx.scene.control.Label
 import javafx.scene.control.TextInputDialog
 import javafx.scene.image.Image
 import javafx.scene.image.ImageView
+import javafx.scene.input.Clipboard
+import javafx.scene.input.ClipboardContent
+import javafx.scene.input.DataFormat
 import javafx.scene.layout.FlowPane
 import javafx.scene.web.WebView
 import javafx.stage.DirectoryChooser
@@ -30,12 +33,14 @@ import se.alipsa.ymp.YearMonthPicker
 import javax.swing.JComponent
 import java.time.LocalDate
 import java.time.YearMonth
+import java.util.concurrent.ExecutionException
 import java.util.concurrent.FutureTask
 
 class InOut extends AbstractInOut {
 
     Window ownerWindow = null
     ObservableList<String> styleSheetUrls = null
+    private Clipboard clipboard
 
     InOut() {
         new JFXPanel()
@@ -384,5 +389,69 @@ class InOut extends AbstractInOut {
 
     void setStyleSheetUrls(ObservableList<String> styleSheetUrls) {
         this.styleSheetUrls = styleSheetUrls
+    }
+
+    void saveToClipboard(String string) {
+        Platform.runLater(() -> {
+            ClipboardContent content = new ClipboardContent();
+            content.putString(string);
+            getClipboard().setContent(content);
+        });
+    }
+
+    void saveToClipboard(File file) {
+        Platform.runLater(() -> {
+            ClipboardContent content = new ClipboardContent();
+            content.putFiles(List.of(file));
+            getClipboard().setContent(content);
+        });
+    }
+
+    void saveToClipboard(Image img) {
+        Platform.runLater(() -> {
+            ClipboardContent content = new ClipboardContent();
+            content.putImage(img);
+            getClipboard().setContent(content);
+        });
+    }
+
+    void saveToClipboard(Object obj, DataFormat format) {
+        Platform.runLater(() -> {
+            ClipboardContent content = new ClipboardContent();
+            content.put(format, obj);
+            getClipboard().setContent(content);
+        });
+    }
+
+    String getFromClipboard() throws ExecutionException, InterruptedException {
+        final FutureTask<String> query = new FutureTask<>(() -> getClipboard().getString());
+        Platform.runLater(query);
+        return query.get();
+    }
+
+    File getFileFromClipboard() throws ExecutionException, InterruptedException {
+        final FutureTask<File> query = new FutureTask<>(() -> getClipboard().getFiles().getFirst());
+        Platform.runLater(query);
+        return query.get();
+    }
+
+    Image getImageFromClipboard() throws ExecutionException, InterruptedException {
+        final FutureTask<Image> query = new FutureTask<>(() -> getClipboard().getImage());
+        Platform.runLater(query);
+        return query.get();
+    }
+
+    Object getFromClipboard(DataFormat format)
+        throws ExecutionException, InterruptedException {
+        final FutureTask<Object> query = new FutureTask<>(() -> getClipboard().getContent(format));
+        Platform.runLater(query);
+        return query.get();
+    }
+
+    private Clipboard getClipboard() {
+        if (clipboard == null) {
+            clipboard = Clipboard.getSystemClipboard();
+        }
+        return clipboard;
     }
 }
