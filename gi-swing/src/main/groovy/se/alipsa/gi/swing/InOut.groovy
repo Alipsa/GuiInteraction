@@ -20,7 +20,6 @@ import java.time.YearMonth
 import javax.swing.*
 import javax.swing.filechooser.FileNameExtensionFilter
 import java.util.concurrent.ExecutionException
-import java.util.concurrent.FutureTask
 
 class InOut extends AbstractInOut {
 

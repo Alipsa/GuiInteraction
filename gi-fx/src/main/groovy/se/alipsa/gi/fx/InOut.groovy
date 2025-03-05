@@ -40,7 +40,7 @@ class InOut extends AbstractInOut {
 
     Window ownerWindow = null
     ObservableList<String> styleSheetUrls = null
-    private Clipboard clipboard
+    Clipboard clipboard
 
     InOut() {
         new JFXPanel()
@@ -393,62 +393,62 @@ class InOut extends AbstractInOut {
 
     void saveToClipboard(String string) {
         Platform.runLater(() -> {
-            ClipboardContent content = new ClipboardContent();
-            content.putString(string);
-            getClipboard().setContent(content);
+            ClipboardContent content = new ClipboardContent()
+            content.putString(string)
+            getClipboard().setContent(content)
         });
     }
 
     void saveToClipboard(File file) {
         Platform.runLater(() -> {
-            ClipboardContent content = new ClipboardContent();
-            content.putFiles(List.of(file));
-            getClipboard().setContent(content);
+            ClipboardContent content = new ClipboardContent()
+            content.putFiles(List.of(file))
+            getClipboard().setContent(content)
         });
     }
 
     void saveToClipboard(Image img) {
         Platform.runLater(() -> {
-            ClipboardContent content = new ClipboardContent();
-            content.putImage(img);
-            getClipboard().setContent(content);
+            ClipboardContent content = new ClipboardContent()
+            content.putImage(img)
+            getClipboard().setContent(content)
         });
     }
 
     void saveToClipboard(Object obj, DataFormat format) {
         Platform.runLater(() -> {
-            ClipboardContent content = new ClipboardContent();
-            content.put(format, obj);
-            getClipboard().setContent(content);
+            ClipboardContent content = new ClipboardContent()
+            content.put(format, obj)
+            getClipboard().setContent(content)
         });
     }
 
     String getFromClipboard() throws ExecutionException, InterruptedException {
-        final FutureTask<String> query = new FutureTask<>(() -> getClipboard().getString());
-        Platform.runLater(query);
-        return query.get();
+        final FutureTask<String> query = new FutureTask<>(() -> getClipboard().getString())
+        Platform.runLater(query)
+        return query.get()
     }
 
     File getFileFromClipboard() throws ExecutionException, InterruptedException {
-        final FutureTask<File> query = new FutureTask<>(() -> getClipboard().getFiles().getFirst());
-        Platform.runLater(query);
-        return query.get();
+        final FutureTask<File> query = new FutureTask<>(() -> getClipboard().getFiles().getFirst())
+        Platform.runLater(query)
+        return query.get()
     }
 
     Image getImageFromClipboard() throws ExecutionException, InterruptedException {
-        final FutureTask<Image> query = new FutureTask<>(() -> getClipboard().getImage());
-        Platform.runLater(query);
-        return query.get();
+        final FutureTask<Image> query = new FutureTask<>(() -> getClipboard().getImage())
+        Platform.runLater(query)
+        return query.get()
     }
 
     Object getFromClipboard(DataFormat format)
         throws ExecutionException, InterruptedException {
-        final FutureTask<Object> query = new FutureTask<>(() -> getClipboard().getContent(format));
-        Platform.runLater(query);
-        return query.get();
+        final FutureTask<Object> query = new FutureTask<>(() -> getClipboard().getContent(format))
+        Platform.runLater(query)
+        return query.get()
     }
 
-    private Clipboard getClipboard() {
+    Clipboard getClipboard() {
         if (clipboard == null) {
             clipboard = Clipboard.getSystemClipboard();
         }

@@ -5,11 +5,18 @@ import se.alipsa.matrix.charts.Chart
 import se.alipsa.matrix.core.Matrix
 
 import javax.swing.JComponent
+import java.awt.Image
+import java.awt.Toolkit
+import java.awt.datatransfer.Clipboard
+import java.awt.datatransfer.DataFlavor
+import java.awt.datatransfer.StringSelection
 import java.time.LocalDate
 import java.time.YearMonth
+import java.util.concurrent.ExecutionException
 
 class InOut extends AbstractInOut {
 
+    Clipboard clipboard
     BufferedReader sysin = new BufferedReader(new InputStreamReader(System.in))
 
     String read(String prompt) {
@@ -130,4 +137,31 @@ class InOut extends AbstractInOut {
     void display(Chart chart, String... titleOpt) {
 
     }
+
+
+    void saveToClipboard(String string) {
+        getClipboard().setContents(new StringSelection(string), null)
+    }
+
+    /* TODO: figure out a way to do this */
+    void saveToClipboard(File file) {
+        throw new RuntimeException("Not yet implemented!")
+    }
+
+    String getFromClipboard() throws ExecutionException, InterruptedException {
+        getClipboard().getData(DataFlavor.stringFlavor)
+    }
+
+    File getFileFromClipboard() throws ExecutionException, InterruptedException {
+        List<File> files = getClipboard().getData(DataFlavor.javaFileListFlavor) as List<File>
+        files?.getFirst()
+    }
+
+    private Clipboard getClipboard() {
+        if (clipboard == null) {
+            clipboard = Toolkit.getDefaultToolkit().getSystemClipboard()
+        }
+        return clipboard
+    }
+
 }
