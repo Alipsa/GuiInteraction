@@ -27,7 +27,7 @@ tasks.withType(JavaCompile) {
 dependencies {
 
   implementation project(':gi-common')
-  compileOnly 'org.apache.groovy:groovy-all:4.0.25'
+  compileOnly 'org.apache.groovy:groovy-all:4.0.26'
   implementation "se.alipsa:swing-yearmonth-picker:1.0.0-SNAPSHOT"
 
   implementation 'com.github.lgooddatepicker:LGoodDatePicker:11.2.1'

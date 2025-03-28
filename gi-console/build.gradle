@@ -29,7 +29,7 @@ repositories {
 }
 
 dependencies {
-    def groovyVersion = '4.0.25'
+    def groovyVersion = '4.0.26'
 
     implementation project(':gi-common')
     compileOnly "org.apache.groovy:groovy:${groovyVersion}"

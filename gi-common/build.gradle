@@ -32,12 +32,12 @@ repositories {
 dependencies {
     def tikaVersion = '3.1.0'
 
-    compileOnly 'org.apache.groovy:groovy:4.0.25'
+    compileOnly 'org.apache.groovy:groovy:4.0.26'
 
     implementation "org.apache.tika:tika-core:${tikaVersion}"
     implementation "org.apache.tika:tika-parsers-standard-package:${tikaVersion}"
     implementation "org.apache.tika:tika-parser-text-module:${tikaVersion}"
-    api (platform("se.alipsa.matrix:matrix-bom:2.0.0-SNAPSHOT"))
+    api (platform("se.alipsa.matrix:matrix-bom:2.1.0"))
     api 'se.alipsa.matrix:matrix-core'
     api 'se.alipsa.matrix:matrix-charts'
 

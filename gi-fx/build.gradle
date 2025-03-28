@@ -43,7 +43,7 @@ dependencies {
         qualifier = 'mac-aarch64'
     }
     def javaFxVersion = '20.0.2'
-    def groovyVersion = '4.0.25'
+    def groovyVersion = '4.0.26'
 
     api project(':gi-common')
     implementation 'se.alipsa:fx-yearmonth-picker:1.1.0'
