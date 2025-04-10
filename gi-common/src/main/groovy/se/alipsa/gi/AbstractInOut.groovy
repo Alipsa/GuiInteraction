@@ -1,16 +1,22 @@
 package se.alipsa.gi
 
+/*
 import com.vladsch.flexmark.html.HtmlRenderer
 import com.vladsch.flexmark.parser.Parser
 import com.vladsch.flexmark.util.data.MutableDataSet
 import com.vladsch.flexmark.ext.tables.TablesExtension
+*/
+import org.commonmark.ext.gfm.tables.TablesExtension;
+import org.commonmark.parser.Parser;
+import org.commonmark.renderer.html.HtmlRenderer;
 import org.apache.tika.Tika
+
 
 import java.nio.file.Paths;
 
 abstract class AbstractInOut implements GuiInteraction {
 
-  private MutableDataSet flexmarkOptions
+  //private MutableDataSet flexmarkOptions
   private Parser markdownParser
   private HtmlRenderer htmlRenderer
 
@@ -102,23 +108,29 @@ abstract class AbstractInOut implements GuiInteraction {
 
   private Parser getMarkdownParser() {
     if (markdownParser == null) {
-      markdownParser = Parser.builder(getFlexmarkOptions()).build()
+      //markdownParser = Parser.builder(getFlexmarkOptions()).build()
+      markdownParser = Parser.builder().build()
     }
     return markdownParser
   }
 
   private HtmlRenderer getHtmlRenderer() {
     if (htmlRenderer == null) {
-      htmlRenderer = HtmlRenderer.builder(getFlexmarkOptions()).build()
+      //htmlRenderer = HtmlRenderer.builder(getFlexmarkOptions()).build()
+      htmlRenderer = HtmlRenderer.builder()
+          .softbreak("<br />\n")
+          .extensions(List.of(TablesExtension.create()))
+          .build()
     }
     return htmlRenderer
   }
 
+  /*
   private MutableDataSet getFlexmarkOptions() {
     if (flexmarkOptions == null) flexmarkOptions = new MutableDataSet()
     flexmarkOptions.set(Parser.EXTENSIONS, List.of(TablesExtension.create()));
     return flexmarkOptions
-  }
+  }*/
 
   @Override
   void view(Integer o, String... title) {
