@@ -4,11 +4,11 @@ plugins {
     id 'java-library'
     id 'maven-publish'
     id 'signing'
-    id "com.github.ben-manes.versions" version "0.51.0"
+    id "com.github.ben-manes.versions" version "0.52.0"
 }
 
 group = 'se.alipsa.gi'
-version = '1.0.0-SNAPSHOT'
+version = '0.1.0'
 description = 'Allows Gade Gui Interactive capabilities from a standalone app'
 
 java {
@@ -28,7 +28,7 @@ dependencies {
 
   implementation project(':gi-common')
   compileOnly 'org.apache.groovy:groovy-all:4.0.26'
-  implementation "se.alipsa:swing-yearmonth-picker:1.0.0-SNAPSHOT"
+  implementation "se.alipsa:swing-yearmonth-picker:1.0.0"
 
   implementation 'com.github.lgooddatepicker:LGoodDatePicker:11.2.1'
 }

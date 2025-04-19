@@ -1,6 +1,6 @@
 import javafx.application.Platform
 
-@Grab("se.alipsa.gi:gi-fx:1.0.0-SNAPSHOT")
+@Grab("se.alipsa.gi:gi-fx:0.1.0")
 def io = new se.alipsa.gi.fx.InOut()
 
 def file = io.chooseFile("Choose a file", ".", "Pick a file please!" )

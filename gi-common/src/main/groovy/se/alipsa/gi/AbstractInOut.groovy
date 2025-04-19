@@ -11,14 +11,21 @@ import org.commonmark.parser.Parser;
 import org.commonmark.renderer.html.HtmlRenderer;
 import org.apache.tika.Tika
 
-
-import java.nio.file.Paths;
+import java.awt.Toolkit
+import java.awt.datatransfer.Clipboard
+import java.awt.datatransfer.ClipboardOwner
+import java.awt.datatransfer.DataFlavor
+import java.awt.datatransfer.StringSelection
+import java.awt.datatransfer.Transferable
+import java.nio.file.Paths
+import java.util.concurrent.ExecutionException;
 
 abstract class AbstractInOut implements GuiInteraction {
 
   //private MutableDataSet flexmarkOptions
   private Parser markdownParser
   private HtmlRenderer htmlRenderer
+  protected def clipboard
 
   @Override
   File projectFile(String path) {
@@ -140,5 +147,43 @@ abstract class AbstractInOut implements GuiInteraction {
   @Override
   Object promptSelect(String message, Collection<Object> options) {
     return promptSelect(message, "", message, options, options.iterator().next())
+  }
+
+  @Override
+  void saveToClipboard(String string) {
+    getClipboard().setContents(new StringSelection(string), null)
+  }
+
+  @Override
+  void saveToClipboard(File file) {
+    List listOfFiles = new ArrayList();
+    listOfFiles.add(file);
+
+    FileTransferable ft = new FileTransferable(listOfFiles);
+
+    getClipboard().setContents(ft, new ClipboardOwner() {
+      @Override
+      void lostOwnership(Clipboard clipboard, Transferable contents) {
+        System.out.println("Lost ownership")
+      }
+    })
+  }
+
+  @Override
+  String getFromClipboard() throws ExecutionException, InterruptedException {
+    getClipboard().getData(DataFlavor.stringFlavor)
+  }
+
+  @Override
+  File getFileFromClipboard() throws ExecutionException, InterruptedException {
+    List<File> files = getClipboard().getData(DataFlavor.javaFileListFlavor) as List<File>
+    files?.getFirst()
+  }
+
+  private Clipboard getClipboard() {
+    if (clipboard == null) {
+      clipboard = Toolkit.getDefaultToolkit().getSystemClipboard()
+    }
+    return clipboard
   }
 }

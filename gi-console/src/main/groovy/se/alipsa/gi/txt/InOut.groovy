@@ -1,15 +1,21 @@
 package se.alipsa.gi.txt
 
+import org.jsoup.Jsoup
 import se.alipsa.gi.AbstractInOut
+import se.alipsa.gi.FileTransferable
+import se.alipsa.gi.ImageTransferable
 import se.alipsa.matrix.charts.Chart
 import se.alipsa.matrix.core.Matrix
 
 import javax.swing.JComponent
+import java.awt.Desktop
 import java.awt.Image
 import java.awt.Toolkit
 import java.awt.datatransfer.Clipboard
+import java.awt.datatransfer.ClipboardOwner
 import java.awt.datatransfer.DataFlavor
 import java.awt.datatransfer.StringSelection
+import java.awt.datatransfer.Transferable
 import java.time.LocalDate
 import java.time.YearMonth
 import java.util.concurrent.ExecutionException
@@ -68,100 +74,128 @@ class InOut extends AbstractInOut {
 
     @Override
     Object promptSelect(String title, String headerText, String message, Collection<Object> options, Object defaultValue) {
-        return null
+        println title
+        println headerText
+        int i = 0
+        for (def option : options) {
+            println "${i}. $option"
+        }
+        println "Default value is $defaultValue"
+        String input = read(message)
+        if (input.isInteger()) {
+            int index = input.toInteger()
+            if (index >= 0 && index < options.size()) {
+                return options[index]
+            } else {
+                println("Invalid index $input. Returning default value $defaultValue")
+                return defaultValue
+            }
+        } else {
+            println("Invalid input $input. Returning default value $defaultValue")
+            return defaultValue
+        }
     }
 
     @Override
     String promptPassword(String title, String message) {
-        return null
+        println title
+        def console = System.console()
+        if (console == null) {
+            println("No console available")
+            return null
+        }
+        char[] ch = console.readPassword(
+            "$message : ")
+        return new String(ch)
     }
 
     @Override
     String prompt(String message) {
-        return null
+        read(message)
     }
 
     @Override
     String prompt(String title, String message) {
-        return null
+        println title
+        return read(message)
     }
 
     @Override
     String prompt(String title, String headerText, String message) {
-        return null
+        println title
+        println headerText
+        return read(message)
     }
 
     @Override
     String prompt(String title, String headerText, String message, String defaultValue) {
-        return null
+        println title
+        println headerText
+        String input = read(message)
+        if (input.isEmpty()) {
+            return defaultValue
+        } else {
+            return input
+        }
     }
 
     @Override
     void view(File file, String... title) {
-
+        display(file, title)
     }
 
     @Override
     void view(String html, String... title) {
-
+        Jsoup.parse(html).text();
     }
 
 
     @Override
     void view(Matrix tableMatrix, String... title) {
-
+        println tableMatrix.content()
     }
 
     @Override
     void view(List<List<?>> matrix, String... title) {
-
+        Matrix.builder().rows(matrix).matrixName(title.length > 0 ? title[0] : "").build().content()
     }
 
     @Override
     void display(String fileName, String... title) {
-
+        display(new File(fileName), title)
     }
 
     @Override
     void display(File file, String... title) {
-
+        if (Desktop.isDesktopSupported()) {
+            Desktop desktop = Desktop.getDesktop()
+            if (file.exists()) {
+                desktop.open(file)
+            } else {
+                println("File $file does not exist")
+            }
+        } else {
+            println("Desktop is not supported on this platform")
+        }
     }
 
     @Override
     void display(JComponent swingComponent, String... title) {
-
+        println ("Swing component display is not supported in this implementation")
     }
 
 
     @Override
     void display(Chart chart, String... titleOpt) {
-
+        println("Chart display is not supported in this implementation")
     }
 
-
-    void saveToClipboard(String string) {
-        getClipboard().setContents(new StringSelection(string), null)
+    void saveToClipboard(Image img) {
+        getClipboard().setContents(new ImageTransferable(img), null)
     }
 
-    /* TODO: figure out a way to do this */
-    void saveToClipboard(File file) {
-        throw new RuntimeException("Not yet implemented!")
-    }
-
-    String getFromClipboard() throws ExecutionException, InterruptedException {
-        getClipboard().getData(DataFlavor.stringFlavor)
-    }
-
-    File getFileFromClipboard() throws ExecutionException, InterruptedException {
-        List<File> files = getClipboard().getData(DataFlavor.javaFileListFlavor) as List<File>
-        files?.getFirst()
-    }
-
-    private Clipboard getClipboard() {
-        if (clipboard == null) {
-            clipboard = Toolkit.getDefaultToolkit().getSystemClipboard()
-        }
-        return clipboard
+    Image getImageFromClipboard() throws ExecutionException, InterruptedException {
+        getClipboard().getData(DataFlavor.imageFlavor) as Image
     }
 
 }

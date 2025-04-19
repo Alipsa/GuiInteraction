@@ -1,6 +1,8 @@
 package se.alipsa.gi.swing
 
 import com.github.lgooddatepicker.components.DatePicker
+import se.alipsa.gi.ImageTransferable
+import se.alipsa.matrix.charts.Plot
 
 import java.awt.Image
 import java.awt.Toolkit
@@ -268,19 +270,19 @@ class InOut extends AbstractInOut {
     }
     ImageIcon img = new ImageIcon(fileName)
     JLabel label = new JLabel(img)
-    display(label, title);
+    display(label, title)
   }
 
   @Override
   void display(File file, String... title) {
     if (file == null || !file.exists()) {
-      System.err.println("Cannot display image: Failed to find " + file);
-      return;
+      System.err.println("Cannot display image: Failed to find " + file)
+      return
     }
     if (title.length == 0) {
-      display(file.getAbsolutePath(), file.getName());
+      display(file.getAbsolutePath(), file.getName())
     } else {
-      display(file.getAbsolutePath(), title);
+      display(file.getAbsolutePath(), title)
     }
   }
 
@@ -295,29 +297,16 @@ class InOut extends AbstractInOut {
 
   @Override
   void display(Chart chart, String... titleOpt) {
-    System.err.println("Sorry displaying charts is not yet implemented")
-  }
-
-  void saveToClipboard(String string) {
-    getClipboard().setContents(new StringSelection(string), null)
-  }
-
-  /* TODO: figure out a way to do this */
-  void saveToClipboard(File file) {
-   throw new RuntimeException("Not yet implemented!")
+    ByteArrayOutputStream baos = new ByteArrayOutputStream()
+    Plot.png(chart, baos)
+    Image image = Toolkit.getDefaultToolkit().createImage(baos.toByteArray())
+    ImageIcon img = new ImageIcon(image)
+    JLabel label = new JLabel(img)
+    display(label, titleOpt.length > 0 ? titleOpt[0] : chart.getTitle())
   }
 
   void saveToClipboard(Image img) {
     getClipboard().setContents(new ImageTransferable(img), null)
-  }
-
-  String getFromClipboard() throws ExecutionException, InterruptedException {
-    getClipboard().getData(DataFlavor.stringFlavor)
-  }
-
-  File getFileFromClipboard() throws ExecutionException, InterruptedException {
-    List<File> files = getClipboard().getData(DataFlavor.javaFileListFlavor) as List<File>
-    files?.getFirst()
   }
 
   Image getImageFromClipboard() throws ExecutionException, InterruptedException {
@@ -327,13 +316,6 @@ class InOut extends AbstractInOut {
   Object getFromClipboard(DataFlavor format)
       throws ExecutionException, InterruptedException {
     getClipboard().getData(format)
-  }
-
-  private Clipboard getClipboard() {
-    if (clipboard == null) {
-      clipboard = Toolkit.getDefaultToolkit().getSystemClipboard()
-    }
-    return clipboard
   }
 
 }

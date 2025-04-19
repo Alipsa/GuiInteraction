@@ -1,4 +1,4 @@
-package se.alipsa.gi.swing
+package se.alipsa.gi
 
 import java.awt.*
 import java.awt.datatransfer.DataFlavor

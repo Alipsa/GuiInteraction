@@ -5,7 +5,7 @@ plugins {
 }
 
 group = 'se.alipsa.gi'
-version = '1.0.0-SNAPSHOT'
+version = '0.1.0'
 
 java {
     toolchain {
@@ -37,7 +37,7 @@ dependencies {
     implementation "org.apache.tika:tika-core:${tikaVersion}"
     implementation "org.apache.tika:tika-parsers-standard-package:${tikaVersion}"
     implementation "org.apache.tika:tika-parser-text-module:${tikaVersion}"
-    api (platform("se.alipsa.matrix:matrix-bom:2.1.0"))
+    api (platform("se.alipsa.matrix:matrix-bom:2.2.0"))
     api 'se.alipsa.matrix:matrix-core'
     api 'se.alipsa.matrix:matrix-charts'
 
@@ -46,7 +46,7 @@ dependencies {
     api "org.commonmark:commonmark:0.24.0"
     implementation "org.commonmark:commonmark-ext-gfm-tables:0.24.0"
 
-    testImplementation platform('org.junit:junit-bom:5.10.1')
+    testImplementation platform('org.junit:junit-bom:5.12.2')
     testImplementation 'org.junit.jupiter:junit-jupiter'
 }
 

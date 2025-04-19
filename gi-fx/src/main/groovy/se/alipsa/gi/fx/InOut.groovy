@@ -40,7 +40,7 @@ class InOut extends AbstractInOut {
 
     Window ownerWindow = null
     ObservableList<String> styleSheetUrls = null
-    Clipboard clipboard
+    //Clipboard clipboard
 
     InOut() {
         new JFXPanel()
