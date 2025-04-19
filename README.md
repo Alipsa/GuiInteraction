@@ -21,3 +21,9 @@ if (! binding.hasVariable('io')) {
 def file = io.chooseFile("Choose a file", ".", "Pick a file please!" )
 println("File chosen was $file")
 ```
+
+Available on Maven central under group 'se.alipsa.gi'. Module names are:
+- gi-fx
+- gi-swing
+- gi-console
+
