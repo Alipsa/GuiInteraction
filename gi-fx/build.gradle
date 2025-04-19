@@ -89,7 +89,7 @@ jar {
 
 publishing {
     publications {
-        mavenJava(MavenPublication) {
+        maven(MavenPublication) {
             from components.java
             artifacts = [jar, fatJarContainer, javadocJar, sourcesJar]
             pom {
