@@ -1,6 +1,7 @@
 plugins {
     id 'groovy'
     id 'java-library'
+    id 'signing'
     id 'maven-publish'
 }
 
@@ -114,5 +115,13 @@ publishing {
                 }
             }
         }
+    }
+}
+
+signing {
+    if (project.properties['signing.keyId'] != null) {
+        sign publishing.publications.maven
+    } else {
+        project.logger.lifecycle("signing.keyId is not defined, skipping signing of artifacts...")
     }
 }
