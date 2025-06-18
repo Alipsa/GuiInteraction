@@ -6,7 +6,7 @@ plugins {
 }
 
 group = 'se.alipsa.gi'
-version = '0.1.0'
+version = '0.1.1-SNAPSHOT'
 description = 'Allows Gade Gui Interactive capabilities from a javafx standalone app'
 
 repositories {
@@ -44,7 +44,7 @@ dependencies {
         qualifier = 'mac-aarch64'
     }
     def javaFxVersion = '23.0.2'
-    def groovyVersion = '4.0.26'
+    def groovyVersion = '4.0.27'
 
     api project(':gi-common')
     implementation 'se.alipsa:fx-yearmonth-picker:1.1.0'
@@ -55,7 +55,7 @@ dependencies {
     compileOnly "org.openjfx:javafx-swing:${javaFxVersion}:$qualifier"
     compileOnly "org.openjfx:javafx-web:${javaFxVersion}:$qualifier"
 
-    testImplementation platform('org.junit:junit-bom:5.12.2')
+    testImplementation platform('org.junit:junit-bom:5.13.0')
     testImplementation 'org.junit.jupiter:junit-jupiter'
     testImplementation "org.openjfx:javafx-graphics:${javaFxVersion}:$qualifier"
     testImplementation "org.openjfx:javafx-base:${javaFxVersion}:$qualifier"

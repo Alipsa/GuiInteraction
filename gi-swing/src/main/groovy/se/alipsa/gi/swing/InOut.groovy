@@ -208,11 +208,12 @@ class InOut extends AbstractInOut {
     }
 
     JTable jTable = new JTable(rows, tableMatrix.columnNames() as Vector)
-    def name = title.length > 0 ? title[0] : tableMatrix.name
+    jTable.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS)
+    def name = title.length > 0 ? title[0] : tableMatrix.matrixName
     viewTable(jTable, rightAlign, name)
   }
 
-  private viewTable(JTable jTable, List<Boolean> rightAlign, String title) {
+  private static viewTable(JTable jTable, List<Boolean> rightAlign, String title) {
     DefaultTableCellRenderer rightRenderer = new DefaultTableCellRenderer()
     rightRenderer.setHorizontalAlignment(JLabel.RIGHT)
     def model = jTable.getColumnModel()

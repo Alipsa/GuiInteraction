@@ -6,7 +6,7 @@ plugins {
 }
 
 group = 'se.alipsa.gi'
-version = '0.1.0'
+version = '0.1.1-SNAPSHOT'
 
 java {
     toolchain {
@@ -31,9 +31,9 @@ repositories {
 }
 
 dependencies {
-    def tikaVersion = '3.1.0'
+    def tikaVersion = '3.2.0'
 
-    compileOnly 'org.apache.groovy:groovy:4.0.26'
+    compileOnly 'org.apache.groovy:groovy:4.0.27'
 
     implementation "org.apache.tika:tika-core:${tikaVersion}"
     implementation "org.apache.tika:tika-parsers-standard-package:${tikaVersion}"
@@ -42,12 +42,10 @@ dependencies {
     api 'se.alipsa.matrix:matrix-core'
     api 'se.alipsa.matrix:matrix-charts'
 
-    // TODO: change to commmonmark to be consistent with GMD
-    //api 'com.vladsch.flexmark:flexmark-all:0.64.8'
     api "org.commonmark:commonmark:0.24.0"
     implementation "org.commonmark:commonmark-ext-gfm-tables:0.24.0"
 
-    testImplementation platform('org.junit:junit-bom:5.12.2')
+    testImplementation platform('org.junit:junit-bom:5.13.0')
     testImplementation 'org.junit.jupiter:junit-jupiter'
 }
 
