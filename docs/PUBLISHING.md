@@ -32,20 +32,50 @@ gpg --list-keys --keyid-format SHORT
 # Upload your public key to a key server
 gpg --keyserver keyserver.ubuntu.com --send-keys ABCD1234
 
-# Export your secret key ring (for Gradle signing)
-gpg --export-secret-keys ABCD1234 > ~/.gnupg/secring.gpg
+# Export your secret key ring (legacy approach for GPG < 2.1)
+# WARNING: This creates a plaintext secret key file!
+gpg --export-secret-keys -o ~/.gnupg/secring.gpg ABCD1234
+chmod 600 ~/.gnupg/secring.gpg  # Set strict permissions
 ```
+
+**Note:** The above method uses the legacy keyring format. Modern GPG (2.1+) doesn't use `secring.gpg` by default. See the recommended approach below.
 
 ### 3. Configure Credentials
 
-Add credentials to your `~/.gradle/gradle.properties` (NOT the project's `gradle.properties`):
+#### Recommended: Modern In-Memory Signing (GPG 2.1+)
+
+For modern GPG versions, use the in-memory signing approach with the `signingKey` property:
+
+```bash
+# Export your private key in ASCII-armored format
+gpg --armor --export-secret-keys ABCD1234
+```
+
+Add to your `~/.gradle/gradle.properties` (NOT the project's `gradle.properties`):
 
 ```properties
 # Sonatype OSSRH credentials
 sonatypeUsername=your-sonatype-username
 sonatypePassword=your-sonatype-password
 
-# GPG signing configuration
+# GPG signing configuration (modern approach)
+signing.keyId=ABCD1234
+signing.password=your-gpg-passphrase
+signing.key=<paste-the-ascii-armored-key-here>
+```
+
+The `signing.key` value should be the entire ASCII-armored private key block including the `-----BEGIN PGP PRIVATE KEY BLOCK-----` and `-----END PGP PRIVATE KEY BLOCK-----` headers.
+
+#### Alternative: Legacy Keyring File (GPG < 2.1)
+
+If you're using an older GPG version or prefer the legacy approach:
+
+```properties
+# Sonatype OSSRH credentials
+sonatypeUsername=your-sonatype-username
+sonatypePassword=your-sonatype-password
+
+# GPG signing configuration (legacy approach)
 signing.keyId=ABCD1234
 signing.password=your-gpg-passphrase
 signing.secretKeyRingFile=/path/to/.gnupg/secring.gpg
@@ -54,17 +84,23 @@ signing.secretKeyRingFile=/path/to/.gnupg/secring.gpg
 **Important Security Notes:**
 - Never commit credentials to version control
 - Use environment variables in CI/CD instead of files
+- The modern in-memory approach (`signing.key`) is preferred as it doesn't require a plaintext key file on disk
+- If using `secretKeyRingFile`, ensure the file has strict permissions (0600)
 - Consider using GPG agent for passphrase management
 
-### Alternative: Environment Variables
+### 4. Environment Variables for CI/CD
 
-For CI/CD environments, use environment variables:
+For CI/CD environments, use environment variables. The modern in-memory approach is recommended:
 
 ```bash
+# Recommended: Modern in-memory signing
 export ORG_GRADLE_PROJECT_sonatypeUsername=your-username
 export ORG_GRADLE_PROJECT_sonatypePassword=your-password
 export ORG_GRADLE_PROJECT_signingKeyId=ABCD1234
 export ORG_GRADLE_PROJECT_signingPassword=your-passphrase
+export ORG_GRADLE_PROJECT_signingKey="$(cat private-key.asc)"
+
+# Alternative: Legacy keyring file
 export ORG_GRADLE_PROJECT_signingSecretKeyRingFile=/path/to/secring.gpg
 ```
 
@@ -175,10 +211,11 @@ For automated releases, add secrets to your GitHub repository:
 2. Add these repository secrets:
    - `SONATYPE_USERNAME`
    - `SONATYPE_PASSWORD`
-   - `GPG_SIGNING_KEY` (base64-encoded secret key)
+   - `GPG_KEY_ID` (the 8-character short key ID, e.g., ABCD1234)
+   - `GPG_SIGNING_KEY` (ASCII-armored private key from `gpg --armor --export-secret-keys`)
    - `GPG_SIGNING_PASSWORD`
 
-Example workflow step:
+Example workflow step using modern in-memory signing:
 ```yaml
 - name: Publish to Maven Central
   env:
