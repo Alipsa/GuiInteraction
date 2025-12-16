@@ -42,12 +42,17 @@ import javax.xml.transform.TransformerException
 import javax.xml.transform.TransformerFactory
 import javax.xml.transform.dom.DOMSource
 import javax.xml.transform.stream.StreamResult
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
+
 import java.nio.file.InvalidPathException
 import java.nio.file.Paths
 import java.text.NumberFormat
 
 @CompileStatic
 class Viewer {
+
+    private static final Logger log = LoggerFactory.getLogger(Viewer.class)
 
     static final KeyCodeCombination KEY_CODE_COPY =
             System.getProperty("os.name").toLowerCase().contains("mac") ?
@@ -60,7 +65,7 @@ class Viewer {
 
     static void viewHtml(String url, String... title) {
         if (url == null) {
-            System.err.println("url is null, nothing to view")
+            log.warn("url is null, nothing to view")
             return
         }
 
@@ -183,7 +188,7 @@ class Viewer {
             alert.showAndWait();
             //Alerts.info(webEngine.getTitle(), writer.toString());
         } catch (TransformerException | IOException e) {
-            System.err.println("Failed to read DOM: $e");
+            log.error("Failed to read DOM", e);
         }
     }
 
@@ -294,7 +299,7 @@ class Viewer {
             alert.setResizable(true)
             alert.showAndWait()
         } catch (RuntimeException e) {
-            System.err.println("Failed to view table: $e")
+            log.error("Failed to view table", e)
         }
     }
 

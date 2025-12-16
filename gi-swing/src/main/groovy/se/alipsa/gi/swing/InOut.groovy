@@ -23,11 +23,25 @@ import java.awt.datatransfer.StringSelection
 import java.time.LocalDate
 import java.time.YearMonth
 import javax.swing.*
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
+
+import java.awt.GraphicsEnvironment
 import javax.swing.filechooser.FileNameExtensionFilter
 import java.util.concurrent.ExecutionException
 
 @CompileStatic
 class InOut extends AbstractInOut {
+
+    private static final Logger log = LoggerFactory.getLogger(InOut.class)
+
+    static {
+        if (GraphicsEnvironment.isHeadless()) {
+            throw new UnsupportedOperationException(
+                "gi-swing InOut requires a graphical environment. " +
+                "Use gi-console for headless environments.")
+        }
+    }
 
   InOut() {
     // This is needed due to timing issues to ensure swing UI starts properly
@@ -267,7 +281,7 @@ class InOut extends AbstractInOut {
           return
         }
       } catch (IOException e) {
-        System.err.println("Error detecting content type: " + e.getMessage())
+        log.error("Error detecting content type", e)
         return
       }
     }
@@ -294,7 +308,7 @@ class InOut extends AbstractInOut {
   @Override
   void display(File file, String... title) {
     if (file == null || !file.exists()) {
-      System.err.println("Cannot display image: Failed to find " + file)
+      log.warn("Cannot display image: Failed to find {}", file)
       return
     }
     if (title.length == 0) {

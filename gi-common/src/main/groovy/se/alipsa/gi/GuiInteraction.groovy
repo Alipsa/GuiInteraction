@@ -22,8 +22,20 @@ import java.util.concurrent.ExecutionException;
  * <b>Thread Safety:</b> Implementations may not be thread-safe. UI operations should typically
  * be performed on the appropriate UI thread (EDT for Swing, FX Application Thread for JavaFX).
  * <p>
- * <b>Null Handling:</b> Methods that return objects may return {@code null} to indicate
- * cancellation or unavailability. Check return values before use.
+ * <b>Null Handling Policy:</b>
+ * <ul>
+ *   <li><b>User cancellation:</b> Methods that involve user interaction (file choosers, prompts,
+ *       dialogs) return {@code null} when the user cancels or dismisses the dialog. This is
+ *       expected behaviour and callers should check return values.</li>
+ *   <li><b>Resource not found:</b> {@link #getResourceUrl(String)} returns {@code null} if the
+ *       resource cannot be located. This allows callers to handle missing resources gracefully.</li>
+ *   <li><b>Invalid input:</b> Methods throw exceptions (typically {@link IllegalArgumentException})
+ *       for invalid arguments such as null or empty collections passed to {@link #promptSelect}.</li>
+ *   <li><b>I/O errors:</b> Methods involving file operations throw {@link java.io.IOException}
+ *       or its subclasses (e.g., {@link java.io.FileNotFoundException}) for file system errors.</li>
+ *   <li><b>Environment constraints:</b> gi-fx and gi-swing throw {@link UnsupportedOperationException}
+ *       when instantiated in headless environments.</li>
+ * </ul>
  * <p>
  * <b>Example Usage:</b>
  * <pre>{@code
@@ -230,9 +242,9 @@ interface GuiInteraction {
    * Prompts the user to select from a list of options (simplified version).
    *
    * @param message the prompt message to display
-   * @param options the collection of options to choose from (must not be empty)
+   * @param options the collection of options to choose from (must not be null or empty)
    * @return the selected option
-   * @throws NoSuchElementException if options collection is empty
+   * @throws IllegalArgumentException if options collection is null or empty
    */
   Object promptSelect(String message, Collection<Object> options);
 
