@@ -13,11 +13,11 @@
 - 2.5. [x] Broaden `urlExists`: close the HTTP connection and treat 2xx/3xx as success to avoid resource leaks and false negatives.
 
 ## 3. Build & platform coverage
-- 3.1 [ ] Add automated tests (JUnit/Gradle) for helpers like `FileUtils.baseName`/`getResourceUrl` and content-type detection using existing `src/test/resources` assets; add headless checks for table/clipboard adapters where feasible.
-- 3.2. [ ] Set up CI (e.g., GitHub Actions) to run `./gradlew build` and `./gradlew dependencyUpdates` across modules to catch regressions and dependency drift.
-- 3.3. [ ] Increase Gradle JVM memory: add `org.gradle.jvmargs=-Xmx1g -XX:MaxMetaspaceSize=512m` to `gradle.properties` to avoid metaspace warnings during builds.
-- 3.4. [ ] Extract duplicated fatJar task logic to a shared Gradle convention plugin instead of repeating in each module.
-- 3.5. [ ] Flesh out `release.sh` to automate version bumps, changelog generation, and GitHub releases.
+- 3.1 [x] Add automated tests (JUnit/Gradle) for helpers like `FileUtils.baseName`/`getResourceUrl` and content-type detection using existing `src/test/resources` assets; add headless checks for table/clipboard adapters where feasible.
+- 3.2. [x] Set up CI (e.g., GitHub Actions) to run `./gradlew build` and `./gradlew dependencyUpdates` across modules to catch regressions and dependency drift.
+- 3.3. [x] Increase Gradle JVM memory: add `org.gradle.jvmargs=-Xmx1g -XX:MaxMetaspaceSize=512m` to `gradle.properties` to avoid metaspace warnings during builds.
+- 3.4. [x] Extract duplicated fatJar task logic to a shared Gradle convention plugin instead of repeating in each module.
+- 3.5. [x] Flesh out `release.sh` to automate version bumps, changelog generation, and GitHub releases.
 
 ## 4. Code quality & refactoring
 - 4.1 [ ] Replace 12+ `System.err.println()` calls with a proper logging framework (SLF4J/Logback); locations include `gi-fx/InOut.groovy`, `gi-fx/Viewer.groovy`, `gi-swing/InOut.groovy`.

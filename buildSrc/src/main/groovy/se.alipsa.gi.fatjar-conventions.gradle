@@ -1,0 +1,31 @@
+/**
+ * Convention plugin for creating fat JARs with all dependencies bundled.
+ * Apply this plugin to any module that needs a fat JAR artifact.
+ *
+ * Usage in module build.gradle:
+ *   plugins {
+ *       id 'se.alipsa.gi.fatjar-conventions'
+ *   }
+ */
+
+def fatJarTask = tasks.register('fatJar', Jar) {
+    dependsOn(classes)
+    archiveClassifier = 'fatjar'
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+
+    from {
+        configurations.runtimeClasspath.collect {
+            it.isDirectory() ? it : zipTree(it)
+        }
+    }
+
+    // Exclude signature files that cause issues when repackaging signed JARs
+    exclude 'META-INF/*.RSA', 'META-INF/*.SF', 'META-INF/*.DSA'
+
+    with jar
+}
+
+// Make the regular jar task depend on fatJar so both are built together
+tasks.named('jar') {
+    dependsOn fatJarTask
+}

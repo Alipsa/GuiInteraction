@@ -4,6 +4,7 @@ plugins {
     id 'signing'
     id 'maven-publish'
     id("se.alipsa.nexus-release-plugin") version '2.0.0'
+    id 'se.alipsa.gi.fatjar-conventions'
 }
 
 description = 'Allows Gade Gui Interactive capabilities from a javafx standalone app'
@@ -64,25 +65,6 @@ test {
     useJUnitPlatform()
 }
 
-def fatJarContainer = tasks.register('fatjar', Jar) {
-    dependsOn(classes)
-    archiveClassifier = 'fatjar'
-    //archiveBaseName = project.name + '-fat'
-    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-    from {
-        configurations.runtimeClasspath.collect {
-            it.isDirectory() ? it : zipTree(it)
-        }
-    }
-    exclude 'META-INF/*.RSA', 'META-INF/*.SF', 'META-INF/*.DSA'
-    with jar
-}
-
-
-jar {
-    dependsOn fatJarContainer
-}
-
 tasks.named('javadocJar', Jar) {
     from tasks.named('groovydoc')
     dependsOn tasks.named('groovydoc')
@@ -92,7 +74,7 @@ publishing {
     publications {
         maven(MavenPublication) {
             from components.java
-            artifact(fatJarContainer)
+            artifact(tasks.named('fatJar'))
             pom {
                 name = 'Gade standalone GUI interaction library'
                 description = "${project.description}"
