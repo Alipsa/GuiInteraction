@@ -10,7 +10,7 @@ The core module includes these key dependencies:
 
 | Dependency | Purpose | Impact |
 |------------|---------|--------|
-| Apache Tika | Content-type detection | ~50MB (see below) |
+| Apache Tika | Content-type detection | ~1MB (see below) |
 | Matrix (BOM) | Table/chart support | ~2MB |
 | CommonMark | Markdown rendering | ~200KB |
 | SLF4J API | Logging facade | ~40KB |
@@ -131,13 +131,16 @@ Check for available updates:
 
 ## CI/CD Integration
 
-The GitHub Actions workflow runs dependency checks on each push:
+The GitHub Actions workflow includes a separate `dependency-check` job that runs on a schedule or manual workflow dispatch:
 
 ```yaml
-- name: Check dependencies
-  run: ./gradlew dependencyUpdates
+dependency-check:
+  runs-on: ubuntu-latest
+  if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
 
-- name: Security scan
-  run: ./gradlew dependencyCheckAnalyze
-  continue-on-error: true  # Don't fail PR on vulnerabilities
+  steps:
+    - name: Check for dependency updates
+      run: ./gradlew dependencyUpdates
 ```
+
+This approach keeps regular CI builds fast while still providing periodic dependency monitoring.
