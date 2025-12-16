@@ -24,7 +24,7 @@
 - 4.2 [ ] Fix `printStackTrace()` usage in `gi-swing/InOut.groovy:268`; use logger instead.
 - 4.3 [ ] Remove code duplication: `AbstractInOut.getResourceUrl()` and `FileUtils.getResourceUrl()` have nearly identical logic; make one delegate to the other.
 - 4.4 [ ] Add headless environment detection (`GraphicsEnvironment.isHeadless()`) in gi-fx and gi-swing to fail gracefully instead of crashing on headless systems.
-- 4.5 [ ] Document and standardize null handling policy across all methods; some return null on failure, others throw exceptions.
+- 4.5 [ ] Document and standardise null handling policy across all methods to favour exceptions; some return null on failure, others throw exceptions.
 
 ## 5. Security & dependencies
 - 5.1 [ ] Add OWASP Dependency Check plugin to scan for CVEs in transitive dependencies.
