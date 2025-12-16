@@ -86,7 +86,8 @@ bump_version() {
 # Update version in build.gradle
 update_version() {
     local new_version=$1
-    sed -i "s/^version = '.*'/version = '${new_version}'/" build.gradle
+    sed -i.bak "s/^version = '.*'/version = '${new_version}'/" build.gradle
+    rm build.gradle.bak
     echo -e "${GREEN}Updated version to ${new_version}${NC}"
 }
 
