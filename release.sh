@@ -185,8 +185,14 @@ if [ -n "$BUMP_TYPE" ]; then
         generate_changelog "$NEW_VERSION"
 
         # Commit version change
-        git add build.gradle CHANGELOG.md 2>/dev/null || true
-        git commit -m "Release version ${NEW_VERSION}" 2>/dev/null || true
+        if ! git add build.gradle CHANGELOG.md; then
+            echo -e "${RED}Error: Failed to add files to git. Please resolve the issue and try again.${NC}" >&2
+            exit 1
+        fi
+        if ! git commit -m "Release version ${NEW_VERSION}"; then
+            echo -e "${RED}Error: Failed to commit version change. Please resolve the issue and try again.${NC}" >&2
+            exit 1
+        fi
     else
         echo -e "${YELLOW}[DRY RUN] Would update version to ${NEW_VERSION}${NC}"
     fi
