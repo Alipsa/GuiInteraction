@@ -23,6 +23,7 @@
 - JUnit Jupiter is configured; place specs under `module/src/test/groovy` with `*Test.groovy` naming.
 - Keep UI-heavy code factored so logic can be unit-tested without displays; use resource fixtures already present for rendering assertions.
 - Run `./gradlew test` before pushing; add focused tests when altering IO, clipboard, or rendering behaviors.
+- Always run `./gradlew test` after completing a task to validate changes.
 
 ## Commit & Pull Request Guidelines
 - Follow the existing history: short, imperative messages (e.g., “fix publishing by …”, “improve display methods”).
@@ -32,4 +33,3 @@
 
 ## Implementation Guidelines
 - A task has 3 parts, implementation, tests, and documentation. A task is not done until all 3 parts are completed.
-- Always run `./gradlew test` when a task is finished to validate changes.
