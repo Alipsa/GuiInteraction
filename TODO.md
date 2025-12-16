@@ -1,9 +1,9 @@
 # TODO / Roadmap
 
 ## 1. Testing & documentation
-- 1.1 [ ] Add missing tests for utility methods and headless environments.
-- 1.2 [ ] Document public APIs with Javadoc/Groovydoc comments and usage examples in `docs/`.
-- 1.3 [ ] Clarify module README files with setup instructions and feature overviews.
+- 1.1 [x] Add missing tests for utility methods and headless environments.
+- 1.2 [x] Document public APIs with Javadoc/Groovydoc comments and usage examples in `docs/`.
+- 1.3 [x] Clarify module README files with setup instructions and feature overviews.
 
 ## 2. Functional fixes
 - 2.1. [x] Console output is dropped: `gi-console/src/main/groovy/se/alipsa/gi/txt/InOut.groovy` parses HTML and builds matrices but never prints them; emit the sanitized text/table so console users see results.
