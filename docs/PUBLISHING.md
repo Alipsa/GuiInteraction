@@ -37,6 +37,7 @@ gpg --keyserver keyserver.ubuntu.com --send-keys ABCD1234
 
 Use this approach for local development:
 
+```bash
 # Export your secret key ring (legacy approach for GPG < 2.1)
 # WARNING: This creates a plaintext secret key file!
 gpg --export-secret-keys -o ~/.gnupg/secring.gpg ABCD1234
