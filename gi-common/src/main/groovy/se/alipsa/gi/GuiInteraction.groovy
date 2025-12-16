@@ -1,5 +1,6 @@
 package se.alipsa.gi
 
+import groovy.transform.CompileStatic
 import se.alipsa.matrix.charts.Chart
 import se.alipsa.matrix.core.Matrix
 
@@ -8,6 +9,7 @@ import java.time.LocalDate;
 import java.time.YearMonth;
 import java.util.concurrent.ExecutionException;
 
+@CompileStatic
 interface GuiInteraction {
 
   File projectFile(String path)

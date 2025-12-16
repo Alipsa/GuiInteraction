@@ -1,5 +1,8 @@
 package se.alipsa.gi
 
+import groovy.transform.CompileStatic
+
+@CompileStatic
 class FileUtils {
 
     static String baseName(String url) {

@@ -1,5 +1,6 @@
 package se.alipsa.gi.fx
 
+import groovy.transform.CompileStatic
 import javafx.beans.binding.Bindings
 import javafx.beans.property.SimpleStringProperty
 import javafx.collections.FXCollections
@@ -45,6 +46,7 @@ import java.nio.file.InvalidPathException
 import java.nio.file.Paths
 import java.text.NumberFormat
 
+@CompileStatic
 class Viewer {
 
     static final KeyCodeCombination KEY_CODE_COPY =
@@ -186,7 +188,7 @@ class Viewer {
     }
 
     static void viewTable(Matrix tableMatrix, String... title) {
-        String tit = title.length > 0 ? title[0] : tableMatrix.name
+        String tit = title.length > 0 ? title[0] : tableMatrix.matrixName
         viewTable(tableMatrix.columnNames(), tableMatrix.rowList(), tableMatrix.typeNames(), tit)
     }
 
@@ -200,7 +202,7 @@ class Viewer {
         List<String> headerList = new ArrayList<>()
         for (int i = 0; i < grid[0].size(); i++) {
             typeList.add(type)
-            headerList.add("c${i+1}")
+            headerList.add("c${i+1}" as String)
         }
         viewTable(headerList, grid.getRowList(), typeList, title)
     }

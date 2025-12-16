@@ -1,8 +1,8 @@
 package se.alipsa.gi.txt
 
+import groovy.transform.CompileStatic
 import org.jsoup.Jsoup
 import se.alipsa.gi.AbstractInOut
-import se.alipsa.gi.FileTransferable
 import se.alipsa.gi.ImageTransferable
 import se.alipsa.matrix.charts.Chart
 import se.alipsa.matrix.core.Matrix
@@ -10,19 +10,15 @@ import se.alipsa.matrix.core.Matrix
 import javax.swing.JComponent
 import java.awt.Desktop
 import java.awt.Image
-import java.awt.Toolkit
 import java.awt.datatransfer.Clipboard
-import java.awt.datatransfer.ClipboardOwner
 import java.awt.datatransfer.DataFlavor
-import java.awt.datatransfer.StringSelection
-import java.awt.datatransfer.Transferable
 import java.time.LocalDate
 import java.time.YearMonth
 import java.util.concurrent.ExecutionException
 
+@CompileStatic
 class InOut extends AbstractInOut {
 
-    Clipboard clipboard
     BufferedReader sysin = new BufferedReader(new InputStreamReader(System.in))
 
     String read(String prompt) {
@@ -146,7 +142,12 @@ class InOut extends AbstractInOut {
 
     @Override
     void view(String html, String... title) {
-        Jsoup.parse(html).text();
+        String text = Jsoup.parse(html).text()
+        if (title.length > 0) {
+            println("${title[0]}: $text")
+        } else {
+            println(text)
+        }
     }
 
 
@@ -157,7 +158,11 @@ class InOut extends AbstractInOut {
 
     @Override
     void view(List<List<?>> matrix, String... title) {
-        Matrix.builder().rows(matrix).matrixName(title.length > 0 ? title[0] : "").build().content()
+        Matrix built = Matrix.builder()
+            .rows(matrix)
+            .matrixName(title.length > 0 ? title[0] : "")
+            .build()
+        println(built.content())
     }
 
     @Override
@@ -198,4 +203,8 @@ class InOut extends AbstractInOut {
         getClipboard().getData(DataFlavor.imageFlavor) as Image
     }
 
+    @Override
+    Clipboard getClipboard() {
+        super.getClipboard() as Clipboard
+    }
 }

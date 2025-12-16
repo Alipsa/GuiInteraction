@@ -1,5 +1,8 @@
 package se.alipsa.gi
 
+import groovy.transform.CompileDynamic
+import groovy.transform.CompileStatic
+
 /*
 import com.vladsch.flexmark.html.HtmlRenderer
 import com.vladsch.flexmark.parser.Parser
@@ -20,6 +23,7 @@ import java.awt.datatransfer.Transferable
 import java.nio.file.Paths
 import java.util.concurrent.ExecutionException;
 
+@CompileStatic
 abstract class AbstractInOut implements GuiInteraction {
 
   //private MutableDataSet flexmarkOptions
@@ -149,11 +153,13 @@ abstract class AbstractInOut implements GuiInteraction {
     return promptSelect(message, "", message, options, options.iterator().next())
   }
 
+  @CompileDynamic
   @Override
   void saveToClipboard(String string) {
     getClipboard().setContents(new StringSelection(string), null)
   }
 
+  @CompileDynamic
   @Override
   void saveToClipboard(File file) {
     List listOfFiles = new ArrayList();
@@ -169,18 +175,21 @@ abstract class AbstractInOut implements GuiInteraction {
     })
   }
 
+  @CompileDynamic
   @Override
   String getFromClipboard() throws ExecutionException, InterruptedException {
     getClipboard().getData(DataFlavor.stringFlavor)
   }
 
+  @CompileDynamic
   @Override
   File getFileFromClipboard() throws ExecutionException, InterruptedException {
     List<File> files = getClipboard().getData(DataFlavor.javaFileListFlavor) as List<File>
     files?.getFirst()
   }
 
-  private Clipboard getClipboard() {
+  @CompileDynamic
+  protected def getClipboard() {
     if (clipboard == null) {
       clipboard = Toolkit.getDefaultToolkit().getSystemClipboard()
     }

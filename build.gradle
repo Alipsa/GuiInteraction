@@ -5,16 +5,29 @@ plugins {
     id 'signing'
     id 'maven-publish'
     id('io.github.gradle-nexus.publish-plugin') version '2.0.0'
-    id "com.github.ben-manes.versions" version "0.52.0"
+    id "com.github.ben-manes.versions" version "0.53.0"
 }
 
 group = 'se.alipsa.gi'
-version = '0.1.0'
+version = '0.2.0'
 description = 'Allows Gade Gui Interactive capabilities from a standalone app'
+
 
 java {
     toolchain {
-        languageVersion.set(JavaLanguageVersion.of(17))
+        languageVersion.set(JavaLanguageVersion.of(21))
+    }
+}
+
+subprojects {
+    group = rootProject.group
+    version = rootProject.version
+    if (it.plugins.hasPlugin('java')) {
+        java {
+            toolchain {
+                languageVersion.set(JavaLanguageVersion.of(21))
+            }
+        }
     }
 }
 
@@ -35,14 +48,24 @@ def isNonStable = { String version ->
     return !stableKeyword && !(version ==~ regex)
 }
 
+// Extract leading numeric major: "5.0.0", "v5.0.0", "5.0.0-RC1"
+def majorOf = { String v ->
+    def m = (v ?: "") =~ /(?i)^\D*?(\d+)/
+    m.find() ? (m.group(1) as int) : -1
+}
+
 // https://github.com/ben-manes/gradle-versions-plugin
 tasks.named("dependencyUpdates").configure {
-    gradleReleaseChannel = "current"
+    gradleReleaseChannel = "release"
     resolutionStrategy {
         componentSelection {
-            all {
-                if (isNonStable(it.candidate.version) && !isNonStable(it.currentVersion)) {
-                    reject('Release candidate')
+            all { s ->
+                if (isNonStable(s.candidate.version) && !isNonStable(s.currentVersion)) {
+                    s.reject('Release candidate')
+                }
+                if (s.candidate.group == 'org.openjfx' && majorOf(s.candidate.version) >= 24) {
+                    //println "## Rejecting JavaFX version ${s.candidate}"
+                    s.reject('Blocked: Javafx >= 24 (needs Java 25)')
                 }
             }
         }

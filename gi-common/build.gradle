@@ -3,15 +3,12 @@ plugins {
     id 'java-library'
     id 'signing'
     id 'maven-publish'
+    id("se.alipsa.nexus-release-plugin") version '2.0.0'
 }
 
-group = 'se.alipsa.gi'
-version = '0.1.1-SNAPSHOT'
+description = 'Common code for Gade Gui Interactive capabilities'
 
 java {
-    toolchain {
-        languageVersion.set(JavaLanguageVersion.of(21))
-    }
     withSourcesJar()
     withJavadocJar()
 }
@@ -31,26 +28,31 @@ repositories {
 }
 
 dependencies {
-    def tikaVersion = '3.2.0'
+    def tikaVersion = '3.2.3'
 
-    compileOnly 'org.apache.groovy:groovy:4.0.27'
+    compileOnly 'org.apache.groovy:groovy:5.0.3'
 
     implementation "org.apache.tika:tika-core:${tikaVersion}"
     implementation "org.apache.tika:tika-parsers-standard-package:${tikaVersion}"
     implementation "org.apache.tika:tika-parser-text-module:${tikaVersion}"
-    api (platform("se.alipsa.matrix:matrix-bom:2.2.0"))
+    api (platform("se.alipsa.matrix:matrix-bom:2.3.0"))
     api 'se.alipsa.matrix:matrix-core'
     api 'se.alipsa.matrix:matrix-charts'
 
-    api "org.commonmark:commonmark:0.24.0"
-    implementation "org.commonmark:commonmark-ext-gfm-tables:0.24.0"
+    api "org.commonmark:commonmark:0.27.0"
+    implementation "org.commonmark:commonmark-ext-gfm-tables:0.27.0"
 
-    testImplementation platform('org.junit:junit-bom:5.13.0')
+    testImplementation platform('org.junit:junit-bom:6.0.1')
     testImplementation 'org.junit.jupiter:junit-jupiter'
 }
 
 test {
     useJUnitPlatform()
+}
+
+tasks.named('javadocJar', Jar) {
+    from tasks.named('groovydoc')
+    dependsOn tasks.named('groovydoc')
 }
 
 jar {
@@ -61,9 +63,8 @@ publishing {
     publications {
         maven(MavenPublication) {
             from components.java
-            artifacts = [jar, javadocJar, sourcesJar]
             pom {
-                name = 'Gade standalone GUI interaction library'
+                name = 'Common code for Gade standalone GUI interaction library'
                 description = "${project.description}"
                 url = "https://github.com/Alipsa/GuiInteraction"
                 licenses {
@@ -94,4 +95,10 @@ signing {
     } else {
         project.logger.lifecycle("signing.keyId is not defined, skipping signing of artifacts...")
     }
+}
+
+nexusReleasePlugin {
+    userName = project.ext.properties.sonatypeUsername
+    password = project.ext.properties.sonatypePassword
+    mavenPublication = publishing.publications.maven
 }
