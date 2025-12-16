@@ -31,6 +31,11 @@ gpg --list-keys --keyid-format SHORT
 
 # Upload your public key to a key server
 gpg --keyserver keyserver.ubuntu.com --send-keys ABCD1234
+```
+
+#### File-Based Signing (Traditional Approach)
+
+Use this approach for local development:
 
 # Export your secret key ring (legacy approach for GPG < 2.1)
 # WARNING: This creates a plaintext secret key file!
@@ -96,6 +101,17 @@ For CI/CD environments, use environment variables. The modern in-memory approach
 # Recommended: Modern in-memory signing
 export ORG_GRADLE_PROJECT_sonatypeUsername=your-username
 export ORG_GRADLE_PROJECT_sonatypePassword=your-password
+
+# GPG signing configuration (in-memory - recommended for CI/CD)
+export ORG_GRADLE_PROJECT_signingKeyId=ABCD1234
+export ORG_GRADLE_PROJECT_signingPassword=your-passphrase
+export ORG_GRADLE_PROJECT_signingKey="$(cat private-key.asc)"
+```
+
+Alternatively, for file-based signing in CI/CD:
+
+```bash
+# GPG signing configuration (file-based)
 export ORG_GRADLE_PROJECT_signingKeyId=ABCD1234
 export ORG_GRADLE_PROJECT_signingPassword=your-passphrase
 # In CI/CD, reference the key from a secret (preferred)
@@ -208,7 +224,7 @@ After publishing to Sonatype:
 
 ## CI/CD Setup (GitHub Actions)
 
-For automated releases, add secrets to your GitHub repository:
+For automated releases using **in-memory signing** (recommended), add secrets to your GitHub repository:
 
 1. Go to Settings > Secrets and variables > Actions
 2. Add these repository secrets:
@@ -229,3 +245,5 @@ Example workflow step using modern in-memory signing:
     ORG_GRADLE_PROJECT_signingKey: ${{ secrets.GPG_SIGNING_KEY }}
   run: ./gradlew publish
 ```
+
+**Note:** The `signingKey` property uses the in-memory approach, which avoids creating temporary key files on CI runners. The base64-encoded key from `GPG_SIGNING_KEY` is decoded automatically by Gradle.
