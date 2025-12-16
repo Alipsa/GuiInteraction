@@ -247,4 +247,4 @@ Example workflow step using modern in-memory signing:
   run: ./gradlew publish
 ```
 
-**Note:** The `signingKey` property uses the in-memory approach, which avoids creating temporary key files on CI runners. The base64-encoded key from `GPG_SIGNING_KEY` is decoded automatically by Gradle.
+**Note:** The `signingKey` property uses the in-memory approach, which avoids creating temporary key files on CI runners. The ASCII-armored key from `GPG_SIGNING_KEY` is decoded automatically by Gradle.
