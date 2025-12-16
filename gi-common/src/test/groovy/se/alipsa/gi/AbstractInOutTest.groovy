@@ -119,12 +119,32 @@ class AbstractInOutTest {
     }
 
     @Test
-    void testPromptSelectWithEmptyCollectionThrows() {
-        // This tests the known bug in promptSelect with empty collections
+    void testPromptSelectWithEmptyCollectionThrowsIllegalArgument() {
+        // Empty collections should throw IllegalArgumentException with clear message
         Collection<Object> emptyOptions = []
-        assertThrows(NoSuchElementException.class) {
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class) {
             inOut.promptSelect("Select one", emptyOptions)
         }
+        assertTrue(ex.message.contains("empty") || ex.message.contains("null"),
+                "Exception message should mention empty or null")
+    }
+
+    @Test
+    void testPromptSelectWithNullCollectionThrowsIllegalArgument() {
+        // Null collections should throw IllegalArgumentException
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class) {
+            inOut.promptSelect("Select one", null)
+        }
+        assertTrue(ex.message.contains("empty") || ex.message.contains("null"),
+                "Exception message should mention empty or null")
+    }
+
+    @Test
+    void testPromptSelectWithValidOptions() {
+        Collection<Object> options = ["Option A", "Option B", "Option C"]
+        Object result = inOut.promptSelect("Select one", options)
+        // The test implementation returns defaultValue which is the first item
+        assertEquals("Option A", result)
     }
 
     @Test
@@ -141,6 +161,24 @@ class AbstractInOutTest {
         inOut.view(100)
         // If we got here, no exception was thrown
         assertTrue(true)
+    }
+
+    @Test
+    void testUrlExistsWithMalformedUrl() {
+        // Malformed URLs should return false, not throw
+        assertFalse(inOut.urlExists("not-a-valid-url", 1000))
+    }
+
+    @Test
+    void testUrlExistsWithUnreachableHost() {
+        // Non-existent hosts should return false with timeout
+        assertFalse(inOut.urlExists("http://this-host-does-not-exist-12345.com/", 3000))
+    }
+
+    @Test
+    void testUrlExistsWithInvalidPort() {
+        // Connection refused should return false
+        assertFalse(inOut.urlExists("http://localhost:59999/", 1000))
     }
 
     /**

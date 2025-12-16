@@ -1,2 +1,2 @@
 #!/usr/bin/env zsh
-./gradlew dependencyUpdates -Drevision=release
+./gradlew -Drevision=release dependencyUpdates --no-configuration-cache

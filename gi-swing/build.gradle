@@ -31,6 +31,10 @@ dependencies {
   implementation "se.alipsa:swing-yearmonth-picker:1.0.0"
 
   implementation 'com.github.lgooddatepicker:LGoodDatePicker:11.2.1'
+
+  // Batik for SVG rendering
+  implementation 'org.apache.xmlgraphics:batik-swing:1.19'
+  //implementation 'org.apache.xmlgraphics:batik-transcoder:1.19'
 }
 
 repositories {

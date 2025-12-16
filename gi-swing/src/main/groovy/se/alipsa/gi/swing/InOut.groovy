@@ -2,6 +2,7 @@ package se.alipsa.gi.swing
 
 import com.github.lgooddatepicker.components.DatePicker
 import groovy.transform.CompileStatic
+import org.apache.batik.swing.JSVGCanvas
 import se.alipsa.gi.ImageTransferable
 import se.alipsa.matrix.charts.Plot
 
@@ -14,6 +15,7 @@ import se.alipsa.symp.YearMonthPicker
 
 import javax.swing.table.DefaultTableCellRenderer
 import java.awt.BorderLayout
+import java.awt.Dimension
 import java.awt.FlowLayout
 import java.awt.datatransfer.Clipboard
 import java.awt.datatransfer.DataFlavor
@@ -261,17 +263,32 @@ class InOut extends AbstractInOut {
       try {
         String contentType = getContentType(file)
         if ("image/svg+xml".equals(contentType)) {
-          System.err.println("Sorry, no support for viewing SVG files (yet)")
+          displaySvg(file, title)
           return
         }
       } catch (IOException e) {
-        e.printStackTrace()
+        System.err.println("Error detecting content type: " + e.getMessage())
         return
       }
     }
     ImageIcon img = new ImageIcon(fileName)
     JLabel label = new JLabel(img)
     display(label, title)
+  }
+
+  /**
+   * Displays an SVG file using Apache Batik's JSVGCanvas.
+   */
+  private void displaySvg(File svgFile, String... title) {
+    JSVGCanvas svgCanvas = new JSVGCanvas()
+    svgCanvas.setURI(svgFile.toURI().toString())
+    svgCanvas.setPreferredSize(new Dimension(800, 600))
+
+    JFrame frame = new JFrame(title.length > 0 ? title[0] : svgFile.getName())
+    frame.getContentPane().add(new JScrollPane(svgCanvas))
+    frame.setSize(800, 600)
+    frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE)
+    frame.setVisible(true)
   }
 
   @Override

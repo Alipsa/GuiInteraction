@@ -38,16 +38,23 @@ abstract class AbstractInOut implements GuiInteraction {
 
   @Override
   boolean urlExists(String urlString, int timeout) {
+    HttpURLConnection con = null
     try {
       URL url = new URL(urlString)
-      HttpURLConnection con = (HttpURLConnection) url.openConnection()
-      HttpURLConnection.setFollowRedirects(false)
+      con = (HttpURLConnection) url.openConnection()
+      con.setInstanceFollowRedirects(false)
       con.setRequestMethod("HEAD")
       con.setConnectTimeout(timeout)
+      con.setReadTimeout(timeout)
       int responseCode = con.getResponseCode()
-      return responseCode == 200
+      // Accept 2xx (success) and 3xx (redirect) status codes
+      return responseCode >= 200 && responseCode < 400
     } catch (RuntimeException | IOException ignored) {
       return false
+    } finally {
+      if (con != null) {
+        con.disconnect()
+      }
     }
   }
 
@@ -150,6 +157,9 @@ abstract class AbstractInOut implements GuiInteraction {
 
   @Override
   Object promptSelect(String message, Collection<Object> options) {
+    if (options == null || options.isEmpty()) {
+      throw new IllegalArgumentException("Options collection cannot be null or empty")
+    }
     return promptSelect(message, "", message, options, options.iterator().next())
   }
 
