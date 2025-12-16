@@ -1,5 +1,6 @@
 # TODO / Roadmap
 
+# Version 0.2.0
 ## 1. Testing & documentation
 - 1.1 [x] Add missing tests for utility methods and headless environments.
 - 1.2 [x] Document public APIs with Javadoc/Groovydoc comments and usage examples in `docs/`.
@@ -20,11 +21,11 @@
 - 3.5. [x] Flesh out `release.sh` to automate version bumps, changelog generation, and GitHub releases.
 
 ## 4. Code quality & refactoring
-- 4.1 [ ] Replace 12+ `System.err.println()` calls with a proper logging framework (SLF4J/Logback); locations include `gi-fx/InOut.groovy`, `gi-fx/Viewer.groovy`, `gi-swing/InOut.groovy`.
-- 4.2 [ ] Fix `printStackTrace()` usage in `gi-swing/InOut.groovy:268`; use logger instead.
-- 4.3 [ ] Remove code duplication: `AbstractInOut.getResourceUrl()` and `FileUtils.getResourceUrl()` have nearly identical logic; make one delegate to the other.
-- 4.4 [ ] Add headless environment detection (`GraphicsEnvironment.isHeadless()`) in gi-fx and gi-swing to fail gracefully instead of crashing on headless systems.
-- 4.5 [ ] Document and standardize null handling policy across all methods; some return null on failure, others throw exceptions.
+- 4.1 [x] Replace 12+ `System.err.println()` calls with a proper logging framework (SLF4J/Logback); locations include `gi-fx/InOut.groovy`, `gi-fx/Viewer.groovy`, `gi-swing/InOut.groovy`.
+- 4.2 [x] Fix `printStackTrace()` usage in `gi-swing/InOut.groovy:268`; use logger instead.
+- 4.3 [x] Remove code duplication: `AbstractInOut.getResourceUrl()` and `FileUtils.getResourceUrl()` have nearly identical logic; make one delegate to the other.
+- 4.4 [x] Add headless environment detection (`GraphicsEnvironment.isHeadless()`) in gi-fx and gi-swing to fail gracefully instead of crashing on headless systems.
+- 4.5 [x] Document and standardize null handling policy across all methods to favour exceptions; some return null on failure, others throw exceptions.
 
 ## 5. Security & dependencies
 - 5.1 [ ] Add OWASP Dependency Check plugin to scan for CVEs in transitive dependencies.

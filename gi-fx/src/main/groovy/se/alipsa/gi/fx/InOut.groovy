@@ -31,7 +31,11 @@ import se.alipsa.matrix.core.Grid
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.ymp.YearMonthPicker
 
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
+
 import javax.swing.JComponent
+import java.awt.GraphicsEnvironment
 import java.time.LocalDate
 import java.time.YearMonth
 import java.util.concurrent.ExecutionException
@@ -39,6 +43,16 @@ import java.util.concurrent.FutureTask
 
 @CompileStatic
 class InOut extends AbstractInOut {
+
+    private static final Logger log = LoggerFactory.getLogger(InOut.class)
+
+    static {
+        if (GraphicsEnvironment.isHeadless()) {
+            throw new UnsupportedOperationException(
+                "gi-fx InOut requires a graphical environment. " +
+                "Use gi-console for headless environments.")
+        }
+    }
 
     Window ownerWindow = null
     ObservableList<String> styleSheetUrls = null
@@ -278,14 +292,14 @@ class InOut extends AbstractInOut {
     @Override
     void view(File file, String... title) {
         if (file == null) {
-            System.err.println("view file: File argument cannot be null")
+            log.warn("view file: File argument cannot be null")
             return
         }
         Platform.runLater(() -> {
             try {
                 Viewer.viewHtml(file.getAbsolutePath(), title)
             } catch (Throwable e) {
-                System.err.println("Failed to view html: $e")
+                log.error("Failed to view html", e)
             }
         })
     }
@@ -296,7 +310,7 @@ class InOut extends AbstractInOut {
             try {
                 Viewer.viewHtml(html, title)
             } catch (Throwable e) {
-                System.err.println("Failed to view html: $e")
+                log.error("Failed to view html", e)
             }
         }
     }
@@ -305,7 +319,7 @@ class InOut extends AbstractInOut {
     void display(String fileName, String... title) {
         URL url = FileUtils.getResourceUrl(fileName);
         if (url == null) {
-            System.err.println("Cannot display image, Failed to find $fileName")
+            log.warn("Cannot display image, Failed to find {}", fileName)
             return
         }
         File file = new File(fileName);
@@ -321,7 +335,7 @@ class InOut extends AbstractInOut {
                     return
                 }
             } catch (IOException e) {
-                System.err.println("Failed to detect image content type: $e")
+                log.error("Failed to detect image content type", e)
             }
         }
         Image img = new Image(url.toExternalForm())
@@ -336,7 +350,7 @@ class InOut extends AbstractInOut {
     @Override
     void display(File file, String... title) {
         if (file == null || !file.exists()) {
-            System.err.println("Cannot display image, Failed to find $file")
+            log.warn("Cannot display image, Failed to find {}", file)
             return;
         }
         if (title.length == 0) {

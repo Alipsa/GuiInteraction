@@ -11,6 +11,9 @@ import javax.swing.JComponent
 import java.awt.Desktop
 import java.awt.Image
 import java.awt.datatransfer.Clipboard
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
+
 import java.awt.datatransfer.DataFlavor
 import java.time.LocalDate
 import java.time.YearMonth
@@ -18,6 +21,8 @@ import java.util.concurrent.ExecutionException
 
 @CompileStatic
 class InOut extends AbstractInOut {
+
+    private static final Logger log = LoggerFactory.getLogger(InOut.class)
 
     BufferedReader sysin = new BufferedReader(new InputStreamReader(System.in))
 
@@ -102,7 +107,7 @@ class InOut extends AbstractInOut {
         }
         // Fallback for IDEs/CI where System.console() is unavailable
         // Warning: input will be visible (not masked)
-        System.err.println("Warning: No console available. Password input will be visible.")
+        log.warn("No console available. Password input will be visible.")
         print("$message : ")
         System.out.flush()
         return sysin.readLine()

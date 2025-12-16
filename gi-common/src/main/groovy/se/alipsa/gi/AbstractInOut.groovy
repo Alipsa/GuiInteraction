@@ -85,30 +85,7 @@ abstract class AbstractInOut implements GuiInteraction {
 
   @Override
   URL getResourceUrl(String resource) {
-    final List<ClassLoader> classLoaders = new ArrayList<>()
-    classLoaders.add(Thread.currentThread().getContextClassLoader())
-    classLoaders.add(GuiInteraction.class.getClassLoader())
-
-    URL url = null
-    for (ClassLoader classLoader : classLoaders) {
-      if (classLoader != null) {
-        url = classLoader.getResource(resource)
-      }
-      if (url != null) {
-        return url
-      }
-    }
-
-    final URL systemResource = ClassLoader.getSystemResource(resource)
-    if (systemResource != null) {
-      return systemResource
-    } else {
-      try {
-        return new File(resource).toURI().toURL()
-      } catch (MalformedURLException ignored) {
-        return null
-      }
-    }
+    return FileUtils.getResourceUrl(resource)
   }
 
   @Override
