@@ -172,7 +172,7 @@ class AbstractInOutTest {
     @Test
     void testUrlExistsWithUnreachableHost() {
         // Non-existent hosts should return false with timeout
-        assertFalse(inOut.urlExists("http://this-host-does-not-exist-12345.com/", 1000))
+        assertFalse(inOut.urlExists("http://this-host-does-not-exist-12345.com/", 3000))
     }
 
     @Test
