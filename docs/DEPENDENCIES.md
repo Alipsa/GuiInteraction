@@ -10,7 +10,7 @@ The core module includes these key dependencies:
 
 | Dependency | Purpose | Impact |
 |------------|---------|--------|
-| Apache Tika | Content-type detection | ~50MB (see below) |
+| Apache Tika | Content-type detection | ~1MB (see below) |
 | Matrix (BOM) | Table/chart support | ~2MB |
 | CommonMark | Markdown rendering | ~200KB |
 | SLF4J API | Logging facade | ~40KB |
