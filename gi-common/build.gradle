@@ -32,9 +32,10 @@ dependencies {
 
     compileOnly 'org.apache.groovy:groovy:5.0.3'
 
+    // Tika for MIME type detection - using core only for lightweight footprint
+    // tika-core provides detection via file extension and magic bytes (~1MB vs ~50MB for full parsers)
     implementation "org.apache.tika:tika-core:${tikaVersion}"
-    implementation "org.apache.tika:tika-parsers-standard-package:${tikaVersion}"
-    implementation "org.apache.tika:tika-parser-text-module:${tikaVersion}"
+
     api (platform("se.alipsa.matrix:matrix-bom:2.3.0"))
     api 'se.alipsa.matrix:matrix-core'
     api 'se.alipsa.matrix:matrix-charts'

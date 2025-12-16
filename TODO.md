@@ -28,9 +28,9 @@
 - 4.5 [x] Document and standardize null handling policy across all methods to favour exceptions; some return null on failure, others throw exceptions.
 
 ## 5. Security & dependencies
-- 5.1 [ ] Add OWASP Dependency Check plugin to scan for CVEs in transitive dependencies.
-- 5.2 [ ] Document the Tika dependency impact (100+ transitive deps, ~50MB fat JAR) and consider providing a lighter "minimal" build profile.
-- 5.3 [ ] Document required signing credentials setup (signing.keyId, sonatypeUsername, sonatypePassword) for publishing.
+- 5.1 [x] Add OWASP Dependency Check plugin to scan for CVEs in transitive dependencies.
+- 5.2 [x] Document the Tika dependency impact (100+ transitive deps, ~50MB fat JAR) and consider providing a lighter "minimal" build profile.
+- 5.3 [x] Document required signing credentials setup (signing.keyId, sonatypeUsername, sonatypePassword) for publishing.
 
 ## 6. Feature enhancements
 - 6.2 [ ] Consider adding async/streaming APIs (CompletableFuture) for long-running operations.

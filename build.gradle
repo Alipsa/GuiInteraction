@@ -6,6 +6,7 @@ plugins {
     id 'maven-publish'
     id('io.github.gradle-nexus.publish-plugin') version '2.0.0'
     id "com.github.ben-manes.versions" version "0.53.0"
+    id "org.owasp.dependencycheck" version "12.1.0"
 }
 
 group = 'se.alipsa.gi'
@@ -70,4 +71,19 @@ tasks.named("dependencyUpdates").configure {
             }
         }
     }
+}
+
+// OWASP Dependency Check configuration
+// Run with: ./gradlew dependencyCheckAnalyze
+// Reports are generated in build/reports/dependency-check-report.html
+dependencyCheck {
+    // Scan all configurations including test dependencies
+    scanConfigurations = ['runtimeClasspath', 'testRuntimeClasspath']
+    // Fail the build if a CVSS score of 7 or higher is found (HIGH/CRITICAL)
+    failBuildOnCVSS = 7.0f
+    // Output formats: HTML, JSON, CSV, XML, SARIF, JUNIT, ALL
+    formats = ['HTML', 'JSON']
+    // Suppress false positives (create suppressions.xml if needed)
+    suppressionFile = file("${rootDir}/config/owasp-suppressions.xml").exists() ?
+            "${rootDir}/config/owasp-suppressions.xml" : null
 }
