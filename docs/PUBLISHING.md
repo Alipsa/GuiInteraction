@@ -61,10 +61,10 @@ sonatypePassword=your-sonatype-password
 # GPG signing configuration (modern approach)
 signing.keyId=ABCD1234
 signing.password=your-gpg-passphrase
-signing.key=<paste-the-ascii-armored-key-here>
+signing.key=-----BEGIN PGP PRIVATE KEY BLOCK-----\n...(paste output from gpg --armor --export-secret-keys)...\n-----END PGP PRIVATE KEY BLOCK-----
 ```
 
-The `signing.key` value should be the entire ASCII-armored private key block including the `-----BEGIN PGP PRIVATE KEY BLOCK-----` and `-----END PGP PRIVATE KEY BLOCK-----` headers.
+The `signing.key` value should be the entire ASCII-armored private key block from the `gpg --armor --export-secret-keys ABCD1234` command output.
 
 #### Alternative: Legacy Keyring File (GPG < 2.1)
 
@@ -98,7 +98,8 @@ export ORG_GRADLE_PROJECT_sonatypeUsername=your-username
 export ORG_GRADLE_PROJECT_sonatypePassword=your-password
 export ORG_GRADLE_PROJECT_signingKeyId=ABCD1234
 export ORG_GRADLE_PROJECT_signingPassword=your-passphrase
-export ORG_GRADLE_PROJECT_signingKey="$(cat private-key.asc)"
+# Note: In CI/CD, pipe the key from a secret instead of reading from a file
+export ORG_GRADLE_PROJECT_signingKey="$(gpg --armor --export-secret-keys ABCD1234)"
 
 # Alternative: Legacy keyring file
 export ORG_GRADLE_PROJECT_signingSecretKeyRingFile=/path/to/secring.gpg
