@@ -175,6 +175,7 @@ For automated releases, add secrets to your GitHub repository:
 2. Add these repository secrets:
    - `SONATYPE_USERNAME`
    - `SONATYPE_PASSWORD`
+   - `GPG_KEY_ID` (the key ID, e.g., ABCD1234)
    - `GPG_SIGNING_KEY` (base64-encoded secret key)
    - `GPG_SIGNING_PASSWORD`
 
