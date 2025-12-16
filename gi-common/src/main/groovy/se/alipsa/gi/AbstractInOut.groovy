@@ -42,7 +42,7 @@ abstract class AbstractInOut implements GuiInteraction {
     try {
       URL url = new URL(urlString)
       con = (HttpURLConnection) url.openConnection()
-      HttpURLConnection.setFollowRedirects(false)
+      con.setInstanceFollowRedirects(false)
       con.setRequestMethod("HEAD")
       con.setConnectTimeout(timeout)
       con.setReadTimeout(timeout)
