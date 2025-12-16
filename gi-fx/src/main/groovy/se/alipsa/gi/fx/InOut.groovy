@@ -1,5 +1,6 @@
 package se.alipsa.gi.fx
 
+import groovy.transform.CompileStatic
 import javafx.application.Platform
 import javafx.collections.ObservableList
 import javafx.embed.swing.JFXPanel
@@ -36,6 +37,7 @@ import java.time.YearMonth
 import java.util.concurrent.ExecutionException
 import java.util.concurrent.FutureTask
 
+@CompileStatic
 class InOut extends AbstractInOut {
 
     Window ownerWindow = null
@@ -432,7 +434,7 @@ class InOut extends AbstractInOut {
     File getFileFromClipboard() throws ExecutionException, InterruptedException {
         final FutureTask<File> query = new FutureTask<>(() -> getClipboard().getFiles().getFirst())
         Platform.runLater(query)
-        return query.get()
+        return query.get() as File
     }
 
     Image getImageFromClipboard() throws ExecutionException, InterruptedException {
@@ -448,6 +450,7 @@ class InOut extends AbstractInOut {
         return query.get()
     }
 
+    @Override
     Clipboard getClipboard() {
         if (clipboard == null) {
             clipboard = Clipboard.getSystemClipboard();

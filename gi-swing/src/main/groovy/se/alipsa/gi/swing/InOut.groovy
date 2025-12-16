@@ -1,12 +1,12 @@
 package se.alipsa.gi.swing
 
 import com.github.lgooddatepicker.components.DatePicker
+import groovy.transform.CompileStatic
 import se.alipsa.gi.ImageTransferable
 import se.alipsa.matrix.charts.Plot
 
 import java.awt.Image
 import java.awt.Toolkit
-import java.awt.datatransfer.Clipboard
 import se.alipsa.gi.AbstractInOut
 import se.alipsa.matrix.charts.Chart
 import se.alipsa.matrix.core.Matrix
@@ -15,6 +15,7 @@ import se.alipsa.symp.YearMonthPicker
 import javax.swing.table.DefaultTableCellRenderer
 import java.awt.BorderLayout
 import java.awt.FlowLayout
+import java.awt.datatransfer.Clipboard
 import java.awt.datatransfer.DataFlavor
 import java.awt.datatransfer.StringSelection
 import java.time.LocalDate
@@ -23,9 +24,8 @@ import javax.swing.*
 import javax.swing.filechooser.FileNameExtensionFilter
 import java.util.concurrent.ExecutionException
 
+@CompileStatic
 class InOut extends AbstractInOut {
-
-  Clipboard clipboard
 
   InOut() {
     // This is needed due to timing issues to ensure swing UI starts properly
@@ -193,7 +193,7 @@ class InOut extends AbstractInOut {
   @Override
   void view(Matrix tableMatrix, String... title) {
     Vector rows = new Vector(tableMatrix.rowCount())
-    def rightAlign = []
+    List<Boolean> rightAlign = []
     boolean firstRow = true
     tableMatrix.each { r ->
       Vector row = new Vector()
@@ -208,7 +208,7 @@ class InOut extends AbstractInOut {
     }
 
     JTable jTable = new JTable(rows, tableMatrix.columnNames() as Vector)
-    def name = title.length > 0 ? title[0] : tableMatrix.name
+    def name = title.length > 0 ? title[0] : tableMatrix.matrixName
     viewTable(jTable, rightAlign, name)
   }
 
@@ -232,7 +232,7 @@ class InOut extends AbstractInOut {
   @Override
   void view(List<List<?>> matrix, String... title) {
     Vector rows = new Vector(matrix.size())
-    def rightAlign = []
+    List<Boolean> rightAlign = []
     boolean firstRow = true
     int nCol = 0
     matrix.each { r ->
@@ -316,6 +316,11 @@ class InOut extends AbstractInOut {
   Object getFromClipboard(DataFlavor format)
       throws ExecutionException, InterruptedException {
     getClipboard().getData(format)
+  }
+
+  @Override
+  Clipboard getClipboard() {
+    super.getClipboard() as Clipboard
   }
 
 }

@@ -2,18 +2,10 @@ plugins {
     id 'groovy'
     id 'signing'
     id 'maven-publish'
+    id("se.alipsa.nexus-release-plugin") version '2.0.0'
 }
 
-group = 'se.alipsa.gi'
-version = '0.1.0'
-
-java {
-    toolchain {
-        languageVersion.set(JavaLanguageVersion.of(21))
-    }
-    withSourcesJar()
-    withJavadocJar()
-}
+description = 'Allows Gade Gui Interactive capabilities from a standalone console app'
 
 tasks.withType(JavaCompile) {
     options.encoding = 'UTF-8'
@@ -30,12 +22,12 @@ repositories {
 }
 
 dependencies {
-    def groovyVersion = '4.0.26'
+    def groovyVersion = '5.0.3'
 
     implementation project(':gi-common')
-    implementation 'org.jsoup:jsoup:1.19.1'
+    implementation 'org.jsoup:jsoup:1.21.2'
     compileOnly "org.apache.groovy:groovy:${groovyVersion}"
-    testImplementation platform('org.junit:junit-bom:5.12.2')
+    testImplementation platform('org.junit:junit-bom:6.0.1')
     testImplementation 'org.junit.jupiter:junit-jupiter'
 }
 
@@ -65,7 +57,7 @@ publishing {
     publications {
         maven(MavenPublication) {
             from components.java
-            artifacts = [jar, fatJarContainer, javadocJar, sourcesJar]
+            artifact(fatJarContainer)
             pom {
                 name = 'Gade standalone UI interaction library for the console'
                 description = "${project.description}"
@@ -98,4 +90,10 @@ signing {
     } else {
         project.logger.lifecycle("signing.keyId is not defined, skipping signing of artifacts...")
     }
+}
+
+nexusReleasePlugin {
+    userName = project.ext.properties.sonatypeUsername
+    password = project.ext.properties.sonatypePassword
+    mavenPublication = publishing.publications.maven
 }

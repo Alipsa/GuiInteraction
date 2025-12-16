@@ -1,9 +1,12 @@
 package se.alipsa.gi
 
+import groovy.transform.CompileStatic
+
 import java.awt.datatransfer.DataFlavor
 import java.awt.datatransfer.Transferable
 import java.awt.datatransfer.UnsupportedFlavorException
 
+@CompileStatic
 class FileTransferable implements Transferable {
   private List listOfFiles;
 

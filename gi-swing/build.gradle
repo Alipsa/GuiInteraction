@@ -4,20 +4,12 @@ plugins {
     id 'java-library'
     id 'maven-publish'
     id 'signing'
-    id "com.github.ben-manes.versions" version "0.52.0"
+    id("se.alipsa.nexus-release-plugin") version '2.0.0'
 }
 
 group = 'se.alipsa.gi'
 version = '0.1.0'
 description = 'Allows Gade Gui Interactive capabilities from a standalone app'
-
-java {
-    toolchain {
-        languageVersion.set(JavaLanguageVersion.of(21))
-    }
-    withSourcesJar()
-    withJavadocJar()
-}
 
 tasks.withType(JavaCompile) {
   options.encoding = 'UTF-8'
@@ -27,7 +19,7 @@ tasks.withType(JavaCompile) {
 dependencies {
 
   implementation project(':gi-common')
-  compileOnly 'org.apache.groovy:groovy-all:4.0.26'
+  compileOnly 'org.apache.groovy:groovy-all:5.0.3'
   implementation "se.alipsa:swing-yearmonth-picker:1.0.0"
 
   implementation 'com.github.lgooddatepicker:LGoodDatePicker:11.2.1'
@@ -60,32 +52,11 @@ jar {
   dependsOn fatJarContainer
 }
 
-
-def isNonStable = { String version ->
-    def stableKeyword = ['RELEASE', 'FINAL', 'GA'].any { it -> version.toUpperCase().contains(it) }
-    def regex = /^[0-9,.v-]+(-r)?$/
-    return !stableKeyword && !(version ==~ regex)
-}
-
-// https://github.com/ben-manes/gradle-versions-plugin
-tasks.named("dependencyUpdates").configure {
-    gradleReleaseChannel = "current"
-    resolutionStrategy {
-        componentSelection {
-            all {
-                if (isNonStable(it.candidate.version) && !isNonStable(it.currentVersion)) {
-                    reject('Release candidate')
-                }
-            }
-        }
-    }
-}
-
 publishing {
     publications {
         maven(MavenPublication) {
             from components.java
-            artifacts = [jar, fatJarContainer, javadocJar, sourcesJar]
+            artifact(fatJarContainer)
             pom {
                 name = 'Gade standalone GUI interaction library for Swing'
                 description = "${project.description}"
@@ -118,4 +89,10 @@ signing {
   } else {
     project.logger.lifecycle("signing.keyId is not defined, skipping signing of artifacts...")
   }
+}
+
+nexusReleasePlugin {
+  userName = project.ext.properties.sonatypeUsername
+  password = project.ext.properties.sonatypePassword
+  mavenPublication = publishing.publications.maven
 }

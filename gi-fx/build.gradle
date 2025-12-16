@@ -3,10 +3,9 @@ plugins {
     id 'java-library'
     id 'signing'
     id 'maven-publish'
+    id("se.alipsa.nexus-release-plugin") version '2.0.0'
 }
 
-group = 'se.alipsa.gi'
-version = '0.1.0'
 description = 'Allows Gade Gui Interactive capabilities from a javafx standalone app'
 
 repositories {
@@ -16,14 +15,6 @@ repositories {
         // Slows down the build (a lot), use only if local SNAPSHOTS are needed
         mavenLocal()
     }
-}
-
-java {
-    toolchain {
-        languageVersion.set(JavaLanguageVersion.of(21))
-    }
-    withSourcesJar()
-    withJavadocJar()
 }
 
 tasks.withType(JavaCompile) {
@@ -44,7 +35,7 @@ dependencies {
         qualifier = 'mac-aarch64'
     }
     def javaFxVersion = '23.0.2'
-    def groovyVersion = '4.0.26'
+    def groovyVersion = '5.0.3'
 
     api project(':gi-common')
     implementation 'se.alipsa:fx-yearmonth-picker:1.1.0'
@@ -55,7 +46,7 @@ dependencies {
     compileOnly "org.openjfx:javafx-swing:${javaFxVersion}:$qualifier"
     compileOnly "org.openjfx:javafx-web:${javaFxVersion}:$qualifier"
 
-    testImplementation platform('org.junit:junit-bom:5.12.2')
+    testImplementation platform('org.junit:junit-bom:6.0.1')
     testImplementation 'org.junit.jupiter:junit-jupiter'
     testImplementation "org.openjfx:javafx-graphics:${javaFxVersion}:$qualifier"
     testImplementation "org.openjfx:javafx-base:${javaFxVersion}:$qualifier"
@@ -91,7 +82,7 @@ publishing {
     publications {
         maven(MavenPublication) {
             from components.java
-            artifacts = [jar, fatJarContainer, javadocJar, sourcesJar]
+            artifact(fatJarContainer)
             pom {
                 name = 'Gade standalone GUI interaction library'
                 description = "${project.description}"
@@ -124,4 +115,10 @@ signing {
     } else {
         project.logger.lifecycle("signing.keyId is not defined, skipping signing of artifacts...")
     }
+}
+
+nexusReleasePlugin {
+    userName = project.ext.properties.sonatypeUsername
+    password = project.ext.properties.sonatypePassword
+    mavenPublication = publishing.publications.maven
 }

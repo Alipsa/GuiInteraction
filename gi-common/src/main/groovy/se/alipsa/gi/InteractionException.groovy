@@ -1,19 +1,22 @@
-package se.alipsa.gi;
+package se.alipsa.gi
 
-public class InteractionException extends RuntimeException {
-  public InteractionException() {
-    super();
+import groovy.transform.CompileStatic;
+
+@CompileStatic
+class InteractionException extends RuntimeException {
+  InteractionException() {
+    super()
   }
 
-  public InteractionException(String message) {
-    super(message);
+  InteractionException(String message) {
+    super(message)
   }
 
-  public InteractionException(String message, Throwable cause) {
-    super(message, cause);
+  InteractionException(String message, Throwable cause) {
+    super(message, cause)
   }
 
-  public InteractionException(Throwable cause) {
-    super(cause);
+  InteractionException(Throwable cause) {
+    super(cause)
   }
 }

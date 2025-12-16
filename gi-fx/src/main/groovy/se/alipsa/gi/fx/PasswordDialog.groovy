@@ -1,9 +1,11 @@
-package se.alipsa.gi.fx;
+package se.alipsa.gi.fx
 
+import groovy.transform.CompileStatic;
 import javafx.geometry.Insets;
 import javafx.scene.control.*;
 import javafx.scene.layout.GridPane;
 
+@CompileStatic
 class PasswordDialog extends Dialog<String> {
 
   PasswordDialog(String title, String message) {

@@ -1,10 +1,13 @@
 package se.alipsa.gi
 
+import groovy.transform.CompileStatic
+
 import java.awt.*
 import java.awt.datatransfer.DataFlavor
 import java.awt.datatransfer.Transferable
 import java.awt.datatransfer.UnsupportedFlavorException
 
+@CompileStatic
 class ImageTransferable implements Transferable {
   private Image image;
 
