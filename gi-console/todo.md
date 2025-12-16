@@ -1,0 +1,1 @@
+- check if com.mitchtalmadge:ascii-data can be used for the charts

@@ -9,6 +9,7 @@ import javafx.scene.control.Alert
 import javafx.scene.control.ContextMenu
 import javafx.scene.control.Label
 import javafx.scene.control.MenuItem
+import javafx.scene.control.ScrollPane
 import javafx.scene.control.SelectionMode
 import javafx.scene.control.SingleSelectionModel
 import javafx.scene.control.Tab
@@ -277,7 +278,9 @@ class Viewer {
                 tabTitle = title[0] + tabTitle
             }
             tab.setText(tabTitle)
-            tab.setContent(tableView)
+            ScrollPane scrollPane = new ScrollPane(tableView)
+            scrollPane.setVisible(true)
+            tab.setContent(scrollPane)
             TabPane viewPane = new TabPane()
             viewPane.getTabs().add(tab)
             SingleSelectionModel<Tab> selectionModel = viewPane.getSelectionModel()
@@ -288,6 +291,7 @@ class Viewer {
             alert.setContentText(null)
             alert.getDialogPane().setContent(viewPane)
             alert.initModality(Modality.NONE)
+            alert.setResizable(true)
             alert.showAndWait()
         } catch (RuntimeException e) {
             System.err.println("Failed to view table: $e")

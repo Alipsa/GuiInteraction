@@ -7,8 +7,6 @@ plugins {
     id("se.alipsa.nexus-release-plugin") version '2.0.0'
 }
 
-group = 'se.alipsa.gi'
-version = '0.1.0'
 description = 'Allows Gade Gui Interactive capabilities from a standalone app'
 
 tasks.withType(JavaCompile) {

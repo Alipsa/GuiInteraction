@@ -208,6 +208,7 @@ class InOut extends AbstractInOut {
     }
 
     JTable jTable = new JTable(rows, tableMatrix.columnNames() as Vector)
+    jTable.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS)
     def name = title.length > 0 ? title[0] : tableMatrix.matrixName
     viewTable(jTable, rightAlign, name)
   }
