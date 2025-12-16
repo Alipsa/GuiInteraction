@@ -96,13 +96,16 @@ class InOut extends AbstractInOut {
     String promptPassword(String title, String message) {
         println title
         def console = System.console()
-        if (console == null) {
-            println("No console available")
-            return null
+        if (console != null) {
+            char[] ch = console.readPassword("$message : ")
+            return new String(ch)
         }
-        char[] ch = console.readPassword(
-            "$message : ")
-        return new String(ch)
+        // Fallback for IDEs/CI where System.console() is unavailable
+        // Warning: input will be visible (not masked)
+        System.err.println("Warning: No console available. Password input will be visible.")
+        print("$message : ")
+        System.out.flush()
+        return sysin.readLine()
     }
 
     @Override
