@@ -50,7 +50,7 @@ done
 
 # Get current version from build.gradle
 get_version() {
-    grep "^version = " build.gradle | sed "s/version = '\(.*\)'/\1/"
+    grep -E '^\s*version\s*=\s*["'\'']' build.gradle | sed -E 's/^\s*version\s*=\s*["'\'']([^"'\''"]+)["'\''].*/\1/'
 }
 
 # Bump version based on type (major, minor, patch)
@@ -86,7 +86,8 @@ bump_version() {
 # Update version in build.gradle
 update_version() {
     local new_version=$1
-    sed -i "s/^version = '.*'/version = '${new_version}'/" build.gradle
+    sed -i.bak "s/^version = '.*'/version = '${new_version}'/" build.gradle
+    rm build.gradle.bak
     echo -e "${GREEN}Updated version to ${new_version}${NC}"
 }
 
@@ -160,6 +161,20 @@ if echo "$CURRENT_VERSION" | grep -q 'SNAPSHOT'; then
     exit 1
 fi
 
+# Check if version has already been released (git tag exists)
+TAG="v${CURRENT_VERSION}"
+if git rev-parse "$TAG" >/dev/null 2>&1 || git ls-remote --tags origin | grep -q "refs/tags/$TAG$"; then
+    if [ "$DRY_RUN" = true ]; then
+        echo -e "${YELLOW}Warning: Tag $TAG already exists. This version may have already been released.${NC}"
+    else
+        echo -e "${RED}Warning: Version ${CURRENT_VERSION} appears to have already been released (tag $TAG exists).${NC}"
+        read -p "Continue anyway? [y/N]: " confirm
+        if [[ ! "$confirm" =~ ^[Yy]$ ]]; then
+            echo -e "${RED}Aborting release.${NC}"
+            exit 1
+        fi
+    fi
+fi
 # Handle version bump
 if [ -n "$BUMP_TYPE" ]; then
     NEW_VERSION=$(bump_version "$CURRENT_VERSION" "$BUMP_TYPE")
@@ -170,8 +185,14 @@ if [ -n "$BUMP_TYPE" ]; then
         generate_changelog "$NEW_VERSION"
 
         # Commit version change
-        git add build.gradle CHANGELOG.md 2>/dev/null || true
-        git commit -m "Release version ${NEW_VERSION}" 2>/dev/null || true
+        if ! git add build.gradle CHANGELOG.md; then
+            echo -e "${RED}Error: Failed to add files to git. Please resolve the issue and try again.${NC}" >&2
+            exit 1
+        fi
+        if ! git commit -m "Release version ${NEW_VERSION}"; then
+            echo -e "${RED}Error: Failed to commit version change. Please resolve the issue and try again.${NC}" >&2
+            exit 1
+        fi
     else
         echo -e "${YELLOW}[DRY RUN] Would update version to ${NEW_VERSION}${NC}"
     fi
