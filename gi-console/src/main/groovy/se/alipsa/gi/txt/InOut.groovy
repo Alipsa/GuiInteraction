@@ -142,7 +142,12 @@ class InOut extends AbstractInOut {
 
     @Override
     void view(String html, String... title) {
-        Jsoup.parse(html).text();
+        String text = Jsoup.parse(html).text()
+        if (title.length > 0) {
+            println("${title[0]}: $text")
+        } else {
+            println(text)
+        }
     }
 
 
@@ -153,7 +158,11 @@ class InOut extends AbstractInOut {
 
     @Override
     void view(List<List<?>> matrix, String... title) {
-        Matrix.builder().rows(matrix).matrixName(title.length > 0 ? title[0] : "").build().content()
+        Matrix built = Matrix.builder()
+            .rows(matrix)
+            .matrixName(title.length > 0 ? title[0] : "")
+            .build()
+        println(built.content())
     }
 
     @Override
