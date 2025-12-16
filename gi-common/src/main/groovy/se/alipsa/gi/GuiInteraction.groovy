@@ -118,7 +118,7 @@ interface GuiInteraction {
    */
   String getContentType(File file) throws IOException
 
-  /**@
+  /**
    * Find a resource using available class loaders.
    * It will also load resources/files from the
    * absolute path of the file system (not only the classpath's).
@@ -128,8 +128,8 @@ interface GuiInteraction {
    */
   URL getResourceUrl(String resource)
 
-  /**@
-   * A prompt method with support for named parameters i Groovy.
+  /**
+   * A prompt method with support for named parameters in Groovy.
    * Example usage:
    * applicationId =  io.prompt(
    *    title: "Calculated variables",
