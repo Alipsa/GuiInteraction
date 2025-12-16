@@ -9,9 +9,19 @@ plugins {
 
 description = 'Allows Gade Gui Interactive capabilities from a standalone app'
 
+java {
+    withSourcesJar()
+    withJavadocJar()
+}
+
 tasks.withType(JavaCompile) {
   options.encoding = 'UTF-8'
   options.compilerArgs << '-parameters'
+}
+
+tasks.named('javadocJar', Jar) {
+  from tasks.named('groovydoc')
+  dependsOn tasks.named('groovydoc')
 }
 
 dependencies {
@@ -51,34 +61,34 @@ jar {
 }
 
 publishing {
-    publications {
-        maven(MavenPublication) {
-            from components.java
-            artifact(fatJarContainer)
-            pom {
-                name = 'Gade standalone GUI interaction library for Swing'
-                description = "${project.description}"
-                url = "https://github.com/Alipsa/GuiInteraction/gi-swing"
-                licenses {
-                    license {
-                        name = 'MIT License'
-                        url = 'https://raw.githubusercontent.com/Alipsa/GuiInteraction/main/LICENSE'
-                    }
-                }
-                developers {
-                    developer {
-                        id = 'perNyfelt'
-                        name = 'Per Nyfelt'
-                    }
-                }
-                scm {
-                    url = 'https://github.com/Alipsa/GuiInteraction/tree/main'
-                    connection = 'scm:git:https://github.com/Alipsa/GuiInteraction.git'
-                    developerConnection = 'scm:git:https://github.com/Alipsa/GuiInteraction.git'
-                }
-            }
+  publications {
+    maven(MavenPublication) {
+      from components.java
+      artifact(fatJarContainer)
+      pom {
+        name = 'Gade standalone GUI interaction library for Swing'
+        description = "${project.description}"
+        url = "https://github.com/Alipsa/GuiInteraction/gi-swing"
+        licenses {
+          license {
+            name = 'MIT License'
+            url = 'https://raw.githubusercontent.com/Alipsa/GuiInteraction/main/LICENSE'
+          }
         }
+        developers {
+          developer {
+            id = 'perNyfelt'
+            name = 'Per Nyfelt'
+          }
+        }
+        scm {
+          url = 'https://github.com/Alipsa/GuiInteraction/tree/main'
+          connection = 'scm:git:https://github.com/Alipsa/GuiInteraction.git'
+          developerConnection = 'scm:git:https://github.com/Alipsa/GuiInteraction.git'
+        }
+      }
     }
+  }
 }
 
 signing {

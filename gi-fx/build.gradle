@@ -22,6 +22,11 @@ tasks.withType(JavaCompile) {
     options.compilerArgs << '-parameters'
 }
 
+java {
+    withSourcesJar()
+    withJavadocJar()
+}
+
 dependencies {
     org.gradle.internal.os.OperatingSystem os = org.gradle.internal.os.OperatingSystem.current()
 
@@ -76,6 +81,11 @@ def fatJarContainer = tasks.register('fatjar', Jar) {
 
 jar {
     dependsOn fatJarContainer
+}
+
+tasks.named('javadocJar', Jar) {
+    from tasks.named('groovydoc')
+    dependsOn tasks.named('groovydoc')
 }
 
 publishing {

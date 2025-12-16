@@ -12,6 +12,11 @@ tasks.withType(JavaCompile) {
     options.compilerArgs << '-parameters'
 }
 
+java {
+    withSourcesJar()
+    withJavadocJar()
+}
+
 repositories {
     // Use Maven Central for resolving dependencies.
     mavenCentral()
@@ -48,6 +53,10 @@ def fatJarContainer = tasks.register('fatJar', Jar) {
     with jar
 }
 
+tasks.named('javadocJar', Jar) {
+    from tasks.named('groovydoc')
+    dependsOn tasks.named('groovydoc')
+}
 
 jar {
     dependsOn fatJarContainer
