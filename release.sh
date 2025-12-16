@@ -160,6 +160,20 @@ if echo "$CURRENT_VERSION" | grep -q 'SNAPSHOT'; then
     exit 1
 fi
 
+# Check if version has already been released (git tag exists)
+TAG="v${CURRENT_VERSION}"
+if git rev-parse "$TAG" >/dev/null 2>&1 || git ls-remote --tags origin | grep -q "refs/tags/$TAG$"; then
+    if [ "$DRY_RUN" = true ]; then
+        echo -e "${YELLOW}Warning: Tag $TAG already exists. This version may have already been released.${NC}"
+    else
+        echo -e "${RED}Warning: Version ${CURRENT_VERSION} appears to have already been released (tag $TAG exists).${NC}"
+        read -p "Continue anyway? [y/N]: " confirm
+        if [[ ! "$confirm" =~ ^[Yy]$ ]]; then
+            echo -e "${RED}Aborting release.${NC}"
+            exit 1
+        fi
+    fi
+fi
 # Handle version bump
 if [ -n "$BUMP_TYPE" ]; then
     NEW_VERSION=$(bump_version "$CURRENT_VERSION" "$BUMP_TYPE")
