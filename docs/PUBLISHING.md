@@ -64,7 +64,7 @@ signing.password=your-gpg-passphrase
 signing.key=-----BEGIN PGP PRIVATE KEY BLOCK-----\n...(paste output from gpg --armor --export-secret-keys)...\n-----END PGP PRIVATE KEY BLOCK-----
 ```
 
-The `signing.key` value should be the entire ASCII-armored private key block from the `gpg --armor --export-secret-keys ABCD1234` command output.
+**Note:** The `signing.key` value should be the entire ASCII-armored private key block from the `gpg --armor --export-secret-keys ABCD1234` command output. When storing as a single-line property, replace actual newlines with the literal string `\n`.
 
 #### Alternative: Legacy Keyring File (GPG < 2.1)
 
@@ -98,8 +98,10 @@ export ORG_GRADLE_PROJECT_sonatypeUsername=your-username
 export ORG_GRADLE_PROJECT_sonatypePassword=your-password
 export ORG_GRADLE_PROJECT_signingKeyId=ABCD1234
 export ORG_GRADLE_PROJECT_signingPassword=your-passphrase
-# Note: In CI/CD, pipe the key from a secret instead of reading from a file
-export ORG_GRADLE_PROJECT_signingKey="$(gpg --armor --export-secret-keys ABCD1234)"
+# In CI/CD, reference the key from a secret (preferred)
+export ORG_GRADLE_PROJECT_signingKey="$GPG_PRIVATE_KEY_SECRET"
+# Or export directly from GPG (for local testing)
+# export ORG_GRADLE_PROJECT_signingKey="$(gpg --armor --export-secret-keys ABCD1234)"
 
 # Alternative: Legacy keyring file
 export ORG_GRADLE_PROJECT_signingSecretKeyRingFile=/path/to/secring.gpg
