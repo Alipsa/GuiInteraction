@@ -141,7 +141,7 @@ publish() {
     if [ "$DRY_RUN" = true ]; then
         echo -e "${YELLOW}[DRY RUN] Would execute: ./gradlew :${sub}:clean :${sub}:build :${sub}:release${NC}"
     else
-        ./gradlew ":${sub}:clean" ":${sub}:build" ":${sub}:release"
+        ./gradlew ":${sub}:clean" ":${sub}:build" ":${sub}:release" --no-configuration-cache
     fi
 }
 
