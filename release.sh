@@ -6,11 +6,15 @@
 #   - SDKMAN installed with JDK 21
 #   - Signing credentials in gradle.properties (signing.keyId, signing.password, signing.secretKeyRingFile)
 #   - Sonatype credentials in gradle.properties (sonatypeUsername, sonatypePassword)
+#   - GitHub CLI (gh) installed and authenticated for creating releases
 #
 # Usage:
-#   ./release.sh              - Release current version
+#   ./release.sh              - Release current version (strips -SNAPSHOT if present)
 #   ./release.sh --bump minor - Bump version and release (major, minor, patch)
 #   ./release.sh --dry-run    - Show what would be released without publishing
+#
+# If the version has a -SNAPSHOT suffix, it will be removed to create the release version.
+# The README.md will be updated automatically with the release version.
 #
 set -e
 
@@ -88,7 +92,29 @@ update_version() {
     local new_version=$1
     sed -i.bak "s/^version = '.*'/version = '${new_version}'/" build.gradle
     rm build.gradle.bak
-    echo -e "${GREEN}Updated version to ${new_version}${NC}"
+    echo -e "${GREEN}Updated build.gradle version to ${new_version}${NC}"
+}
+
+# Update version in README.md
+update_readme_version() {
+    local new_version=$1
+    # Update all version references in README.md (Gradle, Maven, Grape examples)
+    sed -i.bak -E "s/(gi-(swing|fx|console):)[0-9]+\.[0-9]+\.[0-9]+(-SNAPSHOT)?/\1${new_version}/g" README.md
+    sed -i.bak -E "s/(<version>)[0-9]+\.[0-9]+\.[0-9]+(-SNAPSHOT)?(<\/version>)/\1${new_version}\3/g" README.md
+    rm -f README.md.bak
+    echo -e "${GREEN}Updated README.md version to ${new_version}${NC}"
+}
+
+# Check if README.md has the correct version
+check_readme_version() {
+    local expected_version=$1
+    local readme_versions=$(grep -oE '(gi-(swing|fx|console):)[0-9]+\.[0-9]+\.[0-9]+(-SNAPSHOT)?' README.md | head -1 | sed -E 's/gi-(swing|fx|console)://')
+
+    if [ "$readme_versions" != "$expected_version" ]; then
+        echo -e "${RED}Warning: README.md contains version '${readme_versions}' but releasing '${expected_version}'${NC}"
+        return 1
+    fi
+    return 0
 }
 
 # Generate changelog entry
@@ -154,11 +180,41 @@ echo ""
 CURRENT_VERSION=$(get_version)
 echo -e "Current version: ${YELLOW}${CURRENT_VERSION}${NC}"
 
-# Check for SNAPSHOT
-if echo "$CURRENT_VERSION" | grep -q 'SNAPSHOT'; then
-    echo -e "${RED}Error: Cannot release a SNAPSHOT version${NC}"
-    echo -e "Remove '-SNAPSHOT' from version or use --bump to create a release version"
-    exit 1
+# Handle SNAPSHOT version - strip -SNAPSHOT suffix for release
+if echo "$CURRENT_VERSION" | grep -q '\-SNAPSHOT'; then
+    RELEASE_VERSION="${CURRENT_VERSION%-SNAPSHOT}"
+    echo -e "Stripping SNAPSHOT suffix: ${YELLOW}${CURRENT_VERSION}${NC} -> ${GREEN}${RELEASE_VERSION}${NC}"
+
+    if [ "$DRY_RUN" = false ]; then
+        update_version "$RELEASE_VERSION"
+        update_readme_version "$RELEASE_VERSION"
+        generate_changelog "$RELEASE_VERSION"
+
+        # Commit version changes
+        if ! git add build.gradle README.md CHANGELOG.md; then
+            echo -e "${RED}Error: Failed to add files to git. Please resolve the issue and try again.${NC}" >&2
+            exit 1
+        fi
+        if ! git commit -m "Release version ${RELEASE_VERSION}"; then
+            echo -e "${RED}Error: Failed to commit version change. Please resolve the issue and try again.${NC}" >&2
+            exit 1
+        fi
+    else
+        echo -e "${YELLOW}[DRY RUN] Would update build.gradle and README.md to ${RELEASE_VERSION}${NC}"
+    fi
+    CURRENT_VERSION=$RELEASE_VERSION
+else
+    # No SNAPSHOT - verify README.md has the correct version
+    if ! check_readme_version "$CURRENT_VERSION"; then
+        if [ "$DRY_RUN" = true ]; then
+            echo -e "${YELLOW}[DRY RUN] Would update README.md to match version ${CURRENT_VERSION}${NC}"
+        else
+            read -p "Update README.md to version ${CURRENT_VERSION}? [Y/n]: " update_readme
+            if [[ ! "$update_readme" =~ ^[Nn]$ ]]; then
+                update_readme_version "$CURRENT_VERSION"
+            fi
+        fi
+    fi
 fi
 
 # Check if version has already been released (git tag exists)
@@ -182,10 +238,11 @@ if [ -n "$BUMP_TYPE" ]; then
 
     if [ "$DRY_RUN" = false ]; then
         update_version "$NEW_VERSION"
+        update_readme_version "$NEW_VERSION"
         generate_changelog "$NEW_VERSION"
 
         # Commit version change
-        if ! git add build.gradle CHANGELOG.md; then
+        if ! git add build.gradle README.md CHANGELOG.md; then
             echo -e "${RED}Error: Failed to add files to git. Please resolve the issue and try again.${NC}" >&2
             exit 1
         fi
@@ -219,16 +276,39 @@ publish 'gi-fx'
 publish 'gi-swing'
 
 echo ""
+
+# Create GitHub release
+TAG="v${CURRENT_VERSION}"
+RELEASE_TITLE="Ver ${CURRENT_VERSION}"
+
+if [ "$DRY_RUN" = true ]; then
+    echo -e "${YELLOW}[DRY RUN] Would push commits to origin${NC}"
+    echo -e "${YELLOW}[DRY RUN] Would create GitHub release:${NC}"
+    echo -e "${YELLOW}  Tag: ${TAG}${NC}"
+    echo -e "${YELLOW}  Title: ${RELEASE_TITLE}${NC}"
+    echo -e "${YELLOW}  Command: gh release create ${TAG} --title \"${RELEASE_TITLE}\" --generate-notes${NC}"
+else
+    echo -e "${YELLOW}Pushing commits to origin...${NC}"
+    if ! git push origin; then
+        echo -e "${RED}Error: Failed to push commits. Please resolve the issue and try again.${NC}" >&2
+        exit 1
+    fi
+
+    echo -e "${YELLOW}Creating GitHub release...${NC}"
+    if ! gh release create "${TAG}" --title "${RELEASE_TITLE}" --generate-notes; then
+        echo -e "${RED}Error: Failed to create GitHub release. Please create it manually.${NC}" >&2
+        echo -e "${YELLOW}You can create it at: https://github.com/Alipsa/GuiInteraction/releases/new${NC}"
+    else
+        echo -e "${GREEN}GitHub release created successfully!${NC}"
+    fi
+fi
+
+echo ""
 echo -e "${GREEN}========================================${NC}"
 if [ "$DRY_RUN" = true ]; then
     echo -e "${YELLOW}[DRY RUN] Release simulation complete${NC}"
 else
-    echo -e "${GREEN}$PROJECT v${CURRENT_VERSION} uploaded and released!${NC}"
-    echo ""
-    echo "Next steps:"
-    echo "  1. Create a git tag: git tag -a v${CURRENT_VERSION} -m 'Release ${CURRENT_VERSION}'"
-    echo "  2. Push the tag: git push origin v${CURRENT_VERSION}"
-    echo "  3. Create a GitHub release at: https://github.com/Alipsa/GuiInteraction/releases/new"
+    echo -e "${GREEN}$PROJECT v${CURRENT_VERSION} released to Maven Central and GitHub!${NC}"
     echo ""
     echo "See https://central.sonatype.org/publish/release/ for more info"
 fi

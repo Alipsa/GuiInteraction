@@ -6,11 +6,11 @@ A library providing GUI interaction capabilities for Groovy applications, compat
 
 GuiInteraction enables standalone Groovy applications to have the same user interaction capabilities as when running in Gade. Choose the implementation that fits your environment:
 
-| Module | UI Technology | JDK Requirements | Best For                              |
-|--------|--------------|------------------|---------------------------------------|
-| [gi-fx](gi-fx/) | JavaFX | JDK with JavaFX (e.g., BellSoft Liberica Full) | Rich desktop apps                     |
-| [gi-swing](gi-swing/) | Swing | Any JDK 21+ | Cross-platform desktop apps           |
-| [gi-console](gi-console/) | Console/Text | Any JDK 21+ | Terminal and Headless/CI environments |
+| Module                    | UI Technology | JDK Requirements                               | Best For                              |
+|---------------------------|---------------|------------------------------------------------|---------------------------------------|
+| [gi-fx](gi-fx/)           | JavaFX        | JDK with JavaFX (e.g., BellSoft Liberica Full) | Rich desktop apps                     |
+| [gi-swing](gi-swing/)     | Swing         | Any JDK 21+                                    | Cross-platform desktop apps           |
+| [gi-console](gi-console/) | Console/Text  | Any JDK 21+                                    | Terminal and Headless/CI environments |
 
 ## Features
 
