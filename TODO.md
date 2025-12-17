@@ -32,6 +32,6 @@
 - 5.2 [x] Document the Tika dependency impact (100+ transitive deps, ~50MB fat JAR) and consider providing a lighter "minimal" build profile.
 - 5.3 [x] Document required signing credentials setup (signing.keyId, sonatypeUsername, sonatypePassword) for publishing.
 
-## 6. Feature enhancements
+# Feature enhancements
 - 6.2 [ ] Consider adding async/streaming APIs (CompletableFuture) for long-running operations.
 - 6.3 [ ] Cache Tika parser instances to avoid expensive re-initialization on each content-type detection call.
