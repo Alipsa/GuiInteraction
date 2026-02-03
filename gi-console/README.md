@@ -17,7 +17,7 @@ This module provides console-based (text mode) interaction capabilities. It's de
 - File path input via console
 - Table output using Matrix text formatting
 - HTML content displayed as plain text (via Jsoup)
-- System clipboard access (when Desktop is available)
+- System clipboard access (when not running headless)
 
 ## Installation
 
@@ -43,7 +43,7 @@ dependencies {
 
 ```groovy
 @Grab(group:'se.alipsa.gi', module:'gi-console', version:'0.2.0')
-import se.alipsa.gi.txt.InOut
+import se.alipsa.gi.console.InOut
 
 def io = new InOut()
 ```
@@ -51,7 +51,7 @@ def io = new InOut()
 ## Quick Start
 
 ```groovy
-import se.alipsa.gi.txt.InOut
+import se.alipsa.gi.console.InOut
 
 def io = new InOut()
 
@@ -85,6 +85,7 @@ dependencies {
 
 ## Limitations
 
+- **Clipboard**: Clipboard access is unavailable in headless environments; clipboard methods log the issue and return `null` or no-op.
 - **Password Input**: Requires `System.console()` to be available. Returns `null` in IDEs and some CI environments where console is unavailable.
 - **Charts/Images**: `display(Chart)` and `display(File)` for images print a message instead of showing graphics
 - **Swing Components**: `display(JComponent)` is not supported

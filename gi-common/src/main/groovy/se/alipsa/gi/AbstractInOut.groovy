@@ -65,14 +65,23 @@ abstract class AbstractInOut implements GuiInteraction {
 
   @Override
   String getContentType(File file) throws IOException {
-    String fileName = file.getAbsolutePath();
+    String originalPath = file.getPath()
+    String fileName = file.getAbsolutePath()
     if (!file.exists()) {
-      URL url = getResourceUrl(fileName);
+      URL url = getResourceUrl(originalPath)
+      if (url == null && fileName != originalPath) {
+        url = getResourceUrl(fileName)
+      }
       if (url != null) {
-        try {
-          file = Paths.get(url.toURI()).toFile();
-        } catch (URISyntaxException ignored) {
-          // Ignore, the URI comes from the classloader so cannot have a syntax issue
+        if ("file".equalsIgnoreCase(url.getProtocol())) {
+          try {
+            file = Paths.get(url.toURI()).toFile();
+          } catch (URISyntaxException ignored) {
+            // Ignore, the URI comes from the classloader so cannot have a syntax issue
+          }
+        } else {
+          Tika tika = new Tika()
+          return tika.detect(url)
         }
       }
     }

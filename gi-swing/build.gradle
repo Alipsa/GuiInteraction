@@ -4,7 +4,7 @@ plugins {
     id 'java-library'
     id 'maven-publish'
     id 'signing'
-    id("se.alipsa.nexus-release-plugin") version '2.0.0'
+    id("se.alipsa.nexus-release-plugin") version '2.0.1'
     id 'se.alipsa.gi.fatjar-conventions'
 }
 
@@ -28,14 +28,12 @@ tasks.named('javadocJar', Jar) {
 dependencies {
 
   implementation project(':gi-common')
-  compileOnly 'org.apache.groovy:groovy-all:5.0.3'
-  implementation "se.alipsa:swing-yearmonth-picker:1.0.0"
+  compileOnly libs.groovy.all
+  implementation libs.swing.yearmonth.picker
 
-  implementation 'com.github.lgooddatepicker:LGoodDatePicker:11.2.1'
+  implementation libs.lgooddatepicker
 
-  // Batik for SVG rendering
-  implementation 'org.apache.xmlgraphics:batik-swing:1.19'
-  //implementation 'org.apache.xmlgraphics:batik-transcoder:1.19'
+  // SVG rendering is handled by matrix-charts SvgPanel
 }
 
 repositories {

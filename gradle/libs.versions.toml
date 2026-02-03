@@ -1,0 +1,40 @@
+[versions]
+groovy = "5.0.4"
+tika = "3.2.3"
+matrixBom = "2.4.0"
+commonmark = "0.27.1"
+jsoup = "1.22.1"
+junit = "6.0.2"
+javafx = "23.0.2"
+fxYearMonthPicker = "1.1.0"
+swingYearMonthPicker = "1.0.0"
+lgooddatepicker = "11.2.1"
+
+[libraries]
+groovy = { module = "org.apache.groovy:groovy", version.ref = "groovy" }
+groovy-all = { module = "org.apache.groovy:groovy-all", version.ref = "groovy" }
+tika-core = { module = "org.apache.tika:tika-core", version.ref = "tika" }
+
+matrix-bom = { module = "se.alipsa.matrix:matrix-bom", version.ref = "matrixBom" }
+matrix-core = { module = "se.alipsa.matrix:matrix-core" }
+matrix-charts = { module = "se.alipsa.matrix:matrix-charts" }
+
+commonmark = { module = "org.commonmark:commonmark", version.ref = "commonmark" }
+commonmark-ext-gfm-tables = { module = "org.commonmark:commonmark-ext-gfm-tables", version.ref = "commonmark" }
+
+jsoup = { module = "org.jsoup:jsoup", version.ref = "jsoup" }
+
+junit-bom = { module = "org.junit:junit-bom", version.ref = "junit" }
+junit-jupiter = { module = "org.junit.jupiter:junit-jupiter" }
+junit-platform-launcher = { module = "org.junit.platform:junit-platform-launcher" }
+
+javafx-graphics = { module = "org.openjfx:javafx-graphics", version.ref = "javafx" }
+javafx-base = { module = "org.openjfx:javafx-base", version.ref = "javafx" }
+javafx-controls = { module = "org.openjfx:javafx-controls", version.ref = "javafx" }
+javafx-swing = { module = "org.openjfx:javafx-swing", version.ref = "javafx" }
+javafx-web = { module = "org.openjfx:javafx-web", version.ref = "javafx" }
+
+fx-yearmonth-picker = { module = "se.alipsa:fx-yearmonth-picker", version.ref = "fxYearMonthPicker" }
+swing-yearmonth-picker = { module = "se.alipsa:swing-yearmonth-picker", version.ref = "swingYearMonthPicker" }
+
+lgooddatepicker = { module = "com.github.lgooddatepicker:LGoodDatePicker", version.ref = "lgooddatepicker" }

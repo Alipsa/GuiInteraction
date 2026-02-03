@@ -30,6 +30,11 @@ dependencies {
 }
 ```
 
+## Implementation Notes
+
+- `gi-fx` dialog and clipboard APIs are safe to call from either the FX Application Thread or a background thread; calls are executed on the FX thread internally.
+- `gi-fx` file and directory choosers ignore invalid initial directories and fall back to the platform default.
+
 ## File Operations
 
 ### Choosing Files

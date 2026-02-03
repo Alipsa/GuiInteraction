@@ -3,7 +3,7 @@ plugins {
     id 'java-library'
     id 'signing'
     id 'maven-publish'
-    id("se.alipsa.nexus-release-plugin") version '2.0.0'
+    id("se.alipsa.nexus-release-plugin") version '2.0.1'
     id 'se.alipsa.gi.fatjar-conventions'
 }
 
@@ -40,20 +40,19 @@ dependencies {
     } else if (os.isMacOsX()) {
         qualifier = 'mac-aarch64'
     }
-    def javaFxVersion = '23.0.2'
-    def groovyVersion = '5.0.3'
+    def javaFxVersion = libs.versions.javafx.get()
 
     api project(':gi-common')
-    implementation 'se.alipsa:fx-yearmonth-picker:1.1.0'
-    compileOnly "org.apache.groovy:groovy:${groovyVersion}"
+    implementation libs.fx.yearmonth.picker
+    compileOnly libs.groovy
     compileOnly "org.openjfx:javafx-graphics:${javaFxVersion}:$qualifier"
     compileOnly "org.openjfx:javafx-base:${javaFxVersion}:$qualifier"
     compileOnly "org.openjfx:javafx-controls:${javaFxVersion}:$qualifier"
     compileOnly "org.openjfx:javafx-swing:${javaFxVersion}:$qualifier"
     compileOnly "org.openjfx:javafx-web:${javaFxVersion}:$qualifier"
 
-    testImplementation platform('org.junit:junit-bom:6.0.1')
-    testImplementation 'org.junit.jupiter:junit-jupiter'
+    testImplementation platform(libs.junit.bom)
+    testImplementation libs.junit.jupiter
     testImplementation "org.openjfx:javafx-graphics:${javaFxVersion}:$qualifier"
     testImplementation "org.openjfx:javafx-base:${javaFxVersion}:$qualifier"
     testImplementation "org.openjfx:javafx-controls:${javaFxVersion}:$qualifier"

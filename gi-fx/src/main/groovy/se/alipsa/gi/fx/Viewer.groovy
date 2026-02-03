@@ -42,17 +42,17 @@ import javax.xml.transform.TransformerException
 import javax.xml.transform.TransformerFactory
 import javax.xml.transform.dom.DOMSource
 import javax.xml.transform.stream.StreamResult
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
+import se.alipsa.matrix.core.util.Logger
 
 import java.nio.file.InvalidPathException
 import java.nio.file.Paths
 import java.text.NumberFormat
+import java.util.Collections
 
 @CompileStatic
 class Viewer {
 
-    private static final Logger log = LoggerFactory.getLogger(Viewer.class)
+    private static final Logger log = Logger.getLogger(Viewer.class)
 
     static final KeyCodeCombination KEY_CODE_COPY =
             System.getProperty("os.name").toLowerCase().contains("mac") ?
@@ -198,6 +198,11 @@ class Viewer {
     }
 
     static void viewTable(Grid grid, String... title) {
+        List<List<Object>> rows = grid.getRowList()
+        if (rows == null || rows.isEmpty()) {
+            viewTable(Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), title)
+            return
+        }
         // assume uniform format
         String type = "STRING"
         if (grid.getAt(0,0) instanceof Number) {
@@ -209,7 +214,7 @@ class Viewer {
             typeList.add(type)
             headerList.add("c${i+1}" as String)
         }
-        viewTable(headerList, grid.getRowList(), typeList, title)
+        viewTable(headerList, rows, typeList, title)
     }
 
     static void viewTable(List<String> headerList, List<List<Object>> rowList, List<String> columnTypes, String... title) {

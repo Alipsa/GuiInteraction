@@ -2,7 +2,7 @@ package se.alipsa.gi.swing
 
 import com.github.lgooddatepicker.components.DatePicker
 import groovy.transform.CompileStatic
-import org.apache.batik.swing.JSVGCanvas
+import se.alipsa.matrix.chartexport.ChartToSwing
 import se.alipsa.gi.ImageTransferable
 import se.alipsa.matrix.charts.Plot
 
@@ -23,8 +23,7 @@ import java.awt.datatransfer.StringSelection
 import java.time.LocalDate
 import java.time.YearMonth
 import javax.swing.*
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
+import se.alipsa.matrix.core.util.Logger
 
 import java.awt.GraphicsEnvironment
 import javax.swing.filechooser.FileNameExtensionFilter
@@ -33,7 +32,7 @@ import java.util.concurrent.ExecutionException
 @CompileStatic
 class InOut extends AbstractInOut {
 
-    private static final Logger log = LoggerFactory.getLogger(InOut.class)
+    private static final Logger log = Logger.getLogger(InOut.class)
 
     static {
         if (GraphicsEnvironment.isHeadless()) {
@@ -59,13 +58,13 @@ class InOut extends AbstractInOut {
     if (extensions.length > 0) {
       fc.setAcceptAllFileFilterUsed(false)
       List<String> ext = []
-      extensions.each {
-        if (it.startsWith('*.')) {
-          ext.add(it.substring(2))
-        } else if (it.startsWith('.')) {
-          ext.add(it.substring(1))
+      for (String extension : extensions) {
+        if (extension.startsWith('*.')) {
+          ext.add(extension.substring(2))
+        } else if (extension.startsWith('.')) {
+          ext.add(extension.substring(1))
         } else {
-          ext.add(it)
+          ext.add(extension)
         }
       }
       FileNameExtensionFilter filter = new FileNameExtensionFilter(String.join(",", ext) +" files", ext as String[])
@@ -185,7 +184,7 @@ class InOut extends AbstractInOut {
   void view(File file, String... title) {
     JEditorPane jep = new JEditorPane()
     jep.setPage(file.toURI().toURL())
-    JScrollPane scrollPane = new JScrollPane(jep);
+    JScrollPane scrollPane = new JScrollPane(jep)
     JFrame f = new JFrame(title.length > 0 ? title[0] : file.toString())
     f.getContentPane().add(scrollPane)
     f.setSize(800, 600)
@@ -248,6 +247,12 @@ class InOut extends AbstractInOut {
 
   @Override
   void view(List<List<?>> matrix, String... title) {
+    if (matrix == null || matrix.isEmpty()) {
+      JTable jTable = new JTable(new Vector(), new Vector())
+      def name = title.length > 0 ? title[0] : ""
+      viewTable(jTable, [], name)
+      return
+    }
     Vector rows = new Vector(matrix.size())
     List<Boolean> rightAlign = []
     boolean firstRow = true
@@ -294,12 +299,18 @@ class InOut extends AbstractInOut {
    * Displays an SVG file using Apache Batik's JSVGCanvas.
    */
   private void displaySvg(File svgFile, String... title) {
-    JSVGCanvas svgCanvas = new JSVGCanvas()
-    svgCanvas.setURI(svgFile.toURI().toString())
-    svgCanvas.setPreferredSize(new Dimension(800, 600))
+    String svg
+    try {
+      svg = svgFile.getText("UTF-8")
+    } catch (IOException e) {
+      log.error("Failed to read svg file {}", svgFile, e)
+      return
+    }
+    def svgPanel = ChartToSwing.export(svg)
+    svgPanel.setPreferredSize(new Dimension(800, 600))
 
     JFrame frame = new JFrame(title.length > 0 ? title[0] : svgFile.getName())
-    frame.getContentPane().add(new JScrollPane(svgCanvas))
+    frame.getContentPane().add(new JScrollPane(svgPanel))
     frame.setSize(800, 600)
     frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE)
     frame.setVisible(true)

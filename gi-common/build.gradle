@@ -3,7 +3,7 @@ plugins {
     id 'java-library'
     id 'signing'
     id 'maven-publish'
-    id("se.alipsa.nexus-release-plugin") version '2.0.0'
+    id("se.alipsa.nexus-release-plugin") version '2.0.1'
 }
 
 description = 'Common code for Gade Gui Interactive capabilities'
@@ -28,28 +28,23 @@ repositories {
 }
 
 dependencies {
-    def tikaVersion = '3.2.3'
-
-    compileOnly 'org.apache.groovy:groovy:5.0.3'
+    compileOnly libs.groovy
 
     // Tika for MIME type detection - using core only for lightweight footprint
     // tika-core provides detection via file extension and magic bytes (~1MB vs ~50MB for full parsers)
-    implementation "org.apache.tika:tika-core:${tikaVersion}"
+    implementation libs.tika.core
 
-    api (platform("se.alipsa.matrix:matrix-bom:2.3.0"))
-    api 'se.alipsa.matrix:matrix-core'
-    api 'se.alipsa.matrix:matrix-charts'
+    api platform(libs.matrix.bom)
+    api libs.matrix.core
+    api libs.matrix.charts
 
-    api "org.commonmark:commonmark:0.27.0"
-    implementation "org.commonmark:commonmark-ext-gfm-tables:0.27.0"
+    api libs.commonmark
+    implementation libs.commonmark.ext.gfm.tables
 
-    // Logging - SLF4J API (implementation provided by Tika's transitive deps or user's choice)
-    api 'org.slf4j:slf4j-api:2.0.17'
-
-    testImplementation platform('org.junit:junit-bom:6.0.1')
-    testImplementation 'org.junit.jupiter:junit-jupiter'
-    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
-    testImplementation 'org.apache.groovy:groovy:5.0.3'
+    testImplementation platform(libs.junit.bom)
+    testImplementation libs.junit.jupiter
+    testRuntimeOnly libs.junit.platform.launcher
+    testImplementation libs.groovy
 }
 
 test {

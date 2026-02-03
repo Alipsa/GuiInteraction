@@ -10,4 +10,3 @@ include 'gi-common'
 include 'gi-swing'
 include 'gi-fx'
 include 'gi-console'
-

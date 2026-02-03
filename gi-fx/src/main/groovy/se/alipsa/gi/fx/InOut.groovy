@@ -31,20 +31,20 @@ import se.alipsa.matrix.core.Grid
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.ymp.YearMonthPicker
 
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
+import se.alipsa.matrix.core.util.Logger
 
 import javax.swing.JComponent
 import java.awt.GraphicsEnvironment
 import java.time.LocalDate
 import java.time.YearMonth
+import java.util.concurrent.Callable
 import java.util.concurrent.ExecutionException
 import java.util.concurrent.FutureTask
 
 @CompileStatic
 class InOut extends AbstractInOut {
 
-    private static final Logger log = LoggerFactory.getLogger(InOut.class)
+    private static final Logger log = Logger.getLogger(InOut.class)
 
     static {
         if (GraphicsEnvironment.isHeadless()) {
@@ -74,11 +74,12 @@ class InOut extends AbstractInOut {
 
     @Override
     File chooseFile(String title, File initialDirectory, String description, String... extensions) {
-        FutureTask<File> task = new FutureTask<>(() -> {
+        return runOnFxThread(() -> {
             FileChooser chooser = new FileChooser()
             chooser.setTitle(title == null ? "Select file" : title)
-            if (initialDirectory != null) {
-                chooser.setInitialDirectory(initialDirectory)
+            File normalizedInitialDir = normalizeInitialDirectory(initialDirectory)
+            if (normalizedInitialDir != null) {
+                chooser.setInitialDirectory(normalizedInitialDir)
             }
             if (extensions.length > 0) {
                 List<String> ext = new ArrayList<>();
@@ -97,35 +98,34 @@ class InOut extends AbstractInOut {
             }
             return chooser.showOpenDialog(ownerWindow)
         })
-        Platform.runLater(task)
-        return task.get()
     }
 
     @Override
     File chooseFile(String title, String initialDirectory, String description, String... extensions) {
-        return chooseFile(title, new File(initialDirectory), description, extensions)
+        return chooseFile(title, initialDirectory ? new File(initialDirectory) : null, description, extensions)
     }
 
     @Override
     File chooseDir(String title, File initialDirectory) {
-        FutureTask<File> task = new FutureTask<>(() -> {
+        return runOnFxThread(() -> {
             DirectoryChooser chooser = new DirectoryChooser()
-            chooser.setInitialDirectory(initialDirectory)
+            File normalizedInitialDir = normalizeInitialDirectory(initialDirectory)
+            if (normalizedInitialDir != null) {
+                chooser.setInitialDirectory(normalizedInitialDir)
+            }
             chooser.setTitle(title)
             return chooser.showDialog(ownerWindow)
         });
-        Platform.runLater(task);
-        return task.get()
     }
 
     @Override
     File chooseDir(String title, String initialDirectory) {
-        return chooseDir(title, new File(initialDirectory))
+        return chooseDir(title, initialDirectory ? new File(initialDirectory) : null)
     }
 
     @Override
     YearMonth promptYearMonth(String message) {
-        FutureTask<YearMonth> task = new FutureTask<>(() -> {
+        return runOnFxThread(() -> {
             Dialog<YearMonth> dialog = new Dialog<>()
             dialog.setTitle("")
             FlowPane content = new FlowPane()
@@ -148,13 +148,11 @@ class InOut extends AbstractInOut {
             }
             return dialog.showAndWait().orElse(null)
         });
-        Platform.runLater(task)
-        return task.get()
     }
 
     @Override
     YearMonth promptYearMonth(String title, String message, YearMonth from, YearMonth to, YearMonth initial) {
-        FutureTask<YearMonth> task = new FutureTask<>(() -> {
+        return runOnFxThread(() -> {
             Dialog<YearMonth> dialog = new Dialog<>()
             dialog.setTitle(title)
             FlowPane content = new FlowPane()
@@ -177,13 +175,11 @@ class InOut extends AbstractInOut {
             }
             return dialog.showAndWait().orElse(null)
         })
-        Platform.runLater(task)
-        return task.get()
     }
 
     @Override
     LocalDate promptDate(String title, String message, LocalDate defaultValue) {
-        FutureTask<LocalDate> task = new FutureTask<>(() -> {
+        return runOnFxThread(() -> {
             Dialog<LocalDate> dialog = new Dialog<>()
             dialog.setTitle(title)
             FlowPane content = new FlowPane()
@@ -211,8 +207,6 @@ class InOut extends AbstractInOut {
             }
             return dialog.showAndWait().orElse(null)
         });
-        Platform.runLater(task)
-        return task.get()
     }
 
 
@@ -225,7 +219,7 @@ class InOut extends AbstractInOut {
         }
 
         final int index = defaultIndex;
-        FutureTask<Object> task = new FutureTask<>(() -> {
+        return runOnFxThread(() -> {
             ChoiceDialog<Object> dialog = new ChoiceDialog<>(opt.get(index), options)
             dialog.setTitle(title)
             dialog.setHeaderText(headerText)
@@ -237,13 +231,11 @@ class InOut extends AbstractInOut {
             }
             return dialog.showAndWait().orElse(null)
         })
-        Platform.runLater(task)
-        return task.get()
     }
 
     @Override
     String promptPassword(String title, String message) {
-        FutureTask<String> task = new FutureTask<>(() -> {
+        return runOnFxThread(() -> {
             PasswordDialog dialog = new PasswordDialog(title, message)
             dialog.setResizable(true)
             dialog.getDialogPane().getScene().getWindow().sizeToScene()
@@ -252,8 +244,6 @@ class InOut extends AbstractInOut {
             }
             return dialog.showAndWait().orElse(null)
         })
-        Platform.runLater(task)
-        return task.get()
     }
 
     @Override
@@ -273,7 +263,7 @@ class InOut extends AbstractInOut {
 
     @Override
     String prompt(String title, String headerText, String message, String defaultValue) {
-        FutureTask<String> task = new FutureTask<>(() -> {
+        return runOnFxThread(() -> {
             TextInputDialog dialog = new TextInputDialog(defaultValue)
             dialog.setTitle(title)
             dialog.setHeaderText(headerText)
@@ -285,8 +275,6 @@ class InOut extends AbstractInOut {
             }
             return dialog.showAndWait().orElse(null)
         })
-        Platform.runLater(task)
-        return task.get()
     }
 
     @Override
@@ -440,28 +428,26 @@ class InOut extends AbstractInOut {
     }
 
     String getFromClipboard() throws ExecutionException, InterruptedException {
-        final FutureTask<String> query = new FutureTask<>(() -> getClipboard().getString())
-        Platform.runLater(query)
-        return query.get()
+        return runOnFxThreadChecked(() -> getClipboard().getString())
     }
 
     File getFileFromClipboard() throws ExecutionException, InterruptedException {
-        final FutureTask<File> query = new FutureTask<>(() -> getClipboard().getFiles().getFirst())
-        Platform.runLater(query)
-        return query.get() as File
+        return runOnFxThreadChecked(() -> {
+            List<File> files = getClipboard().getFiles()
+            if (files == null || files.isEmpty()) {
+                return null
+            }
+            return files.getFirst()
+        }) as File
     }
 
     Image getImageFromClipboard() throws ExecutionException, InterruptedException {
-        final FutureTask<Image> query = new FutureTask<>(() -> getClipboard().getImage())
-        Platform.runLater(query)
-        return query.get()
+        return runOnFxThreadChecked(() -> getClipboard().getImage())
     }
 
     Object getFromClipboard(DataFormat format)
         throws ExecutionException, InterruptedException {
-        final FutureTask<Object> query = new FutureTask<>(() -> getClipboard().getContent(format))
-        Platform.runLater(query)
-        return query.get()
+        return runOnFxThreadChecked(() -> getClipboard().getContent(format))
     }
 
     @Override
@@ -470,5 +456,46 @@ class InOut extends AbstractInOut {
             clipboard = Clipboard.getSystemClipboard();
         }
         return clipboard;
+    }
+
+    private static File normalizeInitialDirectory(File initialDirectory) {
+        if (initialDirectory != null && initialDirectory.exists() && initialDirectory.isDirectory()) {
+            return initialDirectory
+        }
+        return null
+    }
+
+    private static <T> T runOnFxThread(Callable<T> action) {
+        if (Platform.isFxApplicationThread()) {
+            try {
+                return action.call()
+            } catch (Exception e) {
+                throw new RuntimeException(e)
+            }
+        }
+        FutureTask<T> task = new FutureTask<>(action)
+        Platform.runLater(task)
+        try {
+            return task.get()
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt()
+            throw new RuntimeException(e)
+        } catch (ExecutionException e) {
+            throw new RuntimeException(e.getCause() ?: e)
+        }
+    }
+
+    private static <T> T runOnFxThreadChecked(Callable<T> action)
+        throws ExecutionException, InterruptedException {
+        if (Platform.isFxApplicationThread()) {
+            try {
+                return action.call()
+            } catch (Exception e) {
+                throw new ExecutionException(e)
+            }
+        }
+        FutureTask<T> task = new FutureTask<>(action)
+        Platform.runLater(task)
+        return task.get()
     }
 }

@@ -52,6 +52,12 @@ class AbstractInOutTest {
     }
 
     @Test
+    void testGetContentTypeForClasspathResourceName() {
+        String contentType = inOut.getContentType("areachart2.png")
+        assertEquals("image/png", contentType)
+    }
+
+    @Test
     void testGetContentTypeForSvgFile() {
         URL svgUrl = FileUtils.getResourceUrl("svgplot.svg")
         assertNotNull(svgUrl, "Test resource should exist")

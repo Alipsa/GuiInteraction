@@ -3,7 +3,7 @@ import java.time.YearMonth
 
 //def io = new se.alipsa.gi.swing.InOut()
 //def io = new se.alipsa.gi.fx.InOut()
-def io = new se.alipsa.gi.txt.InOut()
+def io = new se.alipsa.gi.console.InOut()
 
 def file = io.chooseFile("Choose a file", ".", "Pick a file please!" )
 println("File chosen was $file")
