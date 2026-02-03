@@ -26,7 +26,8 @@
 - Always run `./gradlew test` after completing a task to validate changes.
 
 ## Commit & Pull Request Guidelines
-- Follow the existing history: short, imperative messages (e.g., “fix publishing by …”, “improve display methods”).
+- **Never commit code unless explicitly instructed to do so.**
+- Follow the existing history: short, imperative messages (e.g., "fix publishing by …", "improve display methods").
 - PRs should list the touched modules (`gi-common`, `gi-fx`, etc.), describe behavior changes, and link issues/tickets.
 - Include screenshots or gifs for visual tweaks in `gi-fx`/`gi-swing`; note platform specifics if a change is OS-dependent.
 - Keep release/publishing secrets (signing keys, Sonatype creds) out of the repo; supply them via local `gradle.properties` when needed.
