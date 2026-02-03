@@ -102,7 +102,10 @@ class InOut extends AbstractInOut {
   @Override
   YearMonth promptYearMonth(String message) {
     YearMonthPicker ymp = new YearMonthPicker()
-    JOptionPane.showConfirmDialog(null, ymp, message, JOptionPane.PLAIN_MESSAGE)
+    int result = JOptionPane.showConfirmDialog(null, ymp, message, JOptionPane.OK_CANCEL_OPTION)
+    if (result != JOptionPane.OK_OPTION) {
+      return null
+    }
     return ymp.getValue()
   }
 
@@ -112,7 +115,10 @@ class InOut extends AbstractInOut {
     content.add(new JLabel(message))
     YearMonthPicker ymp = new YearMonthPicker(from, to, initial)
     content.add(ymp)
-    JOptionPane.showConfirmDialog(null, content, title, JOptionPane.PLAIN_MESSAGE)
+    int result = JOptionPane.showConfirmDialog(null, content, title, JOptionPane.OK_CANCEL_OPTION)
+    if (result != JOptionPane.OK_OPTION) {
+      return null
+    }
     return ymp.getValue()
   }
 
@@ -123,7 +129,10 @@ class InOut extends AbstractInOut {
     DatePicker datePicker = new DatePicker()
     datePicker.setDate(defaultValue)
     content.add(datePicker)
-    JOptionPane.showConfirmDialog(null, content, title, JOptionPane.PLAIN_MESSAGE)
+    int result = JOptionPane.showConfirmDialog(null, content, title, JOptionPane.OK_CANCEL_OPTION)
+    if (result != JOptionPane.OK_OPTION) {
+      return null
+    }
     return datePicker.getDate()
   }
 
@@ -137,7 +146,10 @@ class InOut extends AbstractInOut {
     combo.setSelectedItem(defaultValue)
     messagePanel.add(new JLabel(message))
     messagePanel.add(combo)
-    JOptionPane.showConfirmDialog(null, content, title, JOptionPane.PLAIN_MESSAGE)
+    int result = JOptionPane.showConfirmDialog(null, content, title, JOptionPane.OK_CANCEL_OPTION)
+    if (result != JOptionPane.OK_OPTION) {
+      return null
+    }
     return combo.getSelectedItem()
   }
 
@@ -147,7 +159,10 @@ class InOut extends AbstractInOut {
     JPasswordField pwd = new JPasswordField(12)
     content.add(new JLabel(message))
     content.add(pwd)
-    JOptionPane.showConfirmDialog(null, content, title, JOptionPane.PLAIN_MESSAGE)
+    int result = JOptionPane.showConfirmDialog(null, content, title, JOptionPane.OK_CANCEL_OPTION)
+    if (result != JOptionPane.OK_OPTION) {
+      return null
+    }
     return pwd.getPassword() as String
   }
 
@@ -176,7 +191,10 @@ class InOut extends AbstractInOut {
     inputField.setText(defaultValue)
     messagePanel.add(new JLabel(message))
     messagePanel.add(inputField)
-    JOptionPane.showConfirmDialog(null, content, title, JOptionPane.PLAIN_MESSAGE)
+    int result = JOptionPane.showConfirmDialog(null, content, title, JOptionPane.OK_CANCEL_OPTION)
+    if (result != JOptionPane.OK_OPTION) {
+      return null
+    }
     return inputField.getText()
   }
 
@@ -281,7 +299,7 @@ class InOut extends AbstractInOut {
     if (file.exists()) {
       try {
         String contentType = getContentType(file)
-        if ("image/svg+xml".equals(contentType)) {
+        if ("image/svg+xml" == contentType) {
           displaySvg(file, title)
           return
         }

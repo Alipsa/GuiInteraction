@@ -33,24 +33,36 @@ class InOut extends AbstractInOut {
   @Override
   File chooseFile(String title, File initialDirectory, String description, String... extensions) {
     String filePath = read("$title: $description>")
+    if (filePath == null || filePath.trim().isEmpty()) {
+      return null
+    }
     return new File(filePath)
   }
 
   @Override
   File chooseFile(String title, String initialDirectory, String description, String... extensions) {
     String filePath = read("$title: $description>")
+    if (filePath == null || filePath.trim().isEmpty()) {
+      return null
+    }
     return new File(filePath)
   }
 
   @Override
   File chooseDir(String title, File initialDirectory) {
-    String filePath = read("$title")
+    String filePath = read("$title>")
+    if (filePath == null || filePath.trim().isEmpty()) {
+      return null
+    }
     return new File(filePath)
   }
 
   @Override
   File chooseDir(String title, String initialDirectory) {
-    String filePath = read("$title")
+    String filePath = read("$title>")
+    if (filePath == null || filePath.trim().isEmpty()) {
+      return null
+    }
     return new File(filePath)
   }
 

@@ -11,6 +11,9 @@ class FileTransferable implements Transferable {
   private List listOfFiles;
 
   FileTransferable(List listOfFiles) {
+    if (listOfFiles == null) {
+      throw new IllegalArgumentException("listOfFiles cannot be null")
+    }
     this.listOfFiles = listOfFiles;
   }
 
@@ -26,6 +29,9 @@ class FileTransferable implements Transferable {
 
   @Override
   Object getTransferData(DataFlavor flavor) throws UnsupportedFlavorException, IOException {
+    if (!isDataFlavorSupported(flavor)) {
+      throw new UnsupportedFlavorException(flavor)
+    }
     return listOfFiles
   }
 }

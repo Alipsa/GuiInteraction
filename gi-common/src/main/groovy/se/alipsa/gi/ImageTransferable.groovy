@@ -12,6 +12,9 @@ class ImageTransferable implements Transferable {
   private Image image;
 
   ImageTransferable(Image image) {
+    if (image == null) {
+      throw new IllegalArgumentException("image cannot be null")
+    }
     this.image = image
   }
 

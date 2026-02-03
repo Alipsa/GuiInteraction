@@ -2,13 +2,6 @@ package se.alipsa.gi
 
 import groovy.transform.CompileDynamic
 import groovy.transform.CompileStatic
-
-/*
-import com.vladsch.flexmark.html.HtmlRenderer
-import com.vladsch.flexmark.parser.Parser
-import com.vladsch.flexmark.util.data.MutableDataSet
-import com.vladsch.flexmark.ext.tables.TablesExtension
-*/
 import org.commonmark.ext.gfm.tables.TablesExtension;
 import org.commonmark.parser.Parser;
 import org.commonmark.renderer.html.HtmlRenderer;
@@ -26,7 +19,6 @@ import java.util.concurrent.ExecutionException;
 @CompileStatic
 abstract class AbstractInOut implements GuiInteraction {
 
-  //private MutableDataSet flexmarkOptions
   private Parser markdownParser
   private HtmlRenderer htmlRenderer
   protected def clipboard
@@ -112,7 +104,6 @@ abstract class AbstractInOut implements GuiInteraction {
 
   private Parser getMarkdownParser() {
     if (markdownParser == null) {
-      //markdownParser = Parser.builder(getFlexmarkOptions()).build()
       markdownParser = Parser.builder().build()
     }
     return markdownParser
@@ -120,7 +111,6 @@ abstract class AbstractInOut implements GuiInteraction {
 
   private HtmlRenderer getHtmlRenderer() {
     if (htmlRenderer == null) {
-      //htmlRenderer = HtmlRenderer.builder(getFlexmarkOptions()).build()
       htmlRenderer = HtmlRenderer.builder()
           .softbreak("<br />\n")
           .extensions(List.of(TablesExtension.create()))
@@ -128,13 +118,6 @@ abstract class AbstractInOut implements GuiInteraction {
     }
     return htmlRenderer
   }
-
-  /*
-  private MutableDataSet getFlexmarkOptions() {
-    if (flexmarkOptions == null) flexmarkOptions = new MutableDataSet()
-    flexmarkOptions.set(Parser.EXTENSIONS, List.of(TablesExtension.create()));
-    return flexmarkOptions
-  }*/
 
   @Override
   void view(Integer o, String... title) {
@@ -146,7 +129,7 @@ abstract class AbstractInOut implements GuiInteraction {
     if (options == null || options.isEmpty()) {
       throw new IllegalArgumentException("Options collection cannot be null or empty")
     }
-    return promptSelect(message, "", message, options, options.iterator().next())
+    return promptSelect("Select", "", message, options, options.iterator().next())
   }
 
   @CompileDynamic
