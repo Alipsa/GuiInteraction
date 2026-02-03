@@ -10,7 +10,7 @@ plugins {
 }
 
 group = 'se.alipsa.gi'
-version = '0.3.0-SNAPSHOT'
+version = '0.3.0'
 description = 'Allows Gade Gui Interactive capabilities from a standalone app'
 
 

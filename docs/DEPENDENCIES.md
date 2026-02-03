@@ -49,7 +49,7 @@ PDFs or Office documents), add the full parser package:
 
 ```groovy
 dependencies {
-    implementation 'se.alipsa.gi:gi-common:0.2.0'
+    implementation 'se.alipsa.gi:gi-common:0.3.0'
     // Add full Tika parsers for document content extraction
     implementation 'org.apache.tika:tika-parsers-standard-package:3.2.3'
 }
@@ -68,7 +68,7 @@ The fat JARs (`gi-swing-fatjar`, `gi-fx-fatjar`, etc.) include all dependencies
 and are designed for standalone Groovy scripts:
 
 ```groovy
-@Grab(group:'se.alipsa.gi', module:'gi-swing', version:'0.2.0', classifier:'fatjar')
+@Grab(group:'se.alipsa.gi', module:'gi-swing', version:'0.3.0', classifier:'fatjar')
 import se.alipsa.gi.swing.InOut
 ```
 

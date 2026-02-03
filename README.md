@@ -29,7 +29,7 @@ GuiInteraction enables standalone Groovy applications to have the same user inte
 
 ```groovy
 dependencies {
-    implementation 'se.alipsa.gi:gi-swing:0.2.0'  // or gi-fx, gi-console
+    implementation 'se.alipsa.gi:gi-swing:0.3.0'  // or gi-fx, gi-console
 }
 ```
 
@@ -39,14 +39,14 @@ dependencies {
 <dependency>
     <groupId>se.alipsa.gi</groupId>
     <artifactId>gi-swing</artifactId>
-    <version>0.2.0</version>
+    <version>0.3.0</version>
 </dependency>
 ```
 
 ### Groovy Script with Grape
 
 ```groovy
-@Grab(group:'se.alipsa.gi', module:'gi-swing', version:'0.2.0')
+@Grab(group:'se.alipsa.gi', module:'gi-swing', version:'0.3.0')
 import se.alipsa.gi.swing.InOut
 
 def io = new InOut()
@@ -61,7 +61,7 @@ Scripts can run both in Gade and standalone by checking for the `io` variable:
 ```groovy
 // This makes the code run equally in Gade and in a standalone Groovy script
 if (!binding.hasVariable('io')) {
-    @Grab(group:'se.alipsa.gi', module:'gi-swing', version:'0.2.0')
+    @Grab(group:'se.alipsa.gi', module:'gi-swing', version:'0.3.0')
     import se.alipsa.gi.swing.InOut
     binding.setVariable('io', new InOut())
 }

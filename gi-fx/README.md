@@ -25,7 +25,7 @@ This module provides JavaFX-based dialogs and viewers for user interaction. It o
 
 ```groovy
 dependencies {
-    implementation 'se.alipsa.gi:gi-fx:0.2.0'
+    implementation 'se.alipsa.gi:gi-fx:0.3.0'
 }
 ```
 
@@ -35,14 +35,14 @@ dependencies {
 <dependency>
     <groupId>se.alipsa.gi</groupId>
     <artifactId>gi-fx</artifactId>
-    <version>0.2.0</version>
+    <version>0.3.0</version>
 </dependency>
 ```
 
 ### Grape (Groovy Script)
 
 ```groovy
-@Grab(group:'se.alipsa.gi', module:'gi-fx', version:'0.2.0')
+@Grab(group:'se.alipsa.gi', module:'gi-fx', version:'0.3.0')
 import se.alipsa.gi.fx.InOut
 
 def io = new InOut()
@@ -74,7 +74,7 @@ A fat JAR (with all dependencies bundled) is available:
 
 ```groovy
 dependencies {
-    implementation 'se.alipsa.gi:gi-fx:0.2.0:fatjar'
+    implementation 'se.alipsa.gi:gi-fx:0.3.0:fatjar'
 }
 ```
 

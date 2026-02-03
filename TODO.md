@@ -1,5 +1,16 @@
 # TODO / Roadmap
 
+# Version 0.3.0
+
+## Bug fixes
+- [x] Swing dialog methods (`promptYearMonth`, `promptDate`, `promptSelect`, `promptPassword`, `prompt`) now return `null` when user cancels
+- [x] Console `chooseFile` and `chooseDir` return `null` when user enters empty input (cancellation)
+- [x] `FileTransferable.getTransferData()` validates DataFlavor and throws `UnsupportedFlavorException` for unsupported flavors
+- [x] `FileTransferable` and `ImageTransferable` constructors validate for null input
+- [x] `promptSelect(String, Collection)` uses "Select" as title instead of duplicating the message
+- [x] Removed dead/commented-out Flexmark code from `AbstractInOut`
+- [x] Use idiomatic `==` for string comparison in Swing content type check
+
 # Version 0.2.0
 ## 1. Testing & documentation
 - 1.1 [x] Add missing tests for utility methods and headless environments.

@@ -37,7 +37,7 @@ See the [API Guide](../docs/API-Guide.md) for detailed usage examples.
 <dependency>
     <groupId>se.alipsa.gi</groupId>
     <artifactId>gi-common</artifactId>
-    <version>0.2.0</version>
+    <version>0.3.0</version>
 </dependency>
 ```
 
