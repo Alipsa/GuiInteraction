@@ -26,12 +26,30 @@ tasks.named('javadocJar', Jar) {
 }
 
 dependencies {
+  org.gradle.internal.os.OperatingSystem os = org.gradle.internal.os.OperatingSystem.current()
+
+  // check https://repo1.maven.org/maven2/org/openjfx/javafx/20/javafx-20.pom for the platform property
+  def qualifier = 'unknown'
+  if (os.isLinux()) {
+    qualifier='linux'
+  } else if (os.isWindows()) {
+    qualifier = 'win'
+  } else if (os.isMacOsX()) {
+    qualifier = 'mac-aarch64'
+  }
+  def javaFxVersion = libs.versions.javafx.get()
 
   implementation project(':gi-common')
   compileOnly libs.groovy.all
   implementation libs.swing.yearmonth.picker
 
   implementation libs.lgooddatepicker
+
+  // JavaFX is needed at compile-time only for matrix-charts type resolution
+  // The actual JavaFX Chart types are referenced by matrix-charts but not used in gi-swing
+  compileOnly "org.openjfx:javafx-graphics:${javaFxVersion}:$qualifier"
+  compileOnly "org.openjfx:javafx-base:${javaFxVersion}:$qualifier"
+  compileOnly "org.openjfx:javafx-controls:${javaFxVersion}:$qualifier"
 
   // SVG rendering is handled by matrix-charts SvgPanel
 }
