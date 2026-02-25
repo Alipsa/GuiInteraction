@@ -4,7 +4,13 @@
  * The settings file is used to specify which projects to include in your build.
  * For more detailed information on multi-project builds, please refer to https://docs.gradle.org/8.3/userguide/building_swift_projects.html in the Gradle documentation.
  */
-
+pluginManagement {
+  repositories {
+    mavenLocal() // For local development, use mavenLocal to resolve SNAPSHOT dependencies
+    //mavenCentral()
+    gradlePluginPortal()
+  }
+}
 rootProject.name = 'GuiInteraction'
 include 'gi-common'
 include 'gi-swing'
