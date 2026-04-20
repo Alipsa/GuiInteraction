@@ -1,6 +1,8 @@
 # Gui Interaction Release Notes
 
-## 0.3.0 - in progress
+## 0.4.0 - in progress
+
+## 0.3.0 - 2026-02-03
 - Build: introduced Gradle version catalog `gradle/libs.versions.toml` to centralize dependency versions across modules.
 - Build: updated Gradle wrapper to 9.3.1 and OWASP dependency check plugin to 12.2.0.
 - Build: bumped `se.alipsa.nexus-release-plugin` to 2.0.1 across modules.

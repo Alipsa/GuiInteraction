@@ -12,9 +12,13 @@ plugins {
 }
 
 group = 'se.alipsa.gi'
-version = '0.5.0-SNAPSHOT'
+version = '0.4.0-SNAPSHOT'
 description = 'Allows Gade Gui Interactive capabilities from a standalone app'
 
+def requestedTaskNames = gradle.startParameter.taskNames.collect { it.toLowerCase(Locale.ROOT) }
+def configurationCacheRequested = gradle.startParameter.configurationCacheRequested
+def enableSpotless = !configurationCacheRequested || requestedTaskNames.any { it.contains('spotless') }
+def enableSpotbugs = !configurationCacheRequested || requestedTaskNames.any { it.contains('spotbugs') }
 
 java {
     toolchain {
@@ -33,39 +37,43 @@ subprojects {
         }
     }
 
-    apply plugin: 'com.diffplug.spotless'
-    spotless {
-        java {
-            googleJavaFormat('1.34.0')
+    if (enableSpotless) {
+        apply plugin: 'com.diffplug.spotless'
+        spotless {
+            java {
+                googleJavaFormat('1.34.0')
+            }
+            groovy {
+                excludeJava()
+                leadingTabsToSpaces(2)
+                trimTrailingWhitespace()
+                endWithNewline()
+            }
+            groovyGradle {
+                leadingTabsToSpaces(2)
+                trimTrailingWhitespace()
+                endWithNewline()
+            }
         }
-        groovy {
-            excludeJava()
-            leadingTabsToSpaces(2)
-            trimTrailingWhitespace()
-            endWithNewline()
+        tasks.matching { it.name.startsWith('spotless') }.configureEach {
+            notCompatibleWithConfigurationCache("Spotless does not support configuration cache yet")
         }
-        groovyGradle {
-            leadingTabsToSpaces(2)
-            trimTrailingWhitespace()
-            endWithNewline()
-        }
-    }
-    tasks.matching { it.name.startsWith('spotless') }.configureEach {
-        notCompatibleWithConfigurationCache("Spotless does not support configuration cache yet")
     }
 
-    apply plugin: 'com.github.spotbugs'
-    spotbugs {
-        toolVersion = '4.9.8'
-        effort = 'max'
-        reportLevel = 'medium'
-        excludeFilter = rootProject.file('config/spotbugs-exclude.xml')
-    }
-    tasks.withType(com.github.spotbugs.snom.SpotBugsTask).configureEach {
-        notCompatibleWithConfigurationCache("SpotBugs does not support configuration cache yet")
-        reports {
-            html.required = true
-            xml.required = false
+    if (enableSpotbugs) {
+        apply plugin: 'com.github.spotbugs'
+        spotbugs {
+            toolVersion = '4.9.8'
+            effort = 'max'
+            reportLevel = 'medium'
+            excludeFilter = rootProject.file('config/spotbugs-exclude.xml')
+        }
+        tasks.withType(com.github.spotbugs.snom.SpotBugsTask).configureEach {
+            notCompatibleWithConfigurationCache("SpotBugs does not support configuration cache yet")
+            reports {
+                html.required = true
+                xml.required = false
+            }
         }
     }
 }
