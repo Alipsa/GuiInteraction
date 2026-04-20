@@ -92,9 +92,9 @@ abstract class AbstractInOut implements GuiInteraction {
   @Override
   String prompt(Map<String, Object> namedParams) {
     return prompt(String.valueOf(namedParams.getOrDefault("title", "")),
-            String.valueOf(namedParams.getOrDefault("headerText", "")),
-            String.valueOf(namedParams.getOrDefault("message", "")),
-            String.valueOf(namedParams.getOrDefault("defaultValue", "")))
+        String.valueOf(namedParams.getOrDefault("headerText", "")),
+        String.valueOf(namedParams.getOrDefault("message", "")),
+        String.valueOf(namedParams.getOrDefault("defaultValue", "")))
   }
 
   @Override
@@ -147,11 +147,11 @@ abstract class AbstractInOut implements GuiInteraction {
     FileTransferable ft = new FileTransferable(listOfFiles);
 
     getClipboard().setContents(ft, new ClipboardOwner() {
-      @Override
-      void lostOwnership(Clipboard clipboard, Transferable contents) {
-        System.out.println("Lost ownership")
-      }
-    })
+          @Override
+          void lostOwnership(Clipboard clipboard, Transferable contents) {
+            System.out.println("Lost ownership")
+          }
+        })
   }
 
   @CompileDynamic

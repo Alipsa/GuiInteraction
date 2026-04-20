@@ -1,14 +1,13 @@
 [versions]
 groovy = "5.0.4"
 tika = "3.2.3"
-matrixBom = "2.4.0"
+matrixBom = "2.5.0-SNAPSHOT"
 commonmark = "0.27.1"
 jsoup = "1.22.1"
 junit = "6.0.3"
 javafx = "23.0.2"
 fxYearMonthPicker = "1.1.0"
-swingYearMonthPicker = "1.0.0"
-lgooddatepicker = "11.2.1"
+swingWidgets = "1.1.0"
 
 [libraries]
 groovy = { module = "org.apache.groovy:groovy", version.ref = "groovy" }
@@ -35,6 +34,4 @@ javafx-swing = { module = "org.openjfx:javafx-swing", version.ref = "javafx" }
 javafx-web = { module = "org.openjfx:javafx-web", version.ref = "javafx" }
 
 fx-yearmonth-picker = { module = "se.alipsa:fx-yearmonth-picker", version.ref = "fxYearMonthPicker" }
-swing-yearmonth-picker = { module = "se.alipsa:swing-yearmonth-picker", version.ref = "swingYearMonthPicker" }
-
-lgooddatepicker = { module = "com.github.lgooddatepicker:LGoodDatePicker", version.ref = "lgooddatepicker" }
+swing-widgets = { module = "se.alipsa:swing-widgets", version.ref = "swingWidgets" }

@@ -41,9 +41,7 @@ dependencies {
 
   implementation project(':gi-common')
   compileOnly libs.groovy.all
-  implementation libs.swing.yearmonth.picker
-
-  implementation libs.lgooddatepicker
+  implementation libs.swing.widgets
 
   // JavaFX is needed at compile-time only for matrix-charts type resolution
   // The actual JavaFX Chart types are referenced by matrix-charts but not used in gi-swing

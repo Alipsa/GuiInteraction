@@ -4,7 +4,7 @@ import groovy.transform.CompileStatic
 import org.jsoup.Jsoup
 import se.alipsa.gi.AbstractInOut
 import se.alipsa.gi.ImageTransferable
-import se.alipsa.matrix.charts.Chart
+import se.alipsa.groovy.svg.Svg
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.core.util.Logger
 
@@ -208,8 +208,16 @@ class InOut extends AbstractInOut {
     println ("Swing component display is not supported in this implementation")
   }
 
+  /**
+   * Displays an Svg image or chart.
+   * <p>
+   * Note: Not supported in console mode.
+   *
+   * @param svg the svg to display
+   * @param titleOpt optional title for the display window
+   */
   @Override
-  void display(Chart chart, String... titleOpt) {
+  void display(Svg svg, String... titleOpt) {
     println("Chart display is not supported in this implementation")
   }
 

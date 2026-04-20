@@ -1,7 +1,7 @@
 package se.alipsa.gi
 
 import groovy.transform.CompileStatic
-import se.alipsa.matrix.charts.Chart
+import se.alipsa.groovy.svg.Svg
 import se.alipsa.matrix.core.Matrix
 
 import javax.swing.JComponent
@@ -340,14 +340,14 @@ interface GuiInteraction {
   void display(JComponent swingComponent, String... title);
 
   /**
-   * Displays a chart.
+   * Displays an Svg image or chart.
    * <p>
    * Note: Not supported in console mode.
    *
-   * @param chart the Chart to display
+   * @param svg the svg to display
    * @param titleOpt optional title for the display window
    */
-  void display(Chart chart, String... titleOpt);
+  void display(Svg svg, String... titleOpt);
 
   /**
    * Copies a string to the system clipboard.
@@ -378,5 +378,4 @@ interface GuiInteraction {
    * @throws Exception if clipboard access fails
    */
   File getFileFromClipboard() throws Exception;
-
 }

@@ -1,15 +1,14 @@
 package se.alipsa.gi.swing
 
-import com.github.lgooddatepicker.components.DatePicker
 import groovy.transform.CompileStatic
+import se.alipsa.datepicker.DatePicker
+import se.alipsa.groovy.svg.Svg
+import se.alipsa.groovy.svg.export.SvgRenderer
 import se.alipsa.matrix.chartexport.ChartToSwing
 import se.alipsa.gi.ImageTransferable
-import se.alipsa.matrix.charts.Plot
 
 import java.awt.Image
-import java.awt.Toolkit
 import se.alipsa.gi.AbstractInOut
-import se.alipsa.matrix.charts.Chart
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.symp.YearMonthPicker
 
@@ -19,7 +18,6 @@ import java.awt.Dimension
 import java.awt.FlowLayout
 import java.awt.datatransfer.Clipboard
 import java.awt.datatransfer.DataFlavor
-import java.awt.datatransfer.StringSelection
 import java.time.LocalDate
 import java.time.YearMonth
 import javax.swing.*
@@ -357,13 +355,10 @@ class InOut extends AbstractInOut {
   }
 
   @Override
-  void display(Chart chart, String... titleOpt) {
-    ByteArrayOutputStream baos = new ByteArrayOutputStream()
-    Plot.png(chart, baos)
-    Image image = Toolkit.getDefaultToolkit().createImage(baos.toByteArray())
-    ImageIcon img = new ImageIcon(image)
-    JLabel label = new JLabel(img)
-    display(label, titleOpt.length > 0 ? titleOpt[0] : chart.getTitle())
+  void display(Svg chart, String... titleOpt) {
+    var img = SvgRenderer.toBufferedImage(chart)
+    JLabel label = new JLabel(new ImageIcon(img))
+    display(label, titleOpt.length > 0 ? titleOpt[0] : chart.title.getContent())
   }
 
   void saveToClipboard(Image img) {

@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<FindBugsFilter>
+  <!-- Groovy closures and lambdas generate inner classes that trigger false positives -->
+  <Match>
+    <Class name="~.*\$_.*"/>
+    <Bug pattern="EI_EXPOSE_REP,EI_EXPOSE_REP2,SE_NO_SERIALVERSIONID"/>
+  </Match>
+
+  <!-- Groovy auto-generates property getters/setters that expose internal representations -->
+  <Match>
+    <Bug pattern="EI_EXPOSE_REP,EI_EXPOSE_REP2"/>
+  </Match>
+
+  <!-- Groovy generates redundant null checks and false null-dereference patterns in bytecode -->
+  <Match>
+    <Bug pattern="RCN_REDUNDANT_NULLCHECK_OF_NONNULL_VALUE,RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE"/>
+  </Match>
+
+  <!-- Groovy property accessors can appear as infinite recursion to SpotBugs -->
+  <Match>
+    <Bug pattern="IL_INFINITE_RECURSIVE_LOOP"/>
+  </Match>
+
+  <!-- Groovy subclass naming patterns (e.g., InOut extends AbstractInOut) are intentional -->
+  <Match>
+    <Bug pattern="NM_SAME_SIMPLE_NAME_AS_SUPERCLASS"/>
+  </Match>
+</FindBugsFilter>

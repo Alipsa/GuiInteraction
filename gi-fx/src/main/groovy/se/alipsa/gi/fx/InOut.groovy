@@ -25,8 +25,8 @@ import javafx.stage.FileChooser
 import javafx.stage.Modality
 import javafx.stage.Window
 import se.alipsa.gi.*
-import se.alipsa.matrix.charts.Chart
-import se.alipsa.matrix.charts.Plot
+import se.alipsa.groovy.svg.Svg
+import se.alipsa.matrix.chartexport.ChartToJfx
 import se.alipsa.matrix.core.Grid
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.ymp.YearMonthPicker
@@ -355,14 +355,22 @@ class InOut extends AbstractInOut {
         display(swingNode, title)
     }
 
-    void display(Node node, String... title) {
-        show(node, title.length > 0 ? title[0] : '')
+    /**
+     * Displays an Svg image or chart.
+     * <p>
+     * Note: Not supported in console mode.
+     *
+     * @param svg the svg to display
+     * @param titleOpt optional title for the display window
+     */
+    @Override
+    void display(Svg svg, String... titleOpt) {
+        String title = titleOpt.length > 0 ? titleOpt[0] : svg.title?.content
+        display(ChartToJfx.export(svg), title)
     }
 
-    @Override
-    void display(Chart chart, String... titleOpt) {
-        String title = titleOpt.length > 0 ? titleOpt[0] : chart.class.simpleName
-        display(Plot.jfx(chart), title)
+    void display(Node node, String... title) {
+        show(node, title.length > 0 ? title[0] : '')
     }
 
     @Override

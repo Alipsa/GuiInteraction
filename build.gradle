@@ -7,10 +7,12 @@ plugins {
     id('io.github.gradle-nexus.publish-plugin') version '2.0.0'
     id "com.github.ben-manes.versions" version "0.53.0"
     id "org.owasp.dependencycheck" version "12.2.0"
+    id "com.diffplug.spotless" version "7.0.4" apply false
+    id "com.github.spotbugs" version "6.1.12" apply false
 }
 
 group = 'se.alipsa.gi'
-version = '0.4.0'
+version = '0.5.0-SNAPSHOT'
 description = 'Allows Gade Gui Interactive capabilities from a standalone app'
 
 
@@ -28,6 +30,42 @@ subprojects {
             toolchain {
                 languageVersion.set(JavaLanguageVersion.of(21))
             }
+        }
+    }
+
+    apply plugin: 'com.diffplug.spotless'
+    spotless {
+        java {
+            googleJavaFormat('1.34.0')
+        }
+        groovy {
+            excludeJava()
+            leadingTabsToSpaces(2)
+            trimTrailingWhitespace()
+            endWithNewline()
+        }
+        groovyGradle {
+            leadingTabsToSpaces(2)
+            trimTrailingWhitespace()
+            endWithNewline()
+        }
+    }
+    tasks.matching { it.name.startsWith('spotless') }.configureEach {
+        notCompatibleWithConfigurationCache("Spotless does not support configuration cache yet")
+    }
+
+    apply plugin: 'com.github.spotbugs'
+    spotbugs {
+        toolVersion = '4.9.8'
+        effort = 'max'
+        reportLevel = 'medium'
+        excludeFilter = rootProject.file('config/spotbugs-exclude.xml')
+    }
+    tasks.withType(com.github.spotbugs.snom.SpotBugsTask).configureEach {
+        notCompatibleWithConfigurationCache("SpotBugs does not support configuration cache yet")
+        reports {
+            html.required = true
+            xml.required = false
         }
     }
 }
