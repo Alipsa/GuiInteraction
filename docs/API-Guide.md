@@ -203,7 +203,8 @@ io.view([
 // Display an image
 io.display("/path/to/chart.png", "Chart")
 
-// Display a file (opens with system default for unknown types)
+// gi-console opens unknown files with the system default application;
+// gi-swing and gi-fx expect a displayable image resource instead.
 io.display(new File("document.pdf"))
 ```
 
@@ -239,6 +240,8 @@ if (io.urlExists("https://example.com/api/health", 5000)) {
 }
 ```
 
+`urlExists` accepts HTTP and HTTPS URLs, follows redirects within the supplied overall timeout budget, and returns `false` unless the final response is 2xx. A negative timeout throws `IllegalArgumentException`; `0` disables the timeout entirely, so the call may block indefinitely.
+
 ### Content Type Detection
 
 ```groovy
@@ -257,8 +260,13 @@ if (url != null) {
     def content = url.text
 }
 
+// Missing paths return null; use File directly for a file that will be created later.
+def output = new File("build/report.html")
+
 // Extract filename from path
 def filename = FileUtils.baseName("/path/to/data.csv")  // "data.csv"
+// A # in a local filename is preserved; URL fragments are stripped.
+assert FileUtils.baseName("/tmp/report#2.pdf") == "report#2.pdf"
 ```
 
 ## Gade Compatibility
@@ -299,7 +307,7 @@ if (file == null) {
 ### gi-fx (JavaFX)
 
 - Requires a JVM with JavaFX support
-- Full SVG rendering support via WebView
+- SVG rendering via matrix-charts JavaFX integration (a lighter subset than a browser renderer)
 - Rich date pickers with calendar UI
 
 ### gi-swing
@@ -312,5 +320,5 @@ if (file == null) {
 
 - Best for headless/CI environments
 - `display()` and `display(Chart)` print messages instead of showing UI
-- Password input requires `System.console()` (returns null in IDEs)
+- Password input is masked when `System.console()` is available; otherwise stdin input is visible and a warning is logged
 - Tables displayed as text using Matrix.content()

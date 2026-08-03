@@ -9,6 +9,7 @@ import se.alipsa.gi.ImageTransferable
 
 import java.awt.Image
 import se.alipsa.gi.AbstractInOut
+import se.alipsa.gi.FileUtils
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.symp.YearMonthPicker
 
@@ -32,15 +33,12 @@ class InOut extends AbstractInOut {
 
     private static final Logger log = Logger.getLogger(InOut.class)
 
-    static {
-        if (GraphicsEnvironment.isHeadless()) {
-            throw new UnsupportedOperationException(
-                "gi-swing InOut requires a graphical environment. " +
-                "Use gi-console for headless environments.")
-        }
-    }
-
   InOut() {
+    if (GraphicsEnvironment.isHeadless()) {
+      throw new UnsupportedOperationException(
+          "gi-swing InOut requires a graphical environment. " +
+          "Use gi-console for headless environments.")
+    }
     // This is needed due to timing issues to ensure swing UI starts properly
     // Note: attempts with invokeLater to start the EDT did not work on MacOs
     JFrame frame = new JFrame()
@@ -136,6 +134,9 @@ class InOut extends AbstractInOut {
 
   @Override
   Object promptSelect(String title, String headerText, String message, Collection<Object> options, Object defaultValue) {
+    if (options == null || options.isEmpty()) {
+      throw new IllegalArgumentException("Options collection cannot be null or empty")
+    }
     JPanel content = new JPanel(new BorderLayout())
     content.add(new JLabel(headerText), BorderLayout.NORTH)
     JPanel messagePanel = new JPanel(new FlowLayout())
@@ -198,6 +199,10 @@ class InOut extends AbstractInOut {
 
   @Override
   void view(File file, String... title) {
+    if (file == null || !file.exists()) {
+      log.warn("Cannot view file: Failed to find {}", file)
+      return
+    }
     JEditorPane jep = new JEditorPane()
     jep.setPage(file.toURI().toURL())
     JScrollPane scrollPane = new JScrollPane(jep)
@@ -293,39 +298,59 @@ class InOut extends AbstractInOut {
 
   @Override
   void display(String fileName, String... title) {
-    File file = new File(fileName)
-    if (file.exists()) {
+    URL resource = FileUtils.getResourceUrl(fileName)
+    if (resource == null) {
+      log.warn("Cannot display image: Failed to find {}", fileName)
+      return
+    }
+    File file = null
+    if (resource.protocol == 'file') {
+      try {
+        file = new File(resource.toURI())
+      } catch (URISyntaxException e) {
+        log.warn("Cannot display image: Invalid resource URL {}", resource, e)
+        return
+      }
+    }
+    if (file != null && file.exists()) {
       try {
         String contentType = getContentType(file)
         if ("image/svg+xml" == contentType) {
-          displaySvg(file, title)
+          displaySvg(resource, title)
           return
         }
       } catch (IOException e) {
         log.error("Error detecting content type", e)
         return
       }
+    } else if (FileUtils.isSvgResource(resource)) {
+      displaySvg(resource, title)
+      return
     }
-    ImageIcon img = new ImageIcon(fileName)
+    ImageIcon img = new ImageIcon(resource)
+    if (img.getIconWidth() < 0 || img.getIconHeight() < 0) {
+      log.warn("Cannot display image: Failed to load {}", fileName)
+      return
+    }
     JLabel label = new JLabel(img)
     display(label, title)
   }
 
   /**
-   * Displays an SVG file using Apache Batik's JSVGCanvas.
+   * Displays an SVG file using matrix-charts' JSVG-backed panel.
    */
-  private void displaySvg(File svgFile, String... title) {
+  private void displaySvg(URL svgUrl, String... title) {
     String svg
     try {
-      svg = svgFile.getText("UTF-8")
+      svg = FileUtils.readXml(svgUrl)
     } catch (IOException e) {
-      log.error("Failed to read svg file {}", svgFile, e)
+      log.error("Failed to read svg resource {}", svgUrl, e)
       return
     }
     def svgPanel = ChartToSwing.export(svg)
     svgPanel.setPreferredSize(new Dimension(800, 600))
 
-    JFrame frame = new JFrame(title.length > 0 ? title[0] : svgFile.getName())
+    JFrame frame = new JFrame(title.length > 0 ? title[0] : FileUtils.baseName(svgUrl.toExternalForm()))
     frame.getContentPane().add(new JScrollPane(svgPanel))
     frame.setSize(800, 600)
     frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE)

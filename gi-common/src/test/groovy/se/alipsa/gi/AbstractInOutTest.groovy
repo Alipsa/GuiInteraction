@@ -4,12 +4,20 @@ import groovy.transform.CompileStatic
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.Arguments
+import org.junit.jupiter.params.provider.MethodSource
 import se.alipsa.groovy.svg.Svg
 import se.alipsa.matrix.core.Matrix
 
 import javax.swing.JComponent
 import java.time.LocalDate
 import java.time.YearMonth
+import com.sun.net.httpserver.HttpServer
+import java.net.InetSocketAddress
+import java.util.concurrent.atomic.AtomicInteger
+import java.util.concurrent.atomic.AtomicReference
+import java.util.stream.Stream
 
 import static org.junit.jupiter.api.Assertions.*
 
@@ -180,6 +188,13 @@ class AbstractInOutTest {
   }
 
   @Test
+  void testUrlExistsRejectsNegativeTimeout() {
+    assertThrows(IllegalArgumentException) {
+      inOut.urlExists("http://127.0.0.1", -1)
+    }
+  }
+
+  @Test
   void testUrlExistsWithUnreachableHost() {
     // Non-existent hosts should return false with timeout
     assertFalse(inOut.urlExists("http://this-host-does-not-exist-12345.com/", 3000))
@@ -189,6 +204,159 @@ class AbstractInOutTest {
   void testUrlExistsWithInvalidPort() {
     // Connection refused should return false
     assertFalse(inOut.urlExists("http://localhost:59999/", 1000))
+  }
+
+  @ParameterizedTest(name = 'HEAD {0}, fallback expected: {1}')
+  @MethodSource('headFallbackCases')
+  void urlExistsAppliesTheHeadFallbackAllowList(int headStatus, boolean fallbackExpected) {
+    AtomicInteger requests = new AtomicInteger()
+    AtomicReference<String> rangeHeader = new AtomicReference<>()
+    HttpServer server = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0)
+    server.createContext("/health") { exchange ->
+      requests.incrementAndGet()
+      int responseCode
+      if (exchange.requestMethod == "HEAD") {
+        responseCode = headStatus
+      } else {
+        rangeHeader.set(exchange.requestHeaders.getFirst("Range"))
+        responseCode = 200
+      }
+      exchange.sendResponseHeaders(responseCode, -1)
+      exchange.close()
+    }
+    server.start()
+    try {
+      assertEquals(fallbackExpected,
+          inOut.urlExists("http://127.0.0.1:${server.address.port}/health", 2000))
+      assertEquals(fallbackExpected ? "bytes=0-0" : null, rangeHeader.get())
+      assertEquals(fallbackExpected ? 2 : 1, requests.get())
+    } finally {
+      server.stop(0)
+    }
+  }
+
+  static Stream<Arguments> headFallbackCases() {
+    Stream.of(
+        Arguments.of(400, true),
+        Arguments.of(401, true),
+        Arguments.of(403, true),
+        Arguments.of(405, true),
+        Arguments.of(501, true),
+        Arguments.of(404, false),
+        Arguments.of(410, false),
+        Arguments.of(500, false)
+    )
+  }
+
+  @Test
+  void urlExistsFollowsRedirectsAndChecksTheFinalResponse() {
+    HttpServer server = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0)
+    server.createContext("/redirect") { exchange ->
+      exchange.responseHeaders.add("Location", "/missing")
+      exchange.sendResponseHeaders(302, -1)
+      exchange.close()
+    }
+    server.createContext("/missing") { exchange ->
+      exchange.sendResponseHeaders(404, -1)
+      exchange.close()
+    }
+    server.start()
+    try {
+      assertFalse(inOut.urlExists("http://127.0.0.1:${server.address.port}/redirect", 2000))
+    } finally {
+      server.stop(0)
+    }
+  }
+
+  @Test
+  void urlExistsResolvesRelativeRedirects() {
+    HttpServer server = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0)
+    server.createContext("/redirect") { exchange ->
+      exchange.responseHeaders.add("Location", "/ok")
+      exchange.sendResponseHeaders(302, -1)
+      exchange.close()
+    }
+    server.createContext("/ok") { exchange ->
+      exchange.sendResponseHeaders(200, -1)
+      exchange.close()
+    }
+    server.start()
+    try {
+      assertTrue(inOut.urlExists("http://127.0.0.1:${server.address.port}/redirect", 2000))
+    } finally {
+      server.stop(0)
+    }
+  }
+
+  @Test
+  void urlExistsRejectsNonHttpRedirectTargets() {
+    HttpServer server = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0)
+    server.createContext("/redirect") { exchange ->
+      exchange.responseHeaders.add("Location", "file:/etc/hostname")
+      exchange.sendResponseHeaders(302, -1)
+      exchange.close()
+    }
+    server.start()
+    try {
+      assertFalse(inOut.urlExists("http://127.0.0.1:${server.address.port}/redirect", 2000))
+    } finally {
+      server.stop(0)
+    }
+  }
+
+  @Test
+  void urlExistsRejectsRedirectsWithoutLocation() {
+    HttpServer server = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0)
+    server.createContext("/bare-redirect") { exchange ->
+      exchange.sendResponseHeaders(302, -1)
+      exchange.close()
+    }
+    server.start()
+    try {
+      assertFalse(inOut.urlExists("http://127.0.0.1:${server.address.port}/bare-redirect", 2000))
+    } finally {
+      server.stop(0)
+    }
+  }
+
+  @Test
+  void urlExistsStopsAtTheRedirectLimit() {
+    HttpServer server = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0)
+    server.createContext("/loop") { exchange ->
+      exchange.responseHeaders.add("Location", "/loop")
+      exchange.sendResponseHeaders(302, -1)
+      exchange.close()
+    }
+    server.start()
+    try {
+      assertFalse(inOut.urlExists("http://127.0.0.1:${server.address.port}/loop", 2000))
+    } finally {
+      server.stop(0)
+    }
+  }
+
+  @Test
+  void urlExistsRetriesWithoutRangeAfterA416Response() {
+    AtomicReference<String> rangeHeader = new AtomicReference<>()
+    HttpServer server = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0)
+    server.createContext("/range") { exchange ->
+      if (exchange.requestMethod == "HEAD") {
+        exchange.sendResponseHeaders(405, -1)
+      } else if (exchange.requestHeaders.getFirst("Range") != null) {
+        rangeHeader.set(exchange.requestHeaders.getFirst("Range"))
+        exchange.sendResponseHeaders(416, -1)
+      } else {
+        exchange.sendResponseHeaders(200, -1)
+      }
+      exchange.close()
+    }
+    server.start()
+    try {
+      assertTrue(inOut.urlExists("http://127.0.0.1:${server.address.port}/range", 2000))
+      assertEquals("bytes=0-0", rangeHeader.get())
+    } finally {
+      server.stop(0)
+    }
   }
 
   /**

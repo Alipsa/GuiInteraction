@@ -15,7 +15,7 @@ This module provides JavaFX-based dialogs and viewers for user interaction. It o
 
 - Native JavaFX dialogs for file/directory selection
 - Rich date and year-month pickers with calendar UI
-- WebView-based HTML and SVG rendering
+- WebView-based HTML rendering
 - Markdown viewing with full formatting support
 - Chart display via Matrix Charts integration
 
@@ -82,7 +82,7 @@ dependencies {
 
 - JavaFX must be available at runtime (either bundled in JDK or added as dependencies)
 - Thread safety: UI operations are automatically dispatched to the FX Application Thread
-- SVG files are rendered using WebView
+- SVG files are parsed and rendered as JavaFX nodes without WebView. This uses a lighter SVG backend than a browser, so advanced CSS, filters, and scripting may render differently or be unsupported.
 
 ## API Documentation
 

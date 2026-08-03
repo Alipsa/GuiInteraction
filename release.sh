@@ -33,6 +33,7 @@ fi
 PROJECT=$(basename "$PWD")
 DRY_RUN=false
 BUMP_TYPE=""
+README_NEEDS_UPDATE=false
 
 # Parse arguments
 while [[ $# -gt 0 ]]; do
@@ -180,42 +181,39 @@ echo ""
 CURRENT_VERSION=$(get_version)
 echo -e "Current version: ${YELLOW}${CURRENT_VERSION}${NC}"
 
-# Handle SNAPSHOT version - strip -SNAPSHOT suffix for release
-if echo "$CURRENT_VERSION" | grep -q '\-SNAPSHOT'; then
+commit_release_version() {
+    local release_version=$1
+    update_version "$release_version"
+    update_readme_version "$release_version"
+    generate_changelog "$release_version"
+
+    if ! git add build.gradle README.md CHANGELOG.md; then
+        echo -e "${RED}Error: Failed to add files to git. Please resolve the issue and try again.${NC}" >&2
+        exit 1
+    fi
+    if ! git commit -m "Release version ${release_version}" -- build.gradle README.md CHANGELOG.md; then
+        echo -e "${RED}Error: Failed to commit version change. Please resolve the issue and try again.${NC}" >&2
+        exit 1
+    fi
+}
+
+# A requested bump determines the release version, including when the current
+# version is a snapshot. This avoids first committing the unbumped version and
+# then publishing a different version.
+if [ -n "$BUMP_TYPE" ]; then
+    RELEASE_VERSION=$(bump_version "$CURRENT_VERSION" "$BUMP_TYPE")
+    echo -e "Bumping version to: ${GREEN}${RELEASE_VERSION}${NC}"
+elif echo "$CURRENT_VERSION" | grep -q '\-SNAPSHOT'; then
     RELEASE_VERSION="${CURRENT_VERSION%-SNAPSHOT}"
     echo -e "Stripping SNAPSHOT suffix: ${YELLOW}${CURRENT_VERSION}${NC} -> ${GREEN}${RELEASE_VERSION}${NC}"
-
-    if [ "$DRY_RUN" = false ]; then
-        update_version "$RELEASE_VERSION"
-        update_readme_version "$RELEASE_VERSION"
-        generate_changelog "$RELEASE_VERSION"
-
-        # Commit version changes
-        if ! git add build.gradle README.md CHANGELOG.md; then
-            echo -e "${RED}Error: Failed to add files to git. Please resolve the issue and try again.${NC}" >&2
-            exit 1
-        fi
-        if ! git commit -m "Release version ${RELEASE_VERSION}"; then
-            echo -e "${RED}Error: Failed to commit version change. Please resolve the issue and try again.${NC}" >&2
-            exit 1
-        fi
-    else
-        echo -e "${YELLOW}[DRY RUN] Would update build.gradle and README.md to ${RELEASE_VERSION}${NC}"
-    fi
-    CURRENT_VERSION=$RELEASE_VERSION
 else
-    # No SNAPSHOT - verify README.md has the correct version
+    RELEASE_VERSION="$CURRENT_VERSION"
     if ! check_readme_version "$CURRENT_VERSION"; then
-        if [ "$DRY_RUN" = true ]; then
-            echo -e "${YELLOW}[DRY RUN] Would update README.md to match version ${CURRENT_VERSION}${NC}"
-        else
-            read -p "Update README.md to version ${CURRENT_VERSION}? [Y/n]: " update_readme
-            if [[ ! "$update_readme" =~ ^[Nn]$ ]]; then
-                update_readme_version "$CURRENT_VERSION"
-            fi
-        fi
+        README_NEEDS_UPDATE=true
     fi
 fi
+
+CURRENT_VERSION="$RELEASE_VERSION"
 
 # Check if version has already been released (git tag exists)
 TAG="v${CURRENT_VERSION}"
@@ -231,32 +229,34 @@ if git rev-parse "$TAG" >/dev/null 2>&1 || git ls-remote --tags origin | grep -q
         fi
     fi
 fi
-# Handle version bump
-if [ -n "$BUMP_TYPE" ]; then
-    NEW_VERSION=$(bump_version "$CURRENT_VERSION" "$BUMP_TYPE")
-    echo -e "Bumping version to: ${GREEN}${NEW_VERSION}${NC}"
 
-    if [ "$DRY_RUN" = false ]; then
-        update_version "$NEW_VERSION"
-        update_readme_version "$NEW_VERSION"
-        generate_changelog "$NEW_VERSION"
-
-        # Commit version change
-        if ! git add build.gradle README.md CHANGELOG.md; then
-            echo -e "${RED}Error: Failed to add files to git. Please resolve the issue and try again.${NC}" >&2
-            exit 1
-        fi
-        if ! git commit -m "Release version ${NEW_VERSION}"; then
-            echo -e "${RED}Error: Failed to commit version change. Please resolve the issue and try again.${NC}" >&2
-            exit 1
-        fi
+# Only mutate release files after the tag check has passed.
+if [ "$DRY_RUN" = false ] && [ "$RELEASE_VERSION" != "$(get_version)" ]; then
+    commit_release_version "$RELEASE_VERSION"
+elif [ "$DRY_RUN" = true ] && [ "$RELEASE_VERSION" != "$(get_version)" ]; then
+    echo -e "${YELLOW}[DRY RUN] Would update build.gradle and README.md to ${RELEASE_VERSION}${NC}"
+elif [ "$README_NEEDS_UPDATE" = true ]; then
+    if [ "$DRY_RUN" = true ]; then
+        echo -e "${YELLOW}[DRY RUN] Would update README.md to match version ${CURRENT_VERSION}${NC}"
     else
-        echo -e "${YELLOW}[DRY RUN] Would update version to ${NEW_VERSION}${NC}"
+        read -p "Update README.md to version ${CURRENT_VERSION}? [Y/n]: " update_readme
+        if [[ ! "$update_readme" =~ ^[Nn]$ ]]; then
+            update_readme_version "$CURRENT_VERSION"
+            if ! git diff --quiet HEAD -- README.md; then
+                if ! git add README.md; then
+                    echo -e "${RED}Error: Failed to add README.md to git. Please resolve the issue and try again.${NC}" >&2
+                    exit 1
+                fi
+                if ! git commit -m "Update README version to ${CURRENT_VERSION}" -- README.md; then
+                    echo -e "${RED}Error: Failed to commit README.md version change. Please resolve the issue and try again.${NC}" >&2
+                    exit 1
+                fi
+            else
+                echo -e "${YELLOW}README.md already matches version ${CURRENT_VERSION}; no commit needed.${NC}"
+            fi
+        fi
     fi
-
-    CURRENT_VERSION=$NEW_VERSION
 fi
-
 echo ""
 echo -e "Releasing version: ${GREEN}${CURRENT_VERSION}${NC}"
 echo ""

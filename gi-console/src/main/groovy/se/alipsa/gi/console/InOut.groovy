@@ -16,6 +16,7 @@ import java.awt.datatransfer.Clipboard
 import java.awt.datatransfer.DataFlavor
 import java.time.LocalDate
 import java.time.YearMonth
+import java.time.format.DateTimeParseException
 import java.util.concurrent.ExecutionException
 
 @CompileStatic
@@ -27,6 +28,7 @@ class InOut extends AbstractInOut {
 
   String read(String prompt) {
     print(prompt)
+    System.out.flush()
     return sysin.readLine()
   }
 
@@ -69,36 +71,81 @@ class InOut extends AbstractInOut {
   @Override
   YearMonth promptYearMonth(String message) {
     String yearMonth = read(message)
-    return YearMonth.parse(yearMonth)
+    if (yearMonth == null || yearMonth.trim().isEmpty()) {
+      return null
+    }
+    try {
+      return YearMonth.parse(yearMonth.trim())
+    } catch (DateTimeParseException e) {
+      println("Invalid year-month '$yearMonth'. Returning null")
+      return null
+    }
   }
 
   @Override
   YearMonth promptYearMonth(String title, String message, YearMonth from, YearMonth to, YearMonth initial) {
     String yearMonth = read("$title: $message")
-    return YearMonth.parse(yearMonth)
+    if (yearMonth == null) {
+      return null
+    }
+    if (yearMonth.trim().isEmpty()) {
+      return initial
+    }
+    YearMonth selected
+    try {
+      selected = YearMonth.parse(yearMonth.trim())
+    } catch (DateTimeParseException e) {
+      println("Invalid year-month '$yearMonth'. Returning initial value $initial")
+      return initial
+    }
+    if (from != null && selected.isBefore(from) || to != null && selected.isAfter(to)) {
+      String range = from != null && to != null ? "$from to $to" :
+          from != null ? "on or after $from" : "on or before $to"
+      println("Selected year-month $selected is outside the range $range. Returning initial value $initial")
+      return initial
+    }
+    return selected
   }
 
   @Override
   LocalDate promptDate(String title, String message, LocalDate defaultValue) {
-    String yearMonth = read("$title: $message")
-    return LocalDate.parse(yearMonth)
+    String date = read("$title: $message")
+    if (date == null) {
+      return null
+    }
+    if (date.trim().isEmpty()) {
+      return defaultValue
+    }
+    try {
+      return LocalDate.parse(date.trim())
+    } catch (DateTimeParseException e) {
+      println("Invalid date '$date'. Returning default value $defaultValue")
+      return defaultValue
+    }
   }
 
   @Override
   Object promptSelect(String title, String headerText, String message, Collection<Object> options, Object defaultValue) {
+    if (options == null || options.isEmpty()) {
+      throw new IllegalArgumentException("Options collection cannot be null or empty")
+    }
+    List<Object> optionList = new ArrayList<>(options)
     println title
     println headerText
     int i = 0
-    for (def option : options) {
+    for (Object option : optionList) {
       println "${i}. $option"
       i++
     }
     println "Default value is $defaultValue"
     String input = read(message)
-    if (input.isInteger()) {
-      int index = input.toInteger()
-      if (index >= 0 && index < options.size()) {
-        return options[index]
+    if (input == null) {
+      return null
+    }
+    if (input.trim().isInteger()) {
+      int index = input.trim().toInteger()
+      if (index >= 0 && index < optionList.size()) {
+        return optionList[index]
       } else {
         println("Invalid index $input. Returning default value $defaultValue")
         return defaultValue
@@ -148,6 +195,9 @@ class InOut extends AbstractInOut {
     println title
     println headerText
     String input = read(message)
+    if (input == null) {
+      return null
+    }
     if (input.isEmpty()) {
       return defaultValue
     } else {

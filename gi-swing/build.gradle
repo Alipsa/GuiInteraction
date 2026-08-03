@@ -40,7 +40,7 @@ dependencies {
   def javaFxVersion = libs.versions.javafx.get()
 
   implementation project(':gi-common')
-  compileOnly libs.groovy.all
+  compileOnly libs.groovy
   implementation libs.swing.widgets
 
   // JavaFX is needed at compile-time only for matrix-charts type resolution
@@ -50,6 +50,10 @@ dependencies {
   compileOnly "org.openjfx:javafx-controls:${javaFxVersion}:$qualifier"
 
   // SVG rendering is handled by matrix-charts SvgPanel
+  testImplementation platform(libs.junit.bom)
+  testImplementation libs.junit.jupiter
+  testImplementation libs.groovy
+  testRuntimeOnly libs.junit.platform.launcher
 }
 
 repositories {
@@ -59,6 +63,11 @@ repositories {
         // Slows down the build (a lot), use only if local SNAPSHOTS are needed
         mavenLocal()
     }
+}
+
+test {
+  useJUnitPlatform()
+  systemProperty 'java.awt.headless', 'true'
 }
 
 publishing {

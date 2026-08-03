@@ -15,9 +15,12 @@ import java.awt.datatransfer.StringSelection
 import java.awt.datatransfer.Transferable
 import java.nio.file.Paths
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit
 
 @CompileStatic
 abstract class AbstractInOut implements GuiInteraction {
+
+  private static final int MAX_REDIRECTS = 5
 
   private Parser markdownParser
   private HtmlRenderer htmlRenderer
@@ -30,24 +33,92 @@ abstract class AbstractInOut implements GuiInteraction {
 
   @Override
   boolean urlExists(String urlString, int timeout) {
-    HttpURLConnection con = null
+    if (timeout < 0) {
+      throw new IllegalArgumentException("timeout cannot be negative")
+    }
     try {
       URL url = new URL(urlString)
-      con = (HttpURLConnection) url.openConnection()
-      con.setInstanceFollowRedirects(false)
-      con.setRequestMethod("HEAD")
-      con.setConnectTimeout(timeout)
-      con.setReadTimeout(timeout)
-      int responseCode = con.getResponseCode()
-      // Accept 2xx (success) and 3xx (redirect) status codes
-      return responseCode >= 200 && responseCode < 400
+      long deadline = timeout > 0 ?
+          System.nanoTime() + TimeUnit.MILLISECONDS.toNanos(timeout) : Long.MAX_VALUE
+      for (int redirect = 0; redirect <= MAX_REDIRECTS; redirect++) {
+        if (!isHttpUrl(url) || !hasTimeRemaining(timeout, deadline)) {
+          return false
+        }
+        HttpURLConnection con = null
+        try {
+          con = open(url, "HEAD", remainingTimeout(timeout, deadline), false)
+          int responseCode = con.getResponseCode()
+          if (shouldFallbackToGet(responseCode)) {
+            if (!hasTimeRemaining(timeout, deadline)) {
+              return false
+            }
+            con.disconnect()
+            con = open(url, "GET", remainingTimeout(timeout, deadline), true)
+            responseCode = con.getResponseCode()
+            if (responseCode == 416) {
+              if (!hasTimeRemaining(timeout, deadline)) {
+                return false
+              }
+              con.disconnect()
+              con = open(url, "GET", remainingTimeout(timeout, deadline), false)
+              responseCode = con.getResponseCode()
+            }
+          }
+          if (responseCode >= 300 && responseCode < 400) {
+            String location = con.getHeaderField("Location")
+            if (location == null || redirect == MAX_REDIRECTS) {
+              return false
+            }
+            url = new URL(url, location)
+            continue
+          }
+          return responseCode >= 200 && responseCode < 300
+        } finally {
+          if (con != null) {
+            con.disconnect()
+          }
+        }
+      }
     } catch (RuntimeException | IOException ignored) {
       return false
-    } finally {
-      if (con != null) {
-        con.disconnect()
-      }
     }
+    return false
+  }
+
+  private static HttpURLConnection open(URL url, String method, int timeout, boolean range) {
+    HttpURLConnection con = (HttpURLConnection) url.openConnection()
+    con.setInstanceFollowRedirects(false)
+    con.setRequestMethod(method)
+    if (range) {
+      con.setRequestProperty("Range", "bytes=0-0")
+    }
+    con.setConnectTimeout(timeout)
+    con.setReadTimeout(timeout)
+    return con
+  }
+
+  private static boolean isHttpUrl(URL url) {
+    return "http".equalsIgnoreCase(url.protocol) || "https".equalsIgnoreCase(url.protocol)
+  }
+
+  private static boolean shouldFallbackToGet(int responseCode) {
+    return responseCode == HttpURLConnection.HTTP_BAD_REQUEST ||
+        responseCode == HttpURLConnection.HTTP_UNAUTHORIZED ||
+        responseCode == HttpURLConnection.HTTP_FORBIDDEN ||
+        responseCode == HttpURLConnection.HTTP_BAD_METHOD ||
+        responseCode == HttpURLConnection.HTTP_NOT_IMPLEMENTED
+  }
+
+  private static int remainingTimeout(int configuredTimeout, long deadline) {
+    if (configuredTimeout <= 0) {
+      return configuredTimeout
+    }
+    long remainingMillis = TimeUnit.NANOSECONDS.toMillis(deadline - System.nanoTime())
+    return (int) Math.max(1, Math.min(Integer.MAX_VALUE, remainingMillis))
+  }
+
+  private static boolean hasTimeRemaining(int configuredTimeout, long deadline) {
+    return configuredTimeout <= 0 || System.nanoTime() < deadline
   }
 
   @Override
@@ -91,10 +162,18 @@ abstract class AbstractInOut implements GuiInteraction {
 
   @Override
   String prompt(Map<String, Object> namedParams) {
-    return prompt(String.valueOf(namedParams.getOrDefault("title", "")),
-        String.valueOf(namedParams.getOrDefault("headerText", "")),
-        String.valueOf(namedParams.getOrDefault("message", "")),
-        String.valueOf(namedParams.getOrDefault("defaultValue", "")))
+    if (namedParams == null) {
+      throw new IllegalArgumentException("namedParams cannot be null")
+    }
+    return prompt(asPromptValue(namedParams, "title"),
+        asPromptValue(namedParams, "headerText"),
+        asPromptValue(namedParams, "message"),
+        asPromptValue(namedParams, "defaultValue"))
+  }
+
+  private static String asPromptValue(Map<String, Object> namedParams, String key) {
+    Object value = namedParams.get(key)
+    return value == null ? "" : String.valueOf(value)
   }
 
   @Override

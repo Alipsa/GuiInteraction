@@ -102,11 +102,15 @@ interface GuiInteraction {
   /**
    * Checks if a URL exists and is accessible.
    * <p>
-   * Performs an HTTP HEAD request to verify the URL is reachable.
+   * Performs an HTTP HEAD request, falling back to GET for retryable method/authorization
+   * responses (400, 401, 403, 405, or 501),
+   * to verify the URL is reachable.
    *
    * @param urlString the URL to check
-   * @param timeout connection timeout in milliseconds
-   * @return {@code true} if the URL returns HTTP 200, {@code false} otherwise
+   * @param timeout overall timeout budget in milliseconds, including redirect hops and retries
+   * @return {@code true} if the URL returns a successful 2xx response after redirects,
+   *         {@code false} for non-HTTP(S) URLs or any other unsuccessful response
+   * @throws IllegalArgumentException if {@code timeout} is negative
    */
   boolean urlExists(String urlString, int timeout)
 
@@ -136,7 +140,7 @@ interface GuiInteraction {
    * absolute path of the file system (not only the classpath's).
    *
    * @param resource the path to the resource
-   * @return the URL representation of the resource
+   * @return the URL representation of the resource, or {@code null} if it does not exist
    */
   URL getResourceUrl(String resource)
 
@@ -150,7 +154,8 @@ interface GuiInteraction {
    * )
    *
    * @param namedParams a key/value map with the parameter name and its value
-   * @return the user input prompted for
+   * @return the user input prompted for, or {@code null} if cancelled
+   * @throws IllegalArgumentException if {@code namedParams} is {@code null}
    * @throws ExecutionException if a threading issue occurs
    * @throws InterruptedException if a threading interrupt issue occurs
    */
@@ -198,8 +203,7 @@ interface GuiInteraction {
    * Prompts the user to select a year and month.
    *
    * @param message the prompt message to display
-   * @return the selected YearMonth
-   * @throws java.time.format.DateTimeParseException if input cannot be parsed
+   * @return the selected YearMonth, or {@code null} if cancelled or input cannot be parsed
    */
   YearMonth promptYearMonth(String message);
 
@@ -211,7 +215,7 @@ interface GuiInteraction {
    * @param from the earliest selectable YearMonth
    * @param to the latest selectable YearMonth
    * @param initial the initially selected YearMonth
-   * @return the selected YearMonth
+   * @return the selected YearMonth, the initial value for invalid input, or {@code null} if cancelled
    */
   YearMonth promptYearMonth(String title, String message, YearMonth from, YearMonth to, YearMonth initial);
 
@@ -221,7 +225,7 @@ interface GuiInteraction {
    * @param title the dialog title
    * @param message the prompt message to display
    * @param defaultValue the initially selected date
-   * @return the selected LocalDate
+   * @return the selected LocalDate, the default value for invalid input, or {@code null} if cancelled
    */
   LocalDate promptDate(String title, String message, LocalDate defaultValue);
 
@@ -233,8 +237,8 @@ interface GuiInteraction {
    * @param message the prompt message to display
    * @param options the collection of options to choose from (must not be empty)
    * @param defaultValue the initially selected option
-   * @return the selected option
-   * @throws IllegalArgumentException if options collection is empty
+   * @return the selected option, the default value for invalid console input, or {@code null} if cancelled
+   * @throws IllegalArgumentException if options collection is null or empty
    */
   Object promptSelect(String title, String headerText, String message, Collection<Object> options, Object defaultValue);
 
@@ -243,7 +247,7 @@ interface GuiInteraction {
    *
    * @param message the prompt message to display
    * @param options the collection of options to choose from (must not be null or empty)
-   * @return the selected option
+   * @return the selected option, or {@code null} if cancelled
    * @throws IllegalArgumentException if options collection is null or empty
    */
   Object promptSelect(String message, Collection<Object> options);
@@ -251,8 +255,8 @@ interface GuiInteraction {
   /**
    * Prompts the user for a password with masked input.
    * <p>
-   * In console mode, this may return {@code null} if no console is available
-   * (e.g., when running in an IDE or CI environment).
+   * In console mode, a visible-input fallback is used if no system console is
+   * available (e.g., when running in an IDE or CI environment).
    *
    * @param title the dialog title
    * @param message the prompt message to display

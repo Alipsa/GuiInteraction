@@ -19,7 +19,6 @@ import javafx.scene.input.Clipboard
 import javafx.scene.input.ClipboardContent
 import javafx.scene.input.DataFormat
 import javafx.scene.layout.FlowPane
-import javafx.scene.web.WebView
 import javafx.stage.DirectoryChooser
 import javafx.stage.FileChooser
 import javafx.stage.Modality
@@ -46,20 +45,17 @@ class InOut extends AbstractInOut {
 
     private static final Logger log = Logger.getLogger(InOut.class)
 
-    static {
-        if (GraphicsEnvironment.isHeadless()) {
-            throw new UnsupportedOperationException(
-                "gi-fx InOut requires a graphical environment. " +
-                "Use gi-console for headless environments.")
-        }
-    }
-
     Window ownerWindow = null
     ObservableList<String> styleSheetUrls = null
     //Clipboard clipboard
 
     InOut() {
-        new JFXPanel()
+        if (GraphicsEnvironment.isHeadless()) {
+            throw new UnsupportedOperationException(
+                "gi-fx InOut requires a graphical environment. " +
+                "Use gi-console for headless environments.")
+        }
+        initializeToolkit()
     }
 
     InOut(Window owner) {
@@ -70,6 +66,10 @@ class InOut extends AbstractInOut {
     InOut(Window owner, ObservableList<String> styleSheets) {
         this(owner)
         setStyleSheetUrls(styleSheets)
+    }
+
+    private static void initializeToolkit() {
+        new JFXPanel()
     }
 
     @Override
@@ -212,6 +212,9 @@ class InOut extends AbstractInOut {
 
     @Override
     Object promptSelect(String title, String headerText, String message, Collection<Object> options, Object defaultValue) {
+        if (options == null || options.isEmpty()) {
+            throw new IllegalArgumentException("Options collection cannot be null or empty")
+        }
         List opt = options as List
         int defaultIndex = opt.indexOf(defaultValue)
         if (defaultIndex == -1) {
@@ -310,29 +313,64 @@ class InOut extends AbstractInOut {
             log.warn("Cannot display image, Failed to find {}", fileName)
             return
         }
-        File file = new File(fileName);
-        if (file.exists()) {
+        File file = null
+        if ('file' == url.protocol) {
+            try {
+                file = new File(url.toURI())
+            } catch (URISyntaxException e) {
+                log.warn("Cannot display image: Invalid resource URL {}", url, e)
+                return
+            }
+        }
+        if (file != null && file.exists()) {
             try {
                 String contentType = getContentType(file)
                 if ("image/svg+xml" == contentType) {
-                    Platform.runLater(() -> {
-                        final WebView browser = new WebView()
-                        browser.getEngine().load(url.toExternalForm())
-                        display(browser, title)
-                    });
+                    displaySvg(url, title)
                     return
                 }
             } catch (IOException e) {
                 log.error("Failed to detect image content type", e)
             }
         }
-        Image img = new Image(url.toExternalForm())
-        display(img, title)
+        if (FileUtils.isSvgResource(url)) {
+            displaySvg(url, title)
+            return
+        }
+        try {
+            Image img = new Image(url.toExternalForm())
+            if (img.isError()) {
+                log.error("Failed to display image {}", fileName, img.getException())
+                return
+            }
+            display(img, title)
+        } catch (RuntimeException e) {
+            log.error("Failed to display image {}", fileName, e)
+        }
     }
 
     void display(Image img, String... title) {
         ImageView node = new ImageView(img)
         display(node, title)
+    }
+
+    private void displaySvg(URL url, String... title) {
+        String svgContent
+        try {
+            svgContent = FileUtils.readXml(url)
+        } catch (IOException e) {
+            log.error("Failed to read SVG {}", url, e)
+            return
+        }
+        String windowTitle = title.length > 0 ? title[0] : ''
+        Platform.runLater(() -> {
+            try {
+                Node node = ChartToJfx.export(svgContent)
+                showNow(node, windowTitle)
+            } catch (RuntimeException e) {
+                log.error("Failed to parse SVG {}", url, e)
+            }
+        })
     }
 
     @Override
@@ -389,14 +427,18 @@ class InOut extends AbstractInOut {
 
     private static void show(Node node, String title) {
         Platform.runLater {
-            Alert alert = new Alert(Alert.AlertType.INFORMATION)
-            alert.setHeaderText(null)
-            alert.setContentText(null)
-            alert.setTitle(title)
-            alert.getDialogPane().setContent(node)
-            alert.initModality(Modality.NONE)
-            alert.showAndWait()
+            showNow(node, title)
         }
+    }
+
+    private static void showNow(Node node, String title) {
+        Alert alert = new Alert(Alert.AlertType.INFORMATION)
+        alert.setHeaderText(null)
+        alert.setContentText(null)
+        alert.setTitle(title)
+        alert.getDialogPane().setContent(node)
+        alert.initModality(Modality.NONE)
+        alert.showAndWait()
     }
 
     void setStyleSheetUrls(ObservableList<String> styleSheetUrls) {
@@ -404,34 +446,38 @@ class InOut extends AbstractInOut {
     }
 
     void saveToClipboard(String string) {
-        Platform.runLater(() -> {
+        runOnFxThreadAsync(() -> {
             ClipboardContent content = new ClipboardContent()
             content.putString(string)
             getClipboard().setContent(content)
+            return null
         });
     }
 
     void saveToClipboard(File file) {
-        Platform.runLater(() -> {
+        runOnFxThreadAsync(() -> {
             ClipboardContent content = new ClipboardContent()
             content.putFiles(List.of(file))
             getClipboard().setContent(content)
+            return null
         });
     }
 
     void saveToClipboard(Image img) {
-        Platform.runLater(() -> {
+        runOnFxThreadAsync(() -> {
             ClipboardContent content = new ClipboardContent()
             content.putImage(img)
             getClipboard().setContent(content)
+            return null
         });
     }
 
     void saveToClipboard(Object obj, DataFormat format) {
-        Platform.runLater(() -> {
+        runOnFxThreadAsync(() -> {
             ClipboardContent content = new ClipboardContent()
             content.put(format, obj)
             getClipboard().setContent(content)
+            return null
         });
     }
 
@@ -490,6 +536,14 @@ class InOut extends AbstractInOut {
             throw new RuntimeException(e)
         } catch (ExecutionException e) {
             throw new RuntimeException(e.getCause() ?: e)
+        }
+    }
+
+    private static void runOnFxThreadAsync(Runnable action) {
+        if (Platform.isFxApplicationThread()) {
+            action.run()
+        } else {
+            Platform.runLater(action)
         }
     }
 
