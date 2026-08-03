@@ -337,6 +337,6 @@ if [ "$DRY_RUN" = true ]; then
 else
     echo -e "${GREEN}$PROJECT v${CURRENT_VERSION} released to Maven Central and GitHub!${NC}"
     echo ""
-    echo "See https://central.sonatype.org/publish/release/ for more info"
+    echo "See https://central.sonatype.com/publishing/deployments for more info"
 fi
 echo -e "${GREEN}========================================${NC}"

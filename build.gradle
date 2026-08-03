@@ -15,7 +15,7 @@ plugins {
 }
 
 group = 'se.alipsa.gi'
-version = '0.4.0'
+version = '0.4.1-SNAPSHOT'
 description = 'Allows Gade Gui Interactive capabilities from a standalone app'
 
 def requestedTaskNames = gradle.startParameter.taskNames.collect { it.toLowerCase(Locale.ROOT) }
