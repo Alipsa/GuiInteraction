@@ -40,7 +40,7 @@ dependencies {
   def javaFxVersion = libs.versions.javafx.get()
 
   implementation project(':gi-common')
-  compileOnly libs.groovy.all
+  compileOnly libs.groovy
   implementation libs.swing.widgets
 
   // JavaFX is needed at compile-time only for matrix-charts type resolution
@@ -52,7 +52,7 @@ dependencies {
   // SVG rendering is handled by matrix-charts SvgPanel
   testImplementation platform(libs.junit.bom)
   testImplementation libs.junit.jupiter
-  testImplementation libs.groovy.all
+  testImplementation libs.groovy
   testRuntimeOnly libs.junit.platform.launcher
 }
 
@@ -67,6 +67,7 @@ repositories {
 
 test {
   useJUnitPlatform()
+  systemProperty 'java.awt.headless', 'true'
 }
 
 publishing {

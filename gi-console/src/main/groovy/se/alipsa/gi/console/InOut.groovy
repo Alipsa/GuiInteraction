@@ -16,6 +16,7 @@ import java.awt.datatransfer.Clipboard
 import java.awt.datatransfer.DataFlavor
 import java.time.LocalDate
 import java.time.YearMonth
+import java.time.format.DateTimeParseException
 import java.util.concurrent.ExecutionException
 
 @CompileStatic
@@ -73,7 +74,12 @@ class InOut extends AbstractInOut {
     if (yearMonth == null || yearMonth.trim().isEmpty()) {
       return null
     }
-    return YearMonth.parse(yearMonth.trim())
+    try {
+      return YearMonth.parse(yearMonth.trim())
+    } catch (DateTimeParseException e) {
+      println("Invalid year-month '$yearMonth'. Returning null")
+      return null
+    }
   }
 
   @Override
@@ -85,9 +91,18 @@ class InOut extends AbstractInOut {
     if (yearMonth.trim().isEmpty()) {
       return initial
     }
-    YearMonth selected = YearMonth.parse(yearMonth.trim())
+    YearMonth selected
+    try {
+      selected = YearMonth.parse(yearMonth.trim())
+    } catch (DateTimeParseException e) {
+      println("Invalid year-month '$yearMonth'. Returning initial value $initial")
+      return initial
+    }
     if (from != null && selected.isBefore(from) || to != null && selected.isAfter(to)) {
-      throw new IllegalArgumentException("Selected year-month $selected is outside the range $from to $to")
+      String range = from != null && to != null ? "$from to $to" :
+          from != null ? "on or after $from" : "on or before $to"
+      println("Selected year-month $selected is outside the range $range. Returning initial value $initial")
+      return initial
     }
     return selected
   }
@@ -101,7 +116,12 @@ class InOut extends AbstractInOut {
     if (date.trim().isEmpty()) {
       return defaultValue
     }
-    return LocalDate.parse(date.trim())
+    try {
+      return LocalDate.parse(date.trim())
+    } catch (DateTimeParseException e) {
+      println("Invalid date '$date'. Returning default value $defaultValue")
+      return defaultValue
+    }
   }
 
   @Override
@@ -119,7 +139,10 @@ class InOut extends AbstractInOut {
     }
     println "Default value is $defaultValue"
     String input = read(message)
-    if (input != null && input.trim().isInteger()) {
+    if (input == null) {
+      return null
+    }
+    if (input.trim().isInteger()) {
       int index = input.trim().toInteger()
       if (index >= 0 && index < optionList.size()) {
         return optionList[index]

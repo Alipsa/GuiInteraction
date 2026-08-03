@@ -34,13 +34,14 @@ class ConsolePromptTest {
   }
 
   @Test
-  void rangedYearMonthRejectsValuesOutsideRange() {
+  void rangedYearMonthFallsBackForInvalidValues() {
     InOut inOut = new InOut()
-    inOut.sysin = new BufferedReader(new StringReader('2027-01\n'))
+    inOut.sysin = new BufferedReader(new StringReader('2027-01\nnot-a-month\n'))
 
-    assertThrows(IllegalArgumentException) {
-      inOut.promptYearMonth('title', 'month', YearMonth.of(2025, 1), YearMonth.of(2026, 12), null)
-    }
+    assertEquals(YearMonth.of(2026, 12),
+        inOut.promptYearMonth('title', 'month', YearMonth.of(2025, 1), YearMonth.of(2026, 12), YearMonth.of(2026, 12)))
+    assertEquals(YearMonth.of(2026, 12),
+        inOut.promptYearMonth('title', 'month', YearMonth.of(2025, 1), YearMonth.of(2026, 12), YearMonth.of(2026, 12)))
   }
 
   @Test
@@ -48,7 +49,7 @@ class ConsolePromptTest {
     InOut inOut = new InOut()
     inOut.sysin = new BufferedReader(new StringReader(''))
 
-    assertEquals('first', inOut.promptSelect('title', '', 'choice', ['first', 'second'], 'first'))
+    assertNull(inOut.promptSelect('title', '', 'choice', ['first', 'second'], 'first'))
     assertThrows(IllegalArgumentException) {
       inOut.promptSelect('title', '', 'choice', [], null)
     }

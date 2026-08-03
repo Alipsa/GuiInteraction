@@ -13,6 +13,7 @@ import java.awt.datatransfer.ClipboardOwner
 import java.awt.datatransfer.DataFlavor
 import java.awt.datatransfer.StringSelection
 import java.awt.datatransfer.Transferable
+import java.io.InputStream
 import java.nio.file.Paths
 import java.util.concurrent.ExecutionException;
 
@@ -34,7 +35,7 @@ abstract class AbstractInOut implements GuiInteraction {
     try {
       URL url = new URL(urlString)
       con = (HttpURLConnection) url.openConnection()
-      con.setInstanceFollowRedirects(false)
+      con.setInstanceFollowRedirects(true)
       con.setRequestMethod("HEAD")
       con.setConnectTimeout(timeout)
       con.setReadTimeout(timeout)
@@ -43,14 +44,18 @@ abstract class AbstractInOut implements GuiInteraction {
           responseCode == HttpURLConnection.HTTP_NOT_IMPLEMENTED) {
         con.disconnect()
         con = (HttpURLConnection) url.openConnection()
-        con.setInstanceFollowRedirects(false)
+        con.setInstanceFollowRedirects(true)
         con.setRequestMethod("GET")
+        con.setRequestProperty("Range", "bytes=0-0")
         con.setConnectTimeout(timeout)
         con.setReadTimeout(timeout)
         responseCode = con.getResponseCode()
+        try (InputStream response = con.getInputStream()) {
+          response.readNBytes(1)
+        }
       }
-      // Accept 2xx (success) and 3xx (redirect) status codes
-      return responseCode >= 200 && responseCode < 400
+      // Redirects are followed, so only a successful final response counts.
+      return responseCode >= 200 && responseCode < 300
     } catch (RuntimeException | IOException ignored) {
       return false
     } finally {

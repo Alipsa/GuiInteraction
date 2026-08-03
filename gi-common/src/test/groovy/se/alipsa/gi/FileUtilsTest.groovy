@@ -41,6 +41,16 @@ class FileUtilsTest {
   }
 
   @Test
+  void testBaseNamePreservesFragmentCharactersInLocalPaths() {
+    assertEquals("report#2.pdf", FileUtils.baseName("/tmp/report#2.pdf"))
+  }
+
+  @Test
+  void testBaseNameStripsUrlFragments() {
+    assertEquals("file.txt", FileUtils.baseName("https://example.com/file.txt#section"))
+  }
+
+  @Test
   void testBaseNameWithNull() {
     assertNull(FileUtils.baseName(null))
   }

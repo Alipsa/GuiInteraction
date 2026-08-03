@@ -14,26 +14,30 @@ class FileUtils {
   /**
    * Extracts the base filename from a path or URL string.
    * <p>
-   * Handles both Unix and Windows path separators, and strips query strings from URLs.
+   * Handles both Unix and Windows path separators, and strips query strings from paths or URLs.
+   * URL fragments are stripped only from URL-shaped input; {@code #} remains valid in local filenames.
    * <p>
    * Examples:
    * <ul>
    *   <li>{@code baseName("/path/to/file.txt")} returns {@code "file.txt"}</li>
    *   <li>{@code baseName("C:\\path\\to\\file.txt")} returns {@code "file.txt"}</li>
    *   <li>{@code baseName("http://example.com/file.txt?param=1")} returns {@code "file.txt"}</li>
+   *   <li>{@code baseName("/tmp/report#2.pdf")} returns {@code "report#2.pdf"}</li>
    *   <li>{@code baseName("filename")} returns {@code "filename"}</li>
    *   <li>{@code baseName("/path/to/dir/")} returns {@code "/path/to/dir/"} (empty basename)</li>
    * </ul>
    *
    * @param url the path or URL string to extract the filename from
-   * @return the base filename, or the original string if no path separator is found,
+   * @return the base filename, or the original path if it ends with a separator,
    *         or {@code null} if the input is {@code null}
    */
   static String baseName(String url) {
     if (url == null) return null
     url = url.replace('\\', '/')
     int queryIndex = url.indexOf('?')
-    int fragmentIndex = url.indexOf('#')
+    boolean urlLike = url ==~ /^[a-zA-Z][a-zA-Z0-9+.-]*:\/\/.*$/ ||
+        url.startsWith('file:') || url.startsWith('jar:')
+    int fragmentIndex = urlLike ? url.indexOf('#') : -1
     int suffixIndex = queryIndex >= 0 && fragmentIndex >= 0 ?
         Math.min(queryIndex, fragmentIndex) : Math.max(queryIndex, fragmentIndex)
     if (suffixIndex >= 0) {

@@ -304,7 +304,15 @@ class InOut extends AbstractInOut {
       log.warn("Cannot display image: Failed to find {}", fileName)
       return
     }
-    File file = resource.protocol == 'file' ? new File(resource.toURI()) : null
+    File file = null
+    if (resource.protocol == 'file') {
+      try {
+        file = new File(resource.toURI())
+      } catch (URISyntaxException e) {
+        log.warn("Cannot display image: Invalid resource URL {}", resource, e)
+        return
+      }
+    }
     if (file != null && file.exists()) {
       try {
         String contentType = getContentType(file)
@@ -316,7 +324,7 @@ class InOut extends AbstractInOut {
         log.error("Error detecting content type", e)
         return
       }
-    } else if (resource.toExternalForm().toLowerCase(Locale.ROOT).contains('.svg')) {
+    } else if (isSvgResource(resource)) {
       displaySvg(resource, title)
       return
     }
@@ -330,7 +338,7 @@ class InOut extends AbstractInOut {
   }
 
   /**
-   * Displays an SVG file using Apache Batik's JSVGCanvas.
+   * Displays an SVG file using matrix-charts' JSVG-backed panel.
    */
   private void displaySvg(URL svgUrl, String... title) {
     String svg
@@ -348,6 +356,10 @@ class InOut extends AbstractInOut {
     frame.setSize(800, 600)
     frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE)
     frame.setVisible(true)
+  }
+
+  static boolean isSvgResource(URL url) {
+    return url != null && FileUtils.baseName(url.toExternalForm()).toLowerCase(Locale.ROOT).endsWith('.svg')
   }
 
   @Override

@@ -68,16 +68,13 @@ subprojects {
             reportLevel = 'medium'
             excludeFilter = rootProject.file('config/spotbugs-exclude.xml')
         }
-        tasks.withType(com.github.spotbugs.snom.SpotBugsTask).configureEach {
+        tasks.withType(com.github.spotbugs.snom.SpotBugsTask).configureEach { spotbugsTask ->
             notCompatibleWithConfigurationCache("SpotBugs does not support configuration cache yet")
+            def runtimeConfigurationName = spotbugsTask.name == 'spotbugsTest' ? 'testRuntimeClasspath' : 'runtimeClasspath'
+            auxClassPaths.from(project.configurations.named(runtimeConfigurationName))
             reports {
                 html.required = true
                 xml.required = false
-            }
-        }
-        afterEvaluate {
-            tasks.withType(com.github.spotbugs.snom.SpotBugsTask).configureEach {
-                auxClassPaths.from(configurations.runtimeClasspath)
             }
         }
     }

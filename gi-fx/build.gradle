@@ -63,7 +63,8 @@ dependencies {
 }
 
 test {
-    useJUnitPlatform()
+  useJUnitPlatform()
+  systemProperty 'java.awt.headless', 'true'
 }
 
 tasks.named('javadocJar', Jar) {

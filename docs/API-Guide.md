@@ -257,8 +257,13 @@ if (url != null) {
     def content = url.text
 }
 
+// Missing paths return null; use File directly for a file that will be created later.
+def output = new File("build/report.html")
+
 // Extract filename from path
 def filename = FileUtils.baseName("/path/to/data.csv")  // "data.csv"
+// A # in a local filename is preserved; URL fragments are stripped.
+assert FileUtils.baseName("/tmp/report#2.pdf") == "report#2.pdf"
 ```
 
 ## Gade Compatibility

@@ -12,6 +12,7 @@ import java.time.LocalDate
 import java.time.YearMonth
 import com.sun.net.httpserver.HttpServer
 import java.net.InetSocketAddress
+import java.util.concurrent.atomic.AtomicReference
 
 import static org.junit.jupiter.api.Assertions.*
 
@@ -195,11 +196,13 @@ class AbstractInOutTest {
 
   @Test
   void urlExistsFallsBackToGetWhenHeadIsUnsupported() {
+    AtomicReference<String> rangeHeader = new AtomicReference<>()
     HttpServer server = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0)
     server.createContext("/health") { exchange ->
       if (exchange.requestMethod == "HEAD") {
         exchange.sendResponseHeaders(405, -1)
       } else {
+        rangeHeader.set(exchange.requestHeaders.getFirst("Range"))
         byte[] response = "ok".bytes
         exchange.sendResponseHeaders(200, response.length)
         exchange.responseBody.write(response)
@@ -210,6 +213,27 @@ class AbstractInOutTest {
     server.start()
     try {
       assertTrue(inOut.urlExists("http://127.0.0.1:${server.address.port}/health", 2000))
+      assertEquals("bytes=0-0", rangeHeader.get())
+    } finally {
+      server.stop(0)
+    }
+  }
+
+  @Test
+  void urlExistsFollowsRedirectsAndChecksTheFinalResponse() {
+    HttpServer server = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0)
+    server.createContext("/redirect") { exchange ->
+      exchange.responseHeaders.add("Location", "/missing")
+      exchange.sendResponseHeaders(302, -1)
+      exchange.close()
+    }
+    server.createContext("/missing") { exchange ->
+      exchange.sendResponseHeaders(404, -1)
+      exchange.close()
+    }
+    server.start()
+    try {
+      assertFalse(inOut.urlExists("http://127.0.0.1:${server.address.port}/redirect", 2000))
     } finally {
       server.stop(0)
     }

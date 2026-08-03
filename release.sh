@@ -219,11 +219,6 @@ else
     fi
 fi
 
-if [ "$DRY_RUN" = false ] && [ "$RELEASE_VERSION" != "$CURRENT_VERSION" ]; then
-    commit_release_version "$RELEASE_VERSION"
-elif [ "$DRY_RUN" = true ] && [ "$RELEASE_VERSION" != "$CURRENT_VERSION" ]; then
-    echo -e "${YELLOW}[DRY RUN] Would update build.gradle and README.md to ${RELEASE_VERSION}${NC}"
-fi
 CURRENT_VERSION="$RELEASE_VERSION"
 
 # Check if version has already been released (git tag exists)
@@ -239,6 +234,13 @@ if git rev-parse "$TAG" >/dev/null 2>&1 || git ls-remote --tags origin | grep -q
             exit 1
         fi
     fi
+fi
+
+# Only mutate and commit release files after the tag check has passed.
+if [ "$DRY_RUN" = false ] && [ "$RELEASE_VERSION" != "$(get_version)" ]; then
+    commit_release_version "$RELEASE_VERSION"
+elif [ "$DRY_RUN" = true ] && [ "$RELEASE_VERSION" != "$(get_version)" ]; then
+    echo -e "${YELLOW}[DRY RUN] Would update build.gradle and README.md to ${RELEASE_VERSION}${NC}"
 fi
 echo ""
 echo -e "Releasing version: ${GREEN}${CURRENT_VERSION}${NC}"

@@ -19,7 +19,6 @@ import javafx.scene.input.Clipboard
 import javafx.scene.input.ClipboardContent
 import javafx.scene.input.DataFormat
 import javafx.scene.layout.FlowPane
-import javafx.scene.web.WebView
 import javafx.stage.DirectoryChooser
 import javafx.stage.FileChooser
 import javafx.stage.Modality
@@ -35,6 +34,7 @@ import se.alipsa.matrix.core.util.Logger
 
 import javax.swing.JComponent
 import java.awt.GraphicsEnvironment
+import java.nio.charset.StandardCharsets
 import java.time.LocalDate
 import java.time.YearMonth
 import java.util.concurrent.Callable
@@ -319,32 +319,43 @@ class InOut extends AbstractInOut {
             try {
                 String contentType = getContentType(file)
                 if ("image/svg+xml" == contentType) {
-                    Platform.runLater(() -> {
-                        final WebView browser = new WebView()
-                        browser.getEngine().load(url.toExternalForm())
-                        display(browser, title)
-                    });
+                    displaySvg(url, title)
                     return
                 }
             } catch (IOException e) {
                 log.error("Failed to detect image content type", e)
             }
         }
-        if (url.toExternalForm().toLowerCase(Locale.ROOT).contains('.svg')) {
-            Platform.runLater(() -> {
-                final WebView browser = new WebView()
-                browser.getEngine().load(url.toExternalForm())
-                display(browser, title)
-            });
+        if (isSvgResource(url)) {
+            displaySvg(url, title)
             return
         }
-        Image img = new Image(url.toExternalForm())
-        display(img, title)
+        try {
+            Image img = new Image(url.toExternalForm())
+            display(img, title)
+        } catch (RuntimeException e) {
+            log.error("Failed to display image {}", fileName, e)
+        }
     }
 
     void display(Image img, String... title) {
         ImageView node = new ImageView(img)
         display(node, title)
+    }
+
+    private void displaySvg(URL url, String... title) {
+        Platform.runLater(() -> {
+            try (InputStream input = url.openStream()) {
+                String svgContent = new String(input.readAllBytes(), StandardCharsets.UTF_8)
+                display(ChartToJfx.export(svgContent), title)
+            } catch (IOException | RuntimeException e) {
+                log.error("Failed to display SVG {}", url, e)
+            }
+        })
+    }
+
+    static boolean isSvgResource(URL url) {
+        return url != null && FileUtils.baseName(url.toExternalForm()).toLowerCase(Locale.ROOT).endsWith('.svg')
     }
 
     @Override
@@ -416,7 +427,7 @@ class InOut extends AbstractInOut {
     }
 
     void saveToClipboard(String string) {
-        runOnFxThread(() -> {
+        runOnFxThreadAsync(() -> {
             ClipboardContent content = new ClipboardContent()
             content.putString(string)
             getClipboard().setContent(content)
@@ -425,7 +436,7 @@ class InOut extends AbstractInOut {
     }
 
     void saveToClipboard(File file) {
-        runOnFxThread(() -> {
+        runOnFxThreadAsync(() -> {
             ClipboardContent content = new ClipboardContent()
             content.putFiles(List.of(file))
             getClipboard().setContent(content)
@@ -434,7 +445,7 @@ class InOut extends AbstractInOut {
     }
 
     void saveToClipboard(Image img) {
-        runOnFxThread(() -> {
+        runOnFxThreadAsync(() -> {
             ClipboardContent content = new ClipboardContent()
             content.putImage(img)
             getClipboard().setContent(content)
@@ -443,7 +454,7 @@ class InOut extends AbstractInOut {
     }
 
     void saveToClipboard(Object obj, DataFormat format) {
-        runOnFxThread(() -> {
+        runOnFxThreadAsync(() -> {
             ClipboardContent content = new ClipboardContent()
             content.put(format, obj)
             getClipboard().setContent(content)
@@ -506,6 +517,14 @@ class InOut extends AbstractInOut {
             throw new RuntimeException(e)
         } catch (ExecutionException e) {
             throw new RuntimeException(e.getCause() ?: e)
+        }
+    }
+
+    private static void runOnFxThreadAsync(Runnable action) {
+        if (Platform.isFxApplicationThread()) {
+            action.run()
+        } else {
+            Platform.runLater(action)
         }
     }
 
