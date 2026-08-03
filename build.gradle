@@ -5,14 +5,14 @@ plugins {
     id 'signing'
     id 'maven-publish'
     id('io.github.gradle-nexus.publish-plugin') version '2.0.0'
-    id "com.github.ben-manes.versions" version "0.54.0"
-    id "org.owasp.dependencycheck" version "12.2.2"
-    id "com.diffplug.spotless" version "8.4.0" apply false
-    id "com.github.spotbugs" version "6.5.4" apply false
+    id "io.github.ben-manes.versions" version "0.59.0"
+    id "org.owasp.dependencycheck" version "13.0.0"
+    id "com.diffplug.spotless" version "8.9.0" apply false
+    id "com.github.spotbugs" version "6.5.9" apply false
 }
 
 group = 'se.alipsa.gi'
-version = '0.4.0-SNAPSHOT'
+version = '0.4.0'
 description = 'Allows Gade Gui Interactive capabilities from a standalone app'
 
 def requestedTaskNames = gradle.startParameter.taskNames.collect { it.toLowerCase(Locale.ROOT) }
@@ -63,7 +63,7 @@ subprojects {
     if (enableSpotbugs) {
         apply plugin: 'com.github.spotbugs'
         spotbugs {
-            toolVersion = '4.9.8'
+            toolVersion = '4.10.3'
             effort = 'max'
             reportLevel = 'medium'
             excludeFilter = rootProject.file('config/spotbugs-exclude.xml')

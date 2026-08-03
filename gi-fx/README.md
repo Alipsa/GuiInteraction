@@ -25,7 +25,7 @@ This module provides JavaFX-based dialogs and viewers for user interaction. It o
 
 ```groovy
 dependencies {
-    implementation 'se.alipsa.gi:gi-fx:0.3.0'
+    implementation 'se.alipsa.gi:gi-fx:0.4.0'
 }
 ```
 

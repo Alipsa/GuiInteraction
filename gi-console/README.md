@@ -25,7 +25,7 @@ This module provides console-based (text mode) interaction capabilities. It's de
 
 ```groovy
 dependencies {
-    implementation 'se.alipsa.gi:gi-console:0.3.0'
+    implementation 'se.alipsa.gi:gi-console:0.4.0'
 }
 ```
 
