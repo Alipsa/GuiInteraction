@@ -70,8 +70,14 @@ subprojects {
         }
         tasks.withType(com.github.spotbugs.snom.SpotBugsTask).configureEach { spotbugsTask ->
             notCompatibleWithConfigurationCache("SpotBugs does not support configuration cache yet")
-            def runtimeConfigurationName = spotbugsTask.name == 'spotbugsTest' ? 'testRuntimeClasspath' : 'runtimeClasspath'
-            auxClassPaths.from(project.configurations.named(runtimeConfigurationName))
+            String suffix = spotbugsTask.name.startsWith('spotbugs') ?
+                spotbugsTask.name.substring('spotbugs'.length()) : ''
+            String sourceSetName = suffix.isEmpty() ? 'main' :
+                suffix.substring(0, 1).toLowerCase() + suffix.substring(1)
+            def sourceSet = project.sourceSets.findByName(sourceSetName)
+            if (sourceSet != null) {
+                auxClassPaths.from(sourceSet.compileClasspath, sourceSet.runtimeClasspath)
+            }
             reports {
                 html.required = true
                 xml.required = false

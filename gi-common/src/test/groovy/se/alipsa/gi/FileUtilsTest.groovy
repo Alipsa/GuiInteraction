@@ -51,6 +51,13 @@ class FileUtilsTest {
   }
 
   @Test
+  void testSvgResourceDetectionUsesTheFinalPathSegment() {
+    assertTrue(FileUtils.isSvgResource(URI.create('file:/tmp/report.svg').toURL()))
+    assertFalse(FileUtils.isSvgResource(URI.create('file:/tmp/report.svg.png').toURL()))
+    assertFalse(FileUtils.isSvgResource(URI.create('file:/tmp/svgs.svg/logo.png').toURL()))
+  }
+
+  @Test
   void testBaseNameWithNull() {
     assertNull(FileUtils.baseName(null))
   }

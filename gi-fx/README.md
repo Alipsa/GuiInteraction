@@ -82,7 +82,7 @@ dependencies {
 
 - JavaFX must be available at runtime (either bundled in JDK or added as dependencies)
 - Thread safety: UI operations are automatically dispatched to the FX Application Thread
-- SVG files are parsed and rendered as JavaFX nodes without WebView
+- SVG files are parsed and rendered as JavaFX nodes without WebView. This uses a lighter SVG backend than a browser, so advanced CSS, filters, and scripting may render differently or be unsupported.
 
 ## API Documentation
 

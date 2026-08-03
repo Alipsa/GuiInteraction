@@ -326,12 +326,16 @@ class InOut extends AbstractInOut {
                 log.error("Failed to detect image content type", e)
             }
         }
-        if (isSvgResource(url)) {
+        if (FileUtils.isSvgResource(url)) {
             displaySvg(url, title)
             return
         }
         try {
             Image img = new Image(url.toExternalForm())
+            if (img.isError()) {
+                log.error("Failed to display image {}", fileName, img.getException())
+                return
+            }
             display(img, title)
         } catch (RuntimeException e) {
             log.error("Failed to display image {}", fileName, e)
@@ -344,18 +348,22 @@ class InOut extends AbstractInOut {
     }
 
     private void displaySvg(URL url, String... title) {
+        byte[] svgBytes
+        try (InputStream input = url.openStream()) {
+            svgBytes = input.readAllBytes()
+        } catch (IOException e) {
+            log.error("Failed to read SVG {}", url, e)
+            return
+        }
+        String windowTitle = title.length > 0 ? title[0] : ''
         Platform.runLater(() -> {
-            try (InputStream input = url.openStream()) {
-                String svgContent = new String(input.readAllBytes(), StandardCharsets.UTF_8)
-                display(ChartToJfx.export(svgContent), title)
-            } catch (IOException | RuntimeException e) {
-                log.error("Failed to display SVG {}", url, e)
+            try {
+                Node node = ChartToJfx.export(new String(svgBytes, StandardCharsets.UTF_8))
+                show(node, windowTitle)
+            } catch (RuntimeException e) {
+                log.error("Failed to parse SVG {}", url, e)
             }
         })
-    }
-
-    static boolean isSvgResource(URL url) {
-        return url != null && FileUtils.baseName(url.toExternalForm()).toLowerCase(Locale.ROOT).endsWith('.svg')
     }
 
     @Override

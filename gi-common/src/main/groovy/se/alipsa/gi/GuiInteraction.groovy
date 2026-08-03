@@ -235,7 +235,7 @@ interface GuiInteraction {
    * @param message the prompt message to display
    * @param options the collection of options to choose from (must not be empty)
    * @param defaultValue the initially selected option
-   * @return the selected option, or {@code null} if cancelled
+   * @return the selected option, the default value for invalid console input, or {@code null} if cancelled
    * @throws IllegalArgumentException if options collection is null or empty
    */
   Object promptSelect(String title, String headerText, String message, Collection<Object> options, Object defaultValue);

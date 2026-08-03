@@ -34,12 +34,19 @@ class ConsolePromptTest {
   }
 
   @Test
-  void rangedYearMonthFallsBackForInvalidValues() {
+  void rangedYearMonthFallsBackForOutOfRangeValues() {
     InOut inOut = new InOut()
-    inOut.sysin = new BufferedReader(new StringReader('2027-01\nnot-a-month\n'))
+    inOut.sysin = new BufferedReader(new StringReader('2027-01\n'))
 
     assertEquals(YearMonth.of(2026, 12),
         inOut.promptYearMonth('title', 'month', YearMonth.of(2025, 1), YearMonth.of(2026, 12), YearMonth.of(2026, 12)))
+  }
+
+  @Test
+  void rangedYearMonthFallsBackForUnparseableValues() {
+    InOut inOut = new InOut()
+    inOut.sysin = new BufferedReader(new StringReader('not-a-month\n'))
+
     assertEquals(YearMonth.of(2026, 12),
         inOut.promptYearMonth('title', 'month', YearMonth.of(2025, 1), YearMonth.of(2026, 12), YearMonth.of(2026, 12)))
   }

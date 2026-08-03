@@ -52,6 +52,15 @@ class FileUtils {
   }
 
   /**
+   * Returns whether a URL identifies an SVG resource by its final path segment.
+   * Query strings and URL fragments are ignored, while names such as {@code report.svg.png}
+   * and {@code /svgs.svg/logo.png} are not treated as SVG resources.
+   */
+  public static boolean isSvgResource(URL url) {
+    return url != null && baseName(url.toExternalForm()).toLowerCase(Locale.ROOT).endsWith('.svg')
+  }
+
+  /**
    * Finds a resource using multiple classloader strategies.
    * <p>
    * Resolution order:

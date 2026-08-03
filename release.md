@@ -5,7 +5,7 @@
 - Breaking: Swing and JavaFX display resolution now prefers classpath resources when a name exists both on the classpath and in the working directory.
 - Common: local filenames preserve `#`; URL fragments are stripped only from URL-shaped inputs.
 - Console: EOF consistently returns `null`; malformed or out-of-range date input falls back to the documented default/initial value.
-- JavaFX: SVG files are rendered directly as JavaFX nodes; SVG display no longer creates a WebView.
+- JavaFX: SVG files are rendered directly as JavaFX nodes; SVG display no longer creates a WebView. The SVG backend supports a subset of browser SVG features, so advanced CSS, filters, and scripting may render differently or be unsupported.
 - Build: Matrix BOM updated to 2.5.1 and Swing Widgets to 1.1.2.
 
 ## 0.3.0 - 2026-02-03

@@ -33,6 +33,7 @@ fi
 PROJECT=$(basename "$PWD")
 DRY_RUN=false
 BUMP_TYPE=""
+README_NEEDS_UPDATE=false
 
 # Parse arguments
 while [[ $# -gt 0 ]]; do
@@ -208,14 +209,7 @@ elif echo "$CURRENT_VERSION" | grep -q '\-SNAPSHOT'; then
 else
     RELEASE_VERSION="$CURRENT_VERSION"
     if ! check_readme_version "$CURRENT_VERSION"; then
-        if [ "$DRY_RUN" = true ]; then
-            echo -e "${YELLOW}[DRY RUN] Would update README.md to match version ${CURRENT_VERSION}${NC}"
-        else
-            read -p "Update README.md to version ${CURRENT_VERSION}? [Y/n]: " update_readme
-            if [[ ! "$update_readme" =~ ^[Nn]$ ]]; then
-                update_readme_version "$CURRENT_VERSION"
-            fi
-        fi
+        README_NEEDS_UPDATE=true
     fi
 fi
 
@@ -236,11 +230,22 @@ if git rev-parse "$TAG" >/dev/null 2>&1 || git ls-remote --tags origin | grep -q
     fi
 fi
 
-# Only mutate and commit release files after the tag check has passed.
+# Only mutate release files after the tag check has passed.
 if [ "$DRY_RUN" = false ] && [ "$RELEASE_VERSION" != "$(get_version)" ]; then
     commit_release_version "$RELEASE_VERSION"
 elif [ "$DRY_RUN" = true ] && [ "$RELEASE_VERSION" != "$(get_version)" ]; then
     echo -e "${YELLOW}[DRY RUN] Would update build.gradle and README.md to ${RELEASE_VERSION}${NC}"
+elif [ "$README_NEEDS_UPDATE" = true ]; then
+    if [ "$DRY_RUN" = true ]; then
+        echo -e "${YELLOW}[DRY RUN] Would update README.md to match version ${CURRENT_VERSION}${NC}"
+    else
+        read -p "Update README.md to version ${CURRENT_VERSION}? [Y/n]: " update_readme
+        if [[ ! "$update_readme" =~ ^[Nn]$ ]]; then
+            update_readme_version "$CURRENT_VERSION"
+            git add README.md
+            git commit -m "Update README version to ${CURRENT_VERSION}"
+        fi
+    fi
 fi
 echo ""
 echo -e "Releasing version: ${GREEN}${CURRENT_VERSION}${NC}"

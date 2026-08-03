@@ -13,12 +13,13 @@ import java.awt.datatransfer.ClipboardOwner
 import java.awt.datatransfer.DataFlavor
 import java.awt.datatransfer.StringSelection
 import java.awt.datatransfer.Transferable
-import java.io.InputStream
 import java.nio.file.Paths
 import java.util.concurrent.ExecutionException;
 
 @CompileStatic
 abstract class AbstractInOut implements GuiInteraction {
+
+  private static final int MAX_REDIRECTS = 5
 
   private Parser markdownParser
   private HtmlRenderer htmlRenderer
@@ -31,37 +32,68 @@ abstract class AbstractInOut implements GuiInteraction {
 
   @Override
   boolean urlExists(String urlString, int timeout) {
-    HttpURLConnection con = null
     try {
       URL url = new URL(urlString)
-      con = (HttpURLConnection) url.openConnection()
-      con.setInstanceFollowRedirects(true)
-      con.setRequestMethod("HEAD")
-      con.setConnectTimeout(timeout)
-      con.setReadTimeout(timeout)
-      int responseCode = con.getResponseCode()
-      if (responseCode == HttpURLConnection.HTTP_BAD_METHOD ||
-          responseCode == HttpURLConnection.HTTP_NOT_IMPLEMENTED) {
-        con.disconnect()
-        con = (HttpURLConnection) url.openConnection()
-        con.setInstanceFollowRedirects(true)
-        con.setRequestMethod("GET")
-        con.setRequestProperty("Range", "bytes=0-0")
-        con.setConnectTimeout(timeout)
-        con.setReadTimeout(timeout)
-        responseCode = con.getResponseCode()
-        try (InputStream response = con.getInputStream()) {
-          response.readNBytes(1)
+      for (int redirect = 0; redirect <= MAX_REDIRECTS; redirect++) {
+        HttpURLConnection con = null
+        try {
+          con = (HttpURLConnection) url.openConnection()
+          con.setInstanceFollowRedirects(false)
+          con.setRequestMethod("HEAD")
+          con.setConnectTimeout(timeout)
+          con.setReadTimeout(timeout)
+          int responseCode = con.getResponseCode()
+          if (responseCode == HttpURLConnection.HTTP_BAD_METHOD ||
+              responseCode == HttpURLConnection.HTTP_NOT_IMPLEMENTED) {
+            con.disconnect()
+            con = (HttpURLConnection) url.openConnection()
+            con.setInstanceFollowRedirects(false)
+            con.setRequestMethod("GET")
+            con.setRequestProperty("Range", "bytes=0-0")
+            con.setConnectTimeout(timeout)
+            con.setReadTimeout(timeout)
+            responseCode = con.getResponseCode()
+            if (responseCode == 416) {
+              con.disconnect()
+              con = (HttpURLConnection) url.openConnection()
+              con.setInstanceFollowRedirects(false)
+              con.setRequestMethod("GET")
+              con.setConnectTimeout(timeout)
+              con.setReadTimeout(timeout)
+              responseCode = con.getResponseCode()
+            }
+            closeResponseBody(con, responseCode)
+          }
+          if (responseCode >= 300 && responseCode < 400) {
+            String location = con.getHeaderField("Location")
+            if (location == null || redirect == MAX_REDIRECTS) {
+              return location == null
+            }
+            url = new URL(url, location)
+            continue
+          }
+          return responseCode >= 200 && responseCode < 300
+        } finally {
+          if (con != null) {
+            con.disconnect()
+          }
         }
       }
-      // Redirects are followed, so only a successful final response counts.
-      return responseCode >= 200 && responseCode < 300
     } catch (RuntimeException | IOException ignored) {
       return false
-    } finally {
-      if (con != null) {
-        con.disconnect()
+    }
+    return false
+  }
+
+  private static void closeResponseBody(HttpURLConnection con, int responseCode) {
+    try {
+      InputStream response = responseCode >= 200 && responseCode < 400 ?
+          con.getInputStream() : con.getErrorStream()
+      if (response != null) {
+        response.close()
       }
+    } catch (IOException ignored) {
+      // The response code is authoritative for this existence check.
     }
   }
 

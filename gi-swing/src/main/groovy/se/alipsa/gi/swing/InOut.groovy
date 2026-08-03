@@ -27,7 +27,6 @@ import se.alipsa.matrix.core.util.Logger
 import java.awt.GraphicsEnvironment
 import javax.swing.filechooser.FileNameExtensionFilter
 import java.util.concurrent.ExecutionException
-import java.util.Locale
 
 @CompileStatic
 class InOut extends AbstractInOut {
@@ -324,7 +323,7 @@ class InOut extends AbstractInOut {
         log.error("Error detecting content type", e)
         return
       }
-    } else if (isSvgResource(resource)) {
+    } else if (FileUtils.isSvgResource(resource)) {
       displaySvg(resource, title)
       return
     }
@@ -356,10 +355,6 @@ class InOut extends AbstractInOut {
     frame.setSize(800, 600)
     frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE)
     frame.setVisible(true)
-  }
-
-  static boolean isSvgResource(URL url) {
-    return url != null && FileUtils.baseName(url.toExternalForm()).toLowerCase(Locale.ROOT).endsWith('.svg')
   }
 
   @Override
