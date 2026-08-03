@@ -1,3 +1,6 @@
+import org.gradle.api.Action
+import org.owasp.dependencycheck.gradle.extension.OssIndexExtension
+
 plugins {
     //id 'java'
     id 'groovy'
@@ -142,10 +145,13 @@ dependencyCheck {
     // Suppress false positives (create suppressions.xml if needed)
     suppressionFile = file("${rootDir}/config/owasp-suppressions.xml").exists() ?
             "${rootDir}/config/owasp-suppressions.xml" : null
-    analyzers.ossIndex {
-        enabled = true
-        url = 'https://api.guide.sonatype.com'
-        username = providers.environmentVariable('SONATYPE_GUIDE_USERNAME').orNull
-        password = providers.environmentVariable('SONATYPE_GUIDE_PAT').orNull
-    }
+    analyzers.ossIndex(new Action<OssIndexExtension>() {
+        @Override
+        void execute(OssIndexExtension ossIndex) {
+            ossIndex.enabled = true
+            ossIndex.url = 'https://api.guide.sonatype.com'
+            ossIndex.username = providers.environmentVariable('SONATYPE_GUIDE_USERNAME').orNull
+            ossIndex.password = providers.environmentVariable('SONATYPE_GUIDE_PAT').orNull
+        }
+    })
 }

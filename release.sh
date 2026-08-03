@@ -24,10 +24,37 @@ GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
-# Initialize SDKMAN and use JDK 21
+# Initialize SDKMAN and select an installed JavaFX-capable JDK 21
 if [ -f ~/.sdkman/bin/sdkman-init.sh ]; then
     source ~/.sdkman/bin/sdkman-init.sh
-    sdk use java 21.0.9.fx-librca 2>/dev/null || sdk use java 21-librca 2>/dev/null || echo "Using default Java"
+
+    sdk_java_dir="${SDKMAN_CANDIDATES_DIR:-$HOME/.sdkman/candidates}/java"
+    java21_fx_candidates=()
+    if [ -d "$sdk_java_dir" ]; then
+        while IFS= read -r candidate; do
+            java21_fx_candidates+=("$candidate")
+        done < <(
+            find "$sdk_java_dir" -mindepth 1 -maxdepth 1 -type d -printf '%f\n' |
+                awk 'tolower($0) ~ /^21([.-]|$)/ && tolower($0) ~ /fx/' |
+                sort -V -r
+        )
+    fi
+
+    if [ "${#java21_fx_candidates[@]}" -gt 0 ]; then
+        echo "Installed JavaFX-capable JDK 21 candidates:"
+        printf '  %s\n' "${java21_fx_candidates[@]}"
+        echo "Using Java ${java21_fx_candidates[0]}"
+        sdk use java "${java21_fx_candidates[0]}" 2>/dev/null || {
+            echo -e "${RED}Could not activate Java ${java21_fx_candidates[0]}.${NC}" >&2
+            exit 1
+        }
+    else
+        echo -e "${RED}No installed JavaFX-capable JDK 21 was found in ${sdk_java_dir}.${NC}" >&2
+        echo "Install one with SDKMAN, then rerun the release script." >&2
+        exit 1
+    fi
+else
+    echo "SDKMAN is not installed; using the default Java."
 fi
 
 PROJECT=$(basename "$PWD")
