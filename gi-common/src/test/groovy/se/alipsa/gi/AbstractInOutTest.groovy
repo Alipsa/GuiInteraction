@@ -209,9 +209,11 @@ class AbstractInOutTest {
   @ParameterizedTest(name = 'HEAD {0}, fallback expected: {1}')
   @MethodSource('headFallbackCases')
   void urlExistsAppliesTheHeadFallbackAllowList(int headStatus, boolean fallbackExpected) {
+    AtomicInteger requests = new AtomicInteger()
     AtomicReference<String> rangeHeader = new AtomicReference<>()
     HttpServer server = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0)
     server.createContext("/health") { exchange ->
+      requests.incrementAndGet()
       int responseCode
       if (exchange.requestMethod == "HEAD") {
         responseCode = headStatus
@@ -227,6 +229,7 @@ class AbstractInOutTest {
       assertEquals(fallbackExpected,
           inOut.urlExists("http://127.0.0.1:${server.address.port}/health", 2000))
       assertEquals(fallbackExpected ? "bytes=0-0" : null, rangeHeader.get())
+      assertEquals(fallbackExpected ? 2 : 1, requests.get())
     } finally {
       server.stop(0)
     }
@@ -243,24 +246,6 @@ class AbstractInOutTest {
         Arguments.of(410, false),
         Arguments.of(500, false)
     )
-  }
-
-  @Test
-  void urlExistsDoesNotRetryAuthoritativeNotFoundResponses() {
-    AtomicInteger requests = new AtomicInteger()
-    HttpServer server = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0)
-    server.createContext("/missing") { exchange ->
-      requests.incrementAndGet()
-      exchange.sendResponseHeaders(404, -1)
-      exchange.close()
-    }
-    server.start()
-    try {
-      assertFalse(inOut.urlExists("http://127.0.0.1:${server.address.port}/missing", 2000))
-      assertEquals(1, requests.get())
-    } finally {
-      server.stop(0)
-    }
   }
 
   @Test
