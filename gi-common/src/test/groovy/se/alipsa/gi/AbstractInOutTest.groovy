@@ -4,6 +4,9 @@ import groovy.transform.CompileStatic
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.Arguments
+import org.junit.jupiter.params.provider.MethodSource
 import se.alipsa.groovy.svg.Svg
 import se.alipsa.matrix.core.Matrix
 
@@ -14,6 +17,7 @@ import com.sun.net.httpserver.HttpServer
 import java.net.InetSocketAddress
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicReference
+import java.util.stream.Stream
 
 import static org.junit.jupiter.api.Assertions.*
 
@@ -202,70 +206,43 @@ class AbstractInOutTest {
     assertFalse(inOut.urlExists("http://localhost:59999/", 1000))
   }
 
-  @Test
-  void urlExistsFallsBackToGetWhenHeadIsUnsupported() {
+  @ParameterizedTest(name = 'HEAD {0}, fallback expected: {1}')
+  @MethodSource('headFallbackCases')
+  void urlExistsAppliesTheHeadFallbackAllowList(int headStatus, boolean fallbackExpected) {
     AtomicReference<String> rangeHeader = new AtomicReference<>()
     HttpServer server = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0)
     server.createContext("/health") { exchange ->
+      int responseCode
       if (exchange.requestMethod == "HEAD") {
-        exchange.sendResponseHeaders(405, -1)
+        responseCode = headStatus
       } else {
         rangeHeader.set(exchange.requestHeaders.getFirst("Range"))
-        byte[] response = "ok".bytes
-        exchange.sendResponseHeaders(200, response.length)
-        exchange.responseBody.write(response)
-        exchange.responseBody.close()
+        responseCode = 200
       }
+      exchange.sendResponseHeaders(responseCode, -1)
       exchange.close()
     }
     server.start()
     try {
-      assertTrue(inOut.urlExists("http://127.0.0.1:${server.address.port}/health", 2000))
-      assertEquals("bytes=0-0", rangeHeader.get())
+      assertEquals(fallbackExpected,
+          inOut.urlExists("http://127.0.0.1:${server.address.port}/health", 2000))
+      assertEquals(fallbackExpected ? "bytes=0-0" : null, rangeHeader.get())
     } finally {
       server.stop(0)
     }
   }
 
-  @Test
-  void urlExistsFallsBackToGetForAnyHeadClientError() {
-    HttpServer server = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0)
-    server.createContext("/health") { exchange ->
-      if (exchange.requestMethod == "HEAD") {
-        exchange.sendResponseHeaders(403, -1)
-      } else {
-        exchange.sendResponseHeaders(200, -1)
-      }
-      exchange.close()
-    }
-    server.start()
-    try {
-      assertTrue(inOut.urlExists("http://127.0.0.1:${server.address.port}/health", 2000))
-    } finally {
-      server.stop(0)
-    }
-  }
-
-  @Test
-  void urlExistsFallsBackToGetWhenHeadReturns501() {
-    AtomicInteger requests = new AtomicInteger()
-    HttpServer server = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0)
-    server.createContext("/health") { exchange ->
-      requests.incrementAndGet()
-      if (exchange.requestMethod == "HEAD") {
-        exchange.sendResponseHeaders(501, -1)
-      } else {
-        exchange.sendResponseHeaders(200, -1)
-      }
-      exchange.close()
-    }
-    server.start()
-    try {
-      assertTrue(inOut.urlExists("http://127.0.0.1:${server.address.port}/health", 2000))
-      assertEquals(2, requests.get())
-    } finally {
-      server.stop(0)
-    }
+  static Stream<Arguments> headFallbackCases() {
+    Stream.of(
+        Arguments.of(400, true),
+        Arguments.of(401, true),
+        Arguments.of(403, true),
+        Arguments.of(405, true),
+        Arguments.of(501, true),
+        Arguments.of(404, false),
+        Arguments.of(410, false),
+        Arguments.of(500, false)
+    )
   }
 
   @Test
