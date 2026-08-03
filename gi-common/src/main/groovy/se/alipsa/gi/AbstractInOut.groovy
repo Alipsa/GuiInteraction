@@ -15,6 +15,7 @@ import java.awt.datatransfer.StringSelection
 import java.awt.datatransfer.Transferable
 import java.nio.file.Paths
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit
 
 @CompileStatic
 abstract class AbstractInOut implements GuiInteraction {
@@ -34,40 +35,33 @@ abstract class AbstractInOut implements GuiInteraction {
   boolean urlExists(String urlString, int timeout) {
     try {
       URL url = new URL(urlString)
+      long deadline = timeout > 0 ?
+          System.nanoTime() + TimeUnit.MILLISECONDS.toNanos(timeout) : Long.MAX_VALUE
       for (int redirect = 0; redirect <= MAX_REDIRECTS; redirect++) {
+        if (!isHttpUrl(url) || timeout > 0 && System.nanoTime() >= deadline) {
+          return false
+        }
         HttpURLConnection con = null
         try {
-          con = (HttpURLConnection) url.openConnection()
-          con.setInstanceFollowRedirects(false)
-          con.setRequestMethod("HEAD")
-          con.setConnectTimeout(timeout)
-          con.setReadTimeout(timeout)
+          int remaining = remainingTimeout(timeout, deadline)
+          con = open(url, "HEAD", remaining, false)
           int responseCode = con.getResponseCode()
           if (responseCode == HttpURLConnection.HTTP_BAD_METHOD ||
               responseCode == HttpURLConnection.HTTP_NOT_IMPLEMENTED) {
             con.disconnect()
-            con = (HttpURLConnection) url.openConnection()
-            con.setInstanceFollowRedirects(false)
-            con.setRequestMethod("GET")
-            con.setRequestProperty("Range", "bytes=0-0")
-            con.setConnectTimeout(timeout)
-            con.setReadTimeout(timeout)
+            con = open(url, "GET", remainingTimeout(timeout, deadline), true)
             responseCode = con.getResponseCode()
             if (responseCode == 416) {
               con.disconnect()
-              con = (HttpURLConnection) url.openConnection()
-              con.setInstanceFollowRedirects(false)
-              con.setRequestMethod("GET")
-              con.setConnectTimeout(timeout)
-              con.setReadTimeout(timeout)
+              con = open(url, "GET", remainingTimeout(timeout, deadline), false)
               responseCode = con.getResponseCode()
             }
-            closeResponseBody(con, responseCode)
           }
+          closeResponseBody(con, responseCode)
           if (responseCode >= 300 && responseCode < 400) {
             String location = con.getHeaderField("Location")
             if (location == null || redirect == MAX_REDIRECTS) {
-              return location == null
+              return false
             }
             url = new URL(url, location)
             continue
@@ -83,6 +77,30 @@ abstract class AbstractInOut implements GuiInteraction {
       return false
     }
     return false
+  }
+
+  private static HttpURLConnection open(URL url, String method, int timeout, boolean range) {
+    HttpURLConnection con = (HttpURLConnection) url.openConnection()
+    con.setInstanceFollowRedirects(false)
+    con.setRequestMethod(method)
+    if (range) {
+      con.setRequestProperty("Range", "bytes=0-0")
+    }
+    con.setConnectTimeout(timeout)
+    con.setReadTimeout(timeout)
+    return con
+  }
+
+  private static boolean isHttpUrl(URL url) {
+    return "http".equalsIgnoreCase(url.protocol) || "https".equalsIgnoreCase(url.protocol)
+  }
+
+  private static int remainingTimeout(int configuredTimeout, long deadline) {
+    if (configuredTimeout <= 0) {
+      return configuredTimeout
+    }
+    long remainingMillis = TimeUnit.NANOSECONDS.toMillis(deadline - System.nanoTime())
+    return (int) Math.max(1, Math.min(Integer.MAX_VALUE, remainingMillis))
   }
 
   private static void closeResponseBody(HttpURLConnection con, int responseCode) {

@@ -239,6 +239,61 @@ class AbstractInOutTest {
     }
   }
 
+  @Test
+  void urlExistsRejectsRedirectsWithoutLocation() {
+    HttpServer server = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0)
+    server.createContext("/bare-redirect") { exchange ->
+      exchange.sendResponseHeaders(302, -1)
+      exchange.close()
+    }
+    server.start()
+    try {
+      assertFalse(inOut.urlExists("http://127.0.0.1:${server.address.port}/bare-redirect", 2000))
+    } finally {
+      server.stop(0)
+    }
+  }
+
+  @Test
+  void urlExistsStopsAtTheRedirectLimit() {
+    HttpServer server = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0)
+    server.createContext("/loop") { exchange ->
+      exchange.responseHeaders.add("Location", "/loop")
+      exchange.sendResponseHeaders(302, -1)
+      exchange.close()
+    }
+    server.start()
+    try {
+      assertFalse(inOut.urlExists("http://127.0.0.1:${server.address.port}/loop", 2000))
+    } finally {
+      server.stop(0)
+    }
+  }
+
+  @Test
+  void urlExistsRetriesWithoutRangeAfterA416Response() {
+    AtomicReference<String> rangeHeader = new AtomicReference<>()
+    HttpServer server = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0)
+    server.createContext("/range") { exchange ->
+      if (exchange.requestMethod == "HEAD") {
+        exchange.sendResponseHeaders(405, -1)
+      } else if (exchange.requestHeaders.getFirst("Range") != null) {
+        rangeHeader.set(exchange.requestHeaders.getFirst("Range"))
+        exchange.sendResponseHeaders(416, -1)
+      } else {
+        exchange.sendResponseHeaders(200, -1)
+      }
+      exchange.close()
+    }
+    server.start()
+    try {
+      assertTrue(inOut.urlExists("http://127.0.0.1:${server.address.port}/range", 2000))
+      assertEquals("bytes=0-0", rangeHeader.get())
+    } finally {
+      server.stop(0)
+    }
+  }
+
   /**
    * Concrete implementation of AbstractInOut for testing purposes.
    * Provides minimal stub implementations for abstract methods.

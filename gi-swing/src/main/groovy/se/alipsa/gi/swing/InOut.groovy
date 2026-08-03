@@ -341,8 +341,8 @@ class InOut extends AbstractInOut {
    */
   private void displaySvg(URL svgUrl, String... title) {
     String svg
-    try {
-      svg = svgUrl.getText("UTF-8")
+    try (InputStream input = svgUrl.openStream()) {
+      svg = FileUtils.decodeXml(input.readAllBytes())
     } catch (IOException e) {
       log.error("Failed to read svg resource {}", svgUrl, e)
       return

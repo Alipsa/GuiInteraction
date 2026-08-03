@@ -73,7 +73,7 @@ subprojects {
             String suffix = spotbugsTask.name.startsWith('spotbugs') ?
                 spotbugsTask.name.substring('spotbugs'.length()) : ''
             String sourceSetName = suffix.isEmpty() ? 'main' :
-                suffix.substring(0, 1).toLowerCase() + suffix.substring(1)
+                suffix.substring(0, 1).toLowerCase(Locale.ROOT) + suffix.substring(1)
             def sourceSet = project.sourceSets.findByName(sourceSetName)
             if (sourceSet != null) {
                 auxClassPaths.from(sourceSet.compileClasspath, sourceSet.runtimeClasspath)

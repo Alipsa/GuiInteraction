@@ -106,7 +106,7 @@ interface GuiInteraction {
    * to verify the URL is reachable.
    *
    * @param urlString the URL to check
-   * @param timeout connection timeout in milliseconds
+   * @param timeout overall timeout budget in milliseconds, including redirect hops and retries
    * @return {@code true} if the URL returns a successful 2xx response after redirects,
    *         {@code false} otherwise
    */

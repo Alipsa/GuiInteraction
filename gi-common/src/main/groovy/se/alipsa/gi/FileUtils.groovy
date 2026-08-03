@@ -2,6 +2,10 @@ package se.alipsa.gi
 
 import groovy.transform.CompileStatic
 
+import java.nio.charset.Charset
+import java.nio.charset.StandardCharsets
+import java.util.regex.Pattern
+
 /**
  * Utility class for file and resource operations.
  * <p>
@@ -10,6 +14,9 @@ import groovy.transform.CompileStatic
  */
 @CompileStatic
 class FileUtils {
+
+  private static final Pattern XML_ENCODING = Pattern.compile(
+      "(?i)<\\?xml[^>]*encoding\\s*=\\s*['\"]([^'\"]+)['\"]")
 
   /**
    * Extracts the base filename from a path or URL string.
@@ -56,8 +63,34 @@ class FileUtils {
    * Query strings and URL fragments are ignored, while names such as {@code report.svg.png}
    * and {@code /svgs.svg/logo.png} are not treated as SVG resources.
    */
-  public static boolean isSvgResource(URL url) {
+  static boolean isSvgResource(URL url) {
     return url != null && baseName(url.toExternalForm()).toLowerCase(Locale.ROOT).endsWith('.svg')
+  }
+
+  /**
+   * Decodes XML bytes using the encoding declared in the XML prolog when present.
+   * UTF-8 is used when no declaration or byte-order mark is available.
+   */
+  static String decodeXml(byte[] content) {
+    if (content == null || content.length == 0) {
+      return ''
+    }
+    Charset charset = StandardCharsets.UTF_8
+    if (content.length >= 2 && content[0] == (byte) 0xFF && content[1] == (byte) 0xFE) {
+      charset = StandardCharsets.UTF_16LE
+    } else if (content.length >= 2 && content[0] == (byte) 0xFE && content[1] == (byte) 0xFF) {
+      charset = StandardCharsets.UTF_16BE
+    }
+    String prefix = new String(content, 0, Math.min(content.length, 512), charset)
+    def matcher = XML_ENCODING.matcher(prefix)
+    if (matcher.find()) {
+      try {
+        charset = Charset.forName(matcher.group(1))
+      } catch (IllegalArgumentException ignored) {
+        // Keep the UTF-8/BOM-derived fallback for an unknown declaration.
+      }
+    }
+    return new String(content, charset)
   }
 
   /**

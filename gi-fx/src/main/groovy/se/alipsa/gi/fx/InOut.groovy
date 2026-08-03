@@ -34,7 +34,6 @@ import se.alipsa.matrix.core.util.Logger
 
 import javax.swing.JComponent
 import java.awt.GraphicsEnvironment
-import java.nio.charset.StandardCharsets
 import java.time.LocalDate
 import java.time.YearMonth
 import java.util.concurrent.Callable
@@ -314,8 +313,16 @@ class InOut extends AbstractInOut {
             log.warn("Cannot display image, Failed to find {}", fileName)
             return
         }
-        File file = new File(fileName);
-        if (file.exists()) {
+        File file = null
+        if ('file' == url.protocol) {
+            try {
+                file = new File(url.toURI())
+            } catch (URISyntaxException e) {
+                log.warn("Cannot display image: Invalid resource URL {}", url, e)
+                return
+            }
+        }
+        if (file != null && file.exists()) {
             try {
                 String contentType = getContentType(file)
                 if ("image/svg+xml" == contentType) {
@@ -358,8 +365,8 @@ class InOut extends AbstractInOut {
         String windowTitle = title.length > 0 ? title[0] : ''
         Platform.runLater(() -> {
             try {
-                Node node = ChartToJfx.export(new String(svgBytes, StandardCharsets.UTF_8))
-                show(node, windowTitle)
+                Node node = ChartToJfx.export(FileUtils.decodeXml(svgBytes))
+                showNow(node, windowTitle)
             } catch (RuntimeException e) {
                 log.error("Failed to parse SVG {}", url, e)
             }
@@ -420,14 +427,18 @@ class InOut extends AbstractInOut {
 
     private static void show(Node node, String title) {
         Platform.runLater {
-            Alert alert = new Alert(Alert.AlertType.INFORMATION)
-            alert.setHeaderText(null)
-            alert.setContentText(null)
-            alert.setTitle(title)
-            alert.getDialogPane().setContent(node)
-            alert.initModality(Modality.NONE)
-            alert.showAndWait()
+            showNow(node, title)
         }
+    }
+
+    private static void showNow(Node node, String title) {
+        Alert alert = new Alert(Alert.AlertType.INFORMATION)
+        alert.setHeaderText(null)
+        alert.setContentText(null)
+        alert.setTitle(title)
+        alert.getDialogPane().setContent(node)
+        alert.initModality(Modality.NONE)
+        alert.showAndWait()
     }
 
     void setStyleSheetUrls(ObservableList<String> styleSheetUrls) {

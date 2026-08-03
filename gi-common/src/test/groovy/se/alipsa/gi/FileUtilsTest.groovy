@@ -55,6 +55,16 @@ class FileUtilsTest {
     assertTrue(FileUtils.isSvgResource(URI.create('file:/tmp/report.svg').toURL()))
     assertFalse(FileUtils.isSvgResource(URI.create('file:/tmp/report.svg.png').toURL()))
     assertFalse(FileUtils.isSvgResource(URI.create('file:/tmp/svgs.svg/logo.png').toURL()))
+    assertTrue(FileUtils.isSvgResource(URI.create('https://x/a.svg?v=2').toURL()))
+    assertFalse(FileUtils.isSvgResource(URI.create('https://x/download?file=a.svg').toURL()))
+  }
+
+  @Test
+  void testDecodeXmlUsesTheDeclaredEncoding() {
+    byte[] content = '<?xml version="1.0" encoding="ISO-8859-1"?><svg>caf\u00e9</svg>'
+        .getBytes('ISO-8859-1')
+
+    assertTrue(FileUtils.decodeXml(content).contains('café'))
   }
 
   @Test
