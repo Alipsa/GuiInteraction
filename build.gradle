@@ -128,7 +128,7 @@ tasks.named("dependencyUpdates").configure {
 }
 
 // OWASP Dependency Check configuration
-// Run with: ./gradlew dependencyCheckAnalyze
+// Run with: ./gradlew dependencyCheckAnalyze --rerun-tasks --no-configuration-cache --console=plain
 // Reports are generated in build/reports/dependency-check/
 dependencyCheck {
     // Read the NVD API key from the environment; never commit it to the repository.
