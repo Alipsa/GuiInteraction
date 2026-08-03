@@ -306,7 +306,7 @@ if (file == null) {
 ### gi-fx (JavaFX)
 
 - Requires a JVM with JavaFX support
-- Full SVG rendering support via WebView
+- SVG rendering via matrix-charts JavaFX integration (a lighter subset than a browser renderer)
 - Rich date pickers with calendar UI
 
 ### gi-swing
