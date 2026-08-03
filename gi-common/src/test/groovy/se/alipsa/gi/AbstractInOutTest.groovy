@@ -10,6 +10,8 @@ import se.alipsa.matrix.core.Matrix
 import javax.swing.JComponent
 import java.time.LocalDate
 import java.time.YearMonth
+import com.sun.net.httpserver.HttpServer
+import java.net.InetSocketAddress
 
 import static org.junit.jupiter.api.Assertions.*
 
@@ -189,6 +191,28 @@ class AbstractInOutTest {
   void testUrlExistsWithInvalidPort() {
     // Connection refused should return false
     assertFalse(inOut.urlExists("http://localhost:59999/", 1000))
+  }
+
+  @Test
+  void urlExistsFallsBackToGetWhenHeadIsUnsupported() {
+    HttpServer server = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0)
+    server.createContext("/health") { exchange ->
+      if (exchange.requestMethod == "HEAD") {
+        exchange.sendResponseHeaders(405, -1)
+      } else {
+        byte[] response = "ok".bytes
+        exchange.sendResponseHeaders(200, response.length)
+        exchange.responseBody.write(response)
+        exchange.responseBody.close()
+      }
+      exchange.close()
+    }
+    server.start()
+    try {
+      assertTrue(inOut.urlExists("http://127.0.0.1:${server.address.port}/health", 2000))
+    } finally {
+      server.stop(0)
+    }
   }
 
   /**

@@ -180,31 +180,33 @@ echo ""
 CURRENT_VERSION=$(get_version)
 echo -e "Current version: ${YELLOW}${CURRENT_VERSION}${NC}"
 
-# Handle SNAPSHOT version - strip -SNAPSHOT suffix for release
-if echo "$CURRENT_VERSION" | grep -q '\-SNAPSHOT'; then
+commit_release_version() {
+    local release_version=$1
+    update_version "$release_version"
+    update_readme_version "$release_version"
+    generate_changelog "$release_version"
+
+    if ! git add build.gradle README.md CHANGELOG.md; then
+        echo -e "${RED}Error: Failed to add files to git. Please resolve the issue and try again.${NC}" >&2
+        exit 1
+    fi
+    if ! git commit -m "Release version ${release_version}"; then
+        echo -e "${RED}Error: Failed to commit version change. Please resolve the issue and try again.${NC}" >&2
+        exit 1
+    fi
+}
+
+# A requested bump determines the release version, including when the current
+# version is a snapshot. This avoids first committing the unbumped version and
+# then publishing a different version.
+if [ -n "$BUMP_TYPE" ]; then
+    RELEASE_VERSION=$(bump_version "$CURRENT_VERSION" "$BUMP_TYPE")
+    echo -e "Bumping version to: ${GREEN}${RELEASE_VERSION}${NC}"
+elif echo "$CURRENT_VERSION" | grep -q '\-SNAPSHOT'; then
     RELEASE_VERSION="${CURRENT_VERSION%-SNAPSHOT}"
     echo -e "Stripping SNAPSHOT suffix: ${YELLOW}${CURRENT_VERSION}${NC} -> ${GREEN}${RELEASE_VERSION}${NC}"
-
-    if [ "$DRY_RUN" = false ]; then
-        update_version "$RELEASE_VERSION"
-        update_readme_version "$RELEASE_VERSION"
-        generate_changelog "$RELEASE_VERSION"
-
-        # Commit version changes
-        if ! git add build.gradle README.md CHANGELOG.md; then
-            echo -e "${RED}Error: Failed to add files to git. Please resolve the issue and try again.${NC}" >&2
-            exit 1
-        fi
-        if ! git commit -m "Release version ${RELEASE_VERSION}"; then
-            echo -e "${RED}Error: Failed to commit version change. Please resolve the issue and try again.${NC}" >&2
-            exit 1
-        fi
-    else
-        echo -e "${YELLOW}[DRY RUN] Would update build.gradle and README.md to ${RELEASE_VERSION}${NC}"
-    fi
-    CURRENT_VERSION=$RELEASE_VERSION
 else
-    # No SNAPSHOT - verify README.md has the correct version
+    RELEASE_VERSION="$CURRENT_VERSION"
     if ! check_readme_version "$CURRENT_VERSION"; then
         if [ "$DRY_RUN" = true ]; then
             echo -e "${YELLOW}[DRY RUN] Would update README.md to match version ${CURRENT_VERSION}${NC}"
@@ -216,6 +218,13 @@ else
         fi
     fi
 fi
+
+if [ "$DRY_RUN" = false ] && [ "$RELEASE_VERSION" != "$CURRENT_VERSION" ]; then
+    commit_release_version "$RELEASE_VERSION"
+elif [ "$DRY_RUN" = true ] && [ "$RELEASE_VERSION" != "$CURRENT_VERSION" ]; then
+    echo -e "${YELLOW}[DRY RUN] Would update build.gradle and README.md to ${RELEASE_VERSION}${NC}"
+fi
+CURRENT_VERSION="$RELEASE_VERSION"
 
 # Check if version has already been released (git tag exists)
 TAG="v${CURRENT_VERSION}"
@@ -231,32 +240,6 @@ if git rev-parse "$TAG" >/dev/null 2>&1 || git ls-remote --tags origin | grep -q
         fi
     fi
 fi
-# Handle version bump
-if [ -n "$BUMP_TYPE" ]; then
-    NEW_VERSION=$(bump_version "$CURRENT_VERSION" "$BUMP_TYPE")
-    echo -e "Bumping version to: ${GREEN}${NEW_VERSION}${NC}"
-
-    if [ "$DRY_RUN" = false ]; then
-        update_version "$NEW_VERSION"
-        update_readme_version "$NEW_VERSION"
-        generate_changelog "$NEW_VERSION"
-
-        # Commit version change
-        if ! git add build.gradle README.md CHANGELOG.md; then
-            echo -e "${RED}Error: Failed to add files to git. Please resolve the issue and try again.${NC}" >&2
-            exit 1
-        fi
-        if ! git commit -m "Release version ${NEW_VERSION}"; then
-            echo -e "${RED}Error: Failed to commit version change. Please resolve the issue and try again.${NC}" >&2
-            exit 1
-        fi
-    else
-        echo -e "${YELLOW}[DRY RUN] Would update version to ${NEW_VERSION}${NC}"
-    fi
-
-    CURRENT_VERSION=$NEW_VERSION
-fi
-
 echo ""
 echo -e "Releasing version: ${GREEN}${CURRENT_VERSION}${NC}"
 echo ""

@@ -102,11 +102,12 @@ interface GuiInteraction {
   /**
    * Checks if a URL exists and is accessible.
    * <p>
-   * Performs an HTTP HEAD request to verify the URL is reachable.
+   * Performs an HTTP HEAD request, falling back to GET when HEAD is not supported,
+   * to verify the URL is reachable.
    *
    * @param urlString the URL to check
    * @param timeout connection timeout in milliseconds
-   * @return {@code true} if the URL returns HTTP 200, {@code false} otherwise
+   * @return {@code true} if the URL returns a 2xx or 3xx response, {@code false} otherwise
    */
   boolean urlExists(String urlString, int timeout)
 
@@ -251,8 +252,8 @@ interface GuiInteraction {
   /**
    * Prompts the user for a password with masked input.
    * <p>
-   * In console mode, this may return {@code null} if no console is available
-   * (e.g., when running in an IDE or CI environment).
+   * In console mode, a visible-input fallback is used if no system console is
+   * available (e.g., when running in an IDE or CI environment).
    *
    * @param title the dialog title
    * @param message the prompt message to display

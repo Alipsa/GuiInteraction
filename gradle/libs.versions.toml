@@ -1,13 +1,13 @@
 [versions]
 groovy = "5.0.6"
 tika = "3.3.0"
-matrixBom = "2.5.0-SNAPSHOT"
+matrixBom = "2.5.1"
 commonmark = "0.28.0"
 jsoup = "1.22.2"
 junit = "6.0.3"
 javafx = "23.0.2"
 fxYearMonthPicker = "1.1.0"
-swingWidgets = "1.1.0"
+swingWidgets = "1.1.2"
 
 [libraries]
 groovy = { module = "org.apache.groovy:groovy", version.ref = "groovy" }

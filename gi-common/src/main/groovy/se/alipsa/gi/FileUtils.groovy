@@ -30,18 +30,21 @@ class FileUtils {
    *         or {@code null} if the input is {@code null}
    */
   static String baseName(String url) {
-    if (url == null) return null;
-    String basename = "";
-    url = url.replace('\\', '/');
-    if (url.contains("/")) {
-      String filePart = url.substring(url.lastIndexOf('/')+1);
-      if (filePart.contains("?")) {
-        basename = filePart.substring(0, filePart.indexOf('?'));
-      } else {
-        basename = filePart;
-      }
+    if (url == null) return null
+    url = url.replace('\\', '/')
+    int queryIndex = url.indexOf('?')
+    int fragmentIndex = url.indexOf('#')
+    int suffixIndex = queryIndex >= 0 && fragmentIndex >= 0 ?
+        Math.min(queryIndex, fragmentIndex) : Math.max(queryIndex, fragmentIndex)
+    if (suffixIndex >= 0) {
+      url = url.substring(0, suffixIndex)
     }
-    return basename.length() > 0 ? basename : url;
+    String basename = ""
+    if (url.contains("/")) {
+      String filePart = url.substring(url.lastIndexOf('/')+1)
+      basename = filePart
+    }
+    return basename.length() > 0 ? basename : url
   }
 
   /**
@@ -59,9 +62,12 @@ class FileUtils {
    * This method allows loading resources from both the classpath and the file system.
    *
    * @param resource the resource path to locate (classpath resource or file path)
-   * @return the URL of the resource, or {@code null} if not found and path is invalid
+   * @return the URL of the resource, or {@code null} if it cannot be found
    */
   static URL getResourceUrl(String resource) {
+    if (resource == null || resource.isEmpty()) {
+      return null
+    }
     final List<ClassLoader> classLoaders = new ArrayList<>()
     classLoaders.add(Thread.currentThread().getContextClassLoader())
     classLoaders.add(FileUtils.class.getClassLoader())
@@ -82,7 +88,8 @@ class FileUtils {
       return systemResource
     } else {
       try {
-        return new File(resource).toURI().toURL()
+        File file = new File(resource)
+        return file.exists() ? file.toURI().toURL() : null
       } catch (MalformedURLException e) {
         return null
       }

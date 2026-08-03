@@ -53,11 +53,13 @@ dependencies {
 
     testImplementation platform(libs.junit.bom)
     testImplementation libs.junit.jupiter
+    testImplementation libs.groovy
     testImplementation "org.openjfx:javafx-graphics:${javaFxVersion}:$qualifier"
     testImplementation "org.openjfx:javafx-base:${javaFxVersion}:$qualifier"
     testImplementation "org.openjfx:javafx-controls:${javaFxVersion}:$qualifier"
     testImplementation "org.openjfx:javafx-swing:${javaFxVersion}:$qualifier"
     testImplementation "org.openjfx:javafx-web:${javaFxVersion}:$qualifier"
+    testRuntimeOnly libs.junit.platform.launcher
 }
 
 test {

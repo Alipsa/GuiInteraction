@@ -39,6 +39,16 @@ abstract class AbstractInOut implements GuiInteraction {
       con.setConnectTimeout(timeout)
       con.setReadTimeout(timeout)
       int responseCode = con.getResponseCode()
+      if (responseCode == HttpURLConnection.HTTP_BAD_METHOD ||
+          responseCode == HttpURLConnection.HTTP_NOT_IMPLEMENTED) {
+        con.disconnect()
+        con = (HttpURLConnection) url.openConnection()
+        con.setInstanceFollowRedirects(false)
+        con.setRequestMethod("GET")
+        con.setConnectTimeout(timeout)
+        con.setReadTimeout(timeout)
+        responseCode = con.getResponseCode()
+      }
       // Accept 2xx (success) and 3xx (redirect) status codes
       return responseCode >= 200 && responseCode < 400
     } catch (RuntimeException | IOException ignored) {
@@ -91,10 +101,18 @@ abstract class AbstractInOut implements GuiInteraction {
 
   @Override
   String prompt(Map<String, Object> namedParams) {
-    return prompt(String.valueOf(namedParams.getOrDefault("title", "")),
-        String.valueOf(namedParams.getOrDefault("headerText", "")),
-        String.valueOf(namedParams.getOrDefault("message", "")),
-        String.valueOf(namedParams.getOrDefault("defaultValue", "")))
+    if (namedParams == null) {
+      throw new IllegalArgumentException("namedParams cannot be null")
+    }
+    return prompt(asPromptValue(namedParams, "title"),
+        asPromptValue(namedParams, "headerText"),
+        asPromptValue(namedParams, "message"),
+        asPromptValue(namedParams, "defaultValue"))
+  }
+
+  private static String asPromptValue(Map<String, Object> namedParams, String key) {
+    Object value = namedParams.get(key)
+    return value == null ? "" : String.valueOf(value)
   }
 
   @Override

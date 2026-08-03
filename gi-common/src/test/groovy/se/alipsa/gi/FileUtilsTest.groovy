@@ -36,6 +36,11 @@ class FileUtilsTest {
   }
 
   @Test
+  void testBaseNameWithQueryStringAndNoPath() {
+    assertEquals("file.txt", FileUtils.baseName("file.txt?param=value"))
+  }
+
+  @Test
   void testBaseNameWithNull() {
     assertNull(FileUtils.baseName(null))
   }
@@ -76,9 +81,14 @@ class FileUtilsTest {
 
   @Test
   void testGetResourceUrlWithNonExistentResource() {
-    // Should still return a URL (file URL) even for non-existent paths
     URL url = FileUtils.getResourceUrl("/nonexistent/path/file.txt")
-    assertNotNull(url, "Should return file URL for non-existent path")
+    assertNull(url, "Non-existent resources should not resolve")
+  }
+
+  @Test
+  void testGetResourceUrlWithNullOrEmptyResource() {
+    assertNull(FileUtils.getResourceUrl(null))
+    assertNull(FileUtils.getResourceUrl(""))
   }
 
   @Test

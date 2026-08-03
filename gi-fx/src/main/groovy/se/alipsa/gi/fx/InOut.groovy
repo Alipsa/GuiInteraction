@@ -46,20 +46,17 @@ class InOut extends AbstractInOut {
 
     private static final Logger log = Logger.getLogger(InOut.class)
 
-    static {
-        if (GraphicsEnvironment.isHeadless()) {
-            throw new UnsupportedOperationException(
-                "gi-fx InOut requires a graphical environment. " +
-                "Use gi-console for headless environments.")
-        }
-    }
-
     Window ownerWindow = null
     ObservableList<String> styleSheetUrls = null
     //Clipboard clipboard
 
     InOut() {
-        new JFXPanel()
+        if (GraphicsEnvironment.isHeadless()) {
+            throw new UnsupportedOperationException(
+                "gi-fx InOut requires a graphical environment. " +
+                "Use gi-console for headless environments.")
+        }
+        initializeToolkit()
     }
 
     InOut(Window owner) {
@@ -70,6 +67,10 @@ class InOut extends AbstractInOut {
     InOut(Window owner, ObservableList<String> styleSheets) {
         this(owner)
         setStyleSheetUrls(styleSheets)
+    }
+
+    private static void initializeToolkit() {
+        new JFXPanel()
     }
 
     @Override
@@ -212,6 +213,9 @@ class InOut extends AbstractInOut {
 
     @Override
     Object promptSelect(String title, String headerText, String message, Collection<Object> options, Object defaultValue) {
+        if (options == null || options.isEmpty()) {
+            throw new IllegalArgumentException("Options collection cannot be null or empty")
+        }
         List opt = options as List
         int defaultIndex = opt.indexOf(defaultValue)
         if (defaultIndex == -1) {
@@ -326,6 +330,14 @@ class InOut extends AbstractInOut {
                 log.error("Failed to detect image content type", e)
             }
         }
+        if (url.toExternalForm().toLowerCase(Locale.ROOT).contains('.svg')) {
+            Platform.runLater(() -> {
+                final WebView browser = new WebView()
+                browser.getEngine().load(url.toExternalForm())
+                display(browser, title)
+            });
+            return
+        }
         Image img = new Image(url.toExternalForm())
         display(img, title)
     }
@@ -404,34 +416,38 @@ class InOut extends AbstractInOut {
     }
 
     void saveToClipboard(String string) {
-        Platform.runLater(() -> {
+        runOnFxThread(() -> {
             ClipboardContent content = new ClipboardContent()
             content.putString(string)
             getClipboard().setContent(content)
+            return null
         });
     }
 
     void saveToClipboard(File file) {
-        Platform.runLater(() -> {
+        runOnFxThread(() -> {
             ClipboardContent content = new ClipboardContent()
             content.putFiles(List.of(file))
             getClipboard().setContent(content)
+            return null
         });
     }
 
     void saveToClipboard(Image img) {
-        Platform.runLater(() -> {
+        runOnFxThread(() -> {
             ClipboardContent content = new ClipboardContent()
             content.putImage(img)
             getClipboard().setContent(content)
+            return null
         });
     }
 
     void saveToClipboard(Object obj, DataFormat format) {
-        Platform.runLater(() -> {
+        runOnFxThread(() -> {
             ClipboardContent content = new ClipboardContent()
             content.put(format, obj)
             getClipboard().setContent(content)
+            return null
         });
     }
 

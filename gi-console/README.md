@@ -86,20 +86,18 @@ dependencies {
 ## Limitations
 
 - **Clipboard**: Clipboard access is unavailable in headless environments; clipboard methods log the issue and return `null` or no-op.
-- **Password Input**: Requires `System.console()` to be available. Returns `null` in IDEs and some CI environments where console is unavailable.
+- **Password Input**: Uses masked input through `System.console()` when available. In IDEs and some CI environments, it falls back to visible stdin input and logs a warning.
 - **Charts/Images**: `display(Chart)` and `display(File)` for images print a message instead of showing graphics
 - **Swing Components**: `display(JComponent)` is not supported
 - **File Choosers**: User manually types file paths instead of browsing
 
 ## Console Availability
 
-The password prompt requires a system console:
+The password prompt uses a system console when available:
 
 ```groovy
 def password = io.promptPassword("Login", "Enter password")
-if (password == null) {
-    println("Console not available - cannot read password")
-}
+// If no system console is available, stdin input is visible.
 ```
 
 To ensure console availability:

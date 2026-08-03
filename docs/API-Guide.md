@@ -312,5 +312,5 @@ if (file == null) {
 
 - Best for headless/CI environments
 - `display()` and `display(Chart)` print messages instead of showing UI
-- Password input requires `System.console()` (returns null in IDEs)
+- Password input is masked when `System.console()` is available; otherwise stdin input is visible and a warning is logged
 - Tables displayed as text using Matrix.content()
