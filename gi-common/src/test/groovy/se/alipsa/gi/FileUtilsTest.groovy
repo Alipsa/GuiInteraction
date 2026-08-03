@@ -68,6 +68,34 @@ class FileUtilsTest {
   }
 
   @Test
+  void testDecodeXmlStripsUtf8AndUtf16ByteOrderMarks() {
+    String xml = '<?xml version="1.0" encoding="UTF-8"?><svg>ok</svg>'
+    byte[] utf8 = prepend([0xEF, 0xBB, 0xBF] as byte[], xml.getBytes('UTF-8'))
+    byte[] utf16le = prepend([0xFF, 0xFE] as byte[],
+        xml.replace('UTF-8', 'UTF-16LE').getBytes('UTF-16LE'))
+    byte[] utf16be = prepend([0xFE, 0xFF] as byte[],
+        xml.replace('UTF-8', 'UTF-16BE').getBytes('UTF-16BE'))
+
+    assertTrue(FileUtils.decodeXml(utf8).startsWith('<?xml'))
+    assertTrue(FileUtils.decodeXml(utf16le).startsWith('<?xml'))
+    assertTrue(FileUtils.decodeXml(utf16be).startsWith('<?xml'))
+  }
+
+  private static byte[] prepend(byte[] prefix, byte[] content) {
+    byte[] result = new byte[prefix.length + content.length]
+    System.arraycopy(prefix, 0, result, 0, prefix.length)
+    System.arraycopy(content, 0, result, prefix.length, content.length)
+    result
+  }
+
+  @Test
+  void testDecodeXmlFallsBackWhenEncodingIsUnknown() {
+    byte[] content = '<?xml version="1.0" encoding="unknown-charset"?><svg>ok</svg>'.bytes
+
+    assertTrue(FileUtils.decodeXml(content).contains('<svg>ok</svg>'))
+  }
+
+  @Test
   void testBaseNameWithNull() {
     assertNull(FileUtils.baseName(null))
   }

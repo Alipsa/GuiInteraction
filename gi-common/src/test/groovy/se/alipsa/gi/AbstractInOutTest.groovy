@@ -183,6 +183,13 @@ class AbstractInOutTest {
   }
 
   @Test
+  void testUrlExistsRejectsNegativeTimeout() {
+    assertThrows(IllegalArgumentException) {
+      inOut.urlExists("http://127.0.0.1", -1)
+    }
+  }
+
+  @Test
   void testUrlExistsWithUnreachableHost() {
     // Non-existent hosts should return false with timeout
     assertFalse(inOut.urlExists("http://this-host-does-not-exist-12345.com/", 3000))
@@ -229,6 +236,42 @@ class AbstractInOutTest {
     }
     server.createContext("/missing") { exchange ->
       exchange.sendResponseHeaders(404, -1)
+      exchange.close()
+    }
+    server.start()
+    try {
+      assertFalse(inOut.urlExists("http://127.0.0.1:${server.address.port}/redirect", 2000))
+    } finally {
+      server.stop(0)
+    }
+  }
+
+  @Test
+  void urlExistsResolvesRelativeRedirects() {
+    HttpServer server = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0)
+    server.createContext("/redirect") { exchange ->
+      exchange.responseHeaders.add("Location", "/ok")
+      exchange.sendResponseHeaders(302, -1)
+      exchange.close()
+    }
+    server.createContext("/ok") { exchange ->
+      exchange.sendResponseHeaders(200, -1)
+      exchange.close()
+    }
+    server.start()
+    try {
+      assertTrue(inOut.urlExists("http://127.0.0.1:${server.address.port}/redirect", 2000))
+    } finally {
+      server.stop(0)
+    }
+  }
+
+  @Test
+  void urlExistsRejectsNonHttpRedirectTargets() {
+    HttpServer server = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0)
+    server.createContext("/redirect") { exchange ->
+      exchange.responseHeaders.add("Location", "file:/etc/hostname")
+      exchange.sendResponseHeaders(302, -1)
       exchange.close()
     }
     server.start()

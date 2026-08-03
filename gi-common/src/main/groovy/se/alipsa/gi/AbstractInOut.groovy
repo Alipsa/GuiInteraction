@@ -33,31 +33,38 @@ abstract class AbstractInOut implements GuiInteraction {
 
   @Override
   boolean urlExists(String urlString, int timeout) {
+    if (timeout < 0) {
+      throw new IllegalArgumentException("timeout cannot be negative")
+    }
     try {
       URL url = new URL(urlString)
       long deadline = timeout > 0 ?
           System.nanoTime() + TimeUnit.MILLISECONDS.toNanos(timeout) : Long.MAX_VALUE
       for (int redirect = 0; redirect <= MAX_REDIRECTS; redirect++) {
-        if (!isHttpUrl(url) || timeout > 0 && System.nanoTime() >= deadline) {
+        if (!isHttpUrl(url) || !hasTimeRemaining(timeout, deadline)) {
           return false
         }
         HttpURLConnection con = null
         try {
-          int remaining = remainingTimeout(timeout, deadline)
-          con = open(url, "HEAD", remaining, false)
+          con = open(url, "HEAD", remainingTimeout(timeout, deadline), false)
           int responseCode = con.getResponseCode()
           if (responseCode == HttpURLConnection.HTTP_BAD_METHOD ||
               responseCode == HttpURLConnection.HTTP_NOT_IMPLEMENTED) {
+            if (!hasTimeRemaining(timeout, deadline)) {
+              return false
+            }
             con.disconnect()
             con = open(url, "GET", remainingTimeout(timeout, deadline), true)
             responseCode = con.getResponseCode()
             if (responseCode == 416) {
+              if (!hasTimeRemaining(timeout, deadline)) {
+                return false
+              }
               con.disconnect()
               con = open(url, "GET", remainingTimeout(timeout, deadline), false)
               responseCode = con.getResponseCode()
             }
           }
-          closeResponseBody(con, responseCode)
           if (responseCode >= 300 && responseCode < 400) {
             String location = con.getHeaderField("Location")
             if (location == null || redirect == MAX_REDIRECTS) {
@@ -103,16 +110,8 @@ abstract class AbstractInOut implements GuiInteraction {
     return (int) Math.max(1, Math.min(Integer.MAX_VALUE, remainingMillis))
   }
 
-  private static void closeResponseBody(HttpURLConnection con, int responseCode) {
-    try {
-      InputStream response = responseCode >= 200 && responseCode < 400 ?
-          con.getInputStream() : con.getErrorStream()
-      if (response != null) {
-        response.close()
-      }
-    } catch (IOException ignored) {
-      // The response code is authoritative for this existence check.
-    }
+  private static boolean hasTimeRemaining(int configuredTimeout, long deadline) {
+    return configuredTimeout <= 0 || System.nanoTime() < deadline
   }
 
   @Override

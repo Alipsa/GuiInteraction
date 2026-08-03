@@ -90,7 +90,8 @@ class FileUtils {
         // Keep the UTF-8/BOM-derived fallback for an unknown declaration.
       }
     }
-    return new String(content, charset)
+    String decoded = new String(content, charset)
+    return decoded.startsWith('\uFEFF') ? decoded.substring(1) : decoded
   }
 
   /**

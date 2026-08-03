@@ -191,7 +191,7 @@ commit_release_version() {
         echo -e "${RED}Error: Failed to add files to git. Please resolve the issue and try again.${NC}" >&2
         exit 1
     fi
-    if ! git commit -m "Release version ${release_version}"; then
+    if ! git commit -m "Release version ${release_version}" -- build.gradle README.md CHANGELOG.md; then
         echo -e "${RED}Error: Failed to commit version change. Please resolve the issue and try again.${NC}" >&2
         exit 1
     fi
@@ -242,8 +242,14 @@ elif [ "$README_NEEDS_UPDATE" = true ]; then
         read -p "Update README.md to version ${CURRENT_VERSION}? [Y/n]: " update_readme
         if [[ ! "$update_readme" =~ ^[Nn]$ ]]; then
             update_readme_version "$CURRENT_VERSION"
-            git add README.md
-            git commit -m "Update README version to ${CURRENT_VERSION}"
+            if ! git add README.md; then
+                echo -e "${RED}Error: Failed to add README.md to git. Please resolve the issue and try again.${NC}" >&2
+                exit 1
+            fi
+            if ! git commit -m "Update README version to ${CURRENT_VERSION}" -- README.md; then
+                echo -e "${RED}Error: Failed to commit README.md version change. Please resolve the issue and try again.${NC}" >&2
+                exit 1
+            fi
         fi
     fi
 fi
