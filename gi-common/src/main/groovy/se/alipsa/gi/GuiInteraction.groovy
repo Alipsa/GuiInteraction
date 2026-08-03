@@ -102,7 +102,8 @@ interface GuiInteraction {
   /**
    * Checks if a URL exists and is accessible.
    * <p>
-   * Performs an HTTP HEAD request, falling back to GET when HEAD returns a 4xx response,
+   * Performs an HTTP HEAD request, falling back to GET for retryable method/authorization
+   * responses (400, 401, 403, 405, or 501),
    * to verify the URL is reachable.
    *
    * @param urlString the URL to check

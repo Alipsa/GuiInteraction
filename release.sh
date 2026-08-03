@@ -242,7 +242,7 @@ elif [ "$README_NEEDS_UPDATE" = true ]; then
         read -p "Update README.md to version ${CURRENT_VERSION}? [Y/n]: " update_readme
         if [[ ! "$update_readme" =~ ^[Nn]$ ]]; then
             update_readme_version "$CURRENT_VERSION"
-            if ! git diff --quiet -- README.md; then
+            if ! git diff --quiet HEAD -- README.md; then
                 if ! git add README.md; then
                     echo -e "${RED}Error: Failed to add README.md to git. Please resolve the issue and try again.${NC}" >&2
                     exit 1

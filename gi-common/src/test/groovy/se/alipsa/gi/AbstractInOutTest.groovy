@@ -12,6 +12,7 @@ import java.time.LocalDate
 import java.time.YearMonth
 import com.sun.net.httpserver.HttpServer
 import java.net.InetSocketAddress
+import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicReference
 
 import static org.junit.jupiter.api.Assertions.*
@@ -240,6 +241,46 @@ class AbstractInOutTest {
     server.start()
     try {
       assertTrue(inOut.urlExists("http://127.0.0.1:${server.address.port}/health", 2000))
+    } finally {
+      server.stop(0)
+    }
+  }
+
+  @Test
+  void urlExistsFallsBackToGetWhenHeadReturns501() {
+    AtomicInteger requests = new AtomicInteger()
+    HttpServer server = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0)
+    server.createContext("/health") { exchange ->
+      requests.incrementAndGet()
+      if (exchange.requestMethod == "HEAD") {
+        exchange.sendResponseHeaders(501, -1)
+      } else {
+        exchange.sendResponseHeaders(200, -1)
+      }
+      exchange.close()
+    }
+    server.start()
+    try {
+      assertTrue(inOut.urlExists("http://127.0.0.1:${server.address.port}/health", 2000))
+      assertEquals(2, requests.get())
+    } finally {
+      server.stop(0)
+    }
+  }
+
+  @Test
+  void urlExistsDoesNotRetryAuthoritativeNotFoundResponses() {
+    AtomicInteger requests = new AtomicInteger()
+    HttpServer server = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0)
+    server.createContext("/missing") { exchange ->
+      requests.incrementAndGet()
+      exchange.sendResponseHeaders(404, -1)
+      exchange.close()
+    }
+    server.start()
+    try {
+      assertFalse(inOut.urlExists("http://127.0.0.1:${server.address.port}/missing", 2000))
+      assertEquals(1, requests.get())
     } finally {
       server.stop(0)
     }

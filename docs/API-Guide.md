@@ -239,7 +239,7 @@ if (io.urlExists("https://example.com/api/health", 5000)) {
 }
 ```
 
-`urlExists` accepts HTTP and HTTPS URLs, follows redirects within the supplied overall timeout budget, and returns `false` unless the final response is 2xx. A negative timeout throws `IllegalArgumentException`; `0` retains the JVM connection timeout behavior.
+`urlExists` accepts HTTP and HTTPS URLs, follows redirects within the supplied overall timeout budget, and returns `false` unless the final response is 2xx. A negative timeout throws `IllegalArgumentException`; `0` disables the timeout entirely, so the call may block indefinitely.
 
 ### Content Type Detection
 

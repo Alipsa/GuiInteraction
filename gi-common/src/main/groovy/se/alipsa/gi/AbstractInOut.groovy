@@ -48,7 +48,7 @@ abstract class AbstractInOut implements GuiInteraction {
         try {
           con = open(url, "HEAD", remainingTimeout(timeout, deadline), false)
           int responseCode = con.getResponseCode()
-          if (responseCode >= 400 && responseCode < 500) {
+          if (shouldFallbackToGet(responseCode)) {
             if (!hasTimeRemaining(timeout, deadline)) {
               return false
             }
@@ -99,6 +99,14 @@ abstract class AbstractInOut implements GuiInteraction {
 
   private static boolean isHttpUrl(URL url) {
     return "http".equalsIgnoreCase(url.protocol) || "https".equalsIgnoreCase(url.protocol)
+  }
+
+  private static boolean shouldFallbackToGet(int responseCode) {
+    return responseCode == HttpURLConnection.HTTP_BAD_REQUEST ||
+        responseCode == HttpURLConnection.HTTP_UNAUTHORIZED ||
+        responseCode == HttpURLConnection.HTTP_FORBIDDEN ||
+        responseCode == HttpURLConnection.HTTP_BAD_METHOD ||
+        responseCode == HttpURLConnection.HTTP_NOT_IMPLEMENTED
   }
 
   private static int remainingTimeout(int configuredTimeout, long deadline) {
