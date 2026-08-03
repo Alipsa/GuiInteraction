@@ -203,7 +203,8 @@ io.view([
 // Display an image
 io.display("/path/to/chart.png", "Chart")
 
-// Display a file (opens with system default for unknown types)
+// gi-console opens unknown files with the system default application;
+// gi-swing and gi-fx expect a displayable image resource instead.
 io.display(new File("document.pdf"))
 ```
 
