@@ -355,9 +355,9 @@ class InOut extends AbstractInOut {
     }
 
     private void displaySvg(URL url, String... title) {
-        byte[] svgBytes
-        try (InputStream input = url.openStream()) {
-            svgBytes = input.readAllBytes()
+        String svgContent
+        try {
+            svgContent = FileUtils.readXml(url)
         } catch (IOException e) {
             log.error("Failed to read SVG {}", url, e)
             return
@@ -365,7 +365,7 @@ class InOut extends AbstractInOut {
         String windowTitle = title.length > 0 ? title[0] : ''
         Platform.runLater(() -> {
             try {
-                Node node = ChartToJfx.export(FileUtils.decodeXml(svgBytes))
+                Node node = ChartToJfx.export(svgContent)
                 showNow(node, windowTitle)
             } catch (RuntimeException e) {
                 log.error("Failed to parse SVG {}", url, e)

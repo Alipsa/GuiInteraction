@@ -48,8 +48,7 @@ abstract class AbstractInOut implements GuiInteraction {
         try {
           con = open(url, "HEAD", remainingTimeout(timeout, deadline), false)
           int responseCode = con.getResponseCode()
-          if (responseCode == HttpURLConnection.HTTP_BAD_METHOD ||
-              responseCode == HttpURLConnection.HTTP_NOT_IMPLEMENTED) {
+          if (responseCode >= 400 && responseCode < 500) {
             if (!hasTimeRemaining(timeout, deadline)) {
               return false
             }

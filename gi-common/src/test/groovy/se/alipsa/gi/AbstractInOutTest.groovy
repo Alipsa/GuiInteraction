@@ -227,6 +227,25 @@ class AbstractInOutTest {
   }
 
   @Test
+  void urlExistsFallsBackToGetForAnyHeadClientError() {
+    HttpServer server = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0)
+    server.createContext("/health") { exchange ->
+      if (exchange.requestMethod == "HEAD") {
+        exchange.sendResponseHeaders(403, -1)
+      } else {
+        exchange.sendResponseHeaders(200, -1)
+      }
+      exchange.close()
+    }
+    server.start()
+    try {
+      assertTrue(inOut.urlExists("http://127.0.0.1:${server.address.port}/health", 2000))
+    } finally {
+      server.stop(0)
+    }
+  }
+
+  @Test
   void urlExistsFollowsRedirectsAndChecksTheFinalResponse() {
     HttpServer server = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0)
     server.createContext("/redirect") { exchange ->

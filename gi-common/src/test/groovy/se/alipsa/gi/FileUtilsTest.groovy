@@ -96,6 +96,14 @@ class FileUtilsTest {
   }
 
   @Test
+  void testReadXmlReadsAndDecodesClasspathSvg() {
+    String svg = FileUtils.readXml(FileUtils.getResourceUrl('svgplot.svg'))
+
+    assertTrue(svg.startsWith('<?xml'))
+    assertTrue(svg.contains('<svg'))
+  }
+
+  @Test
   void testBaseNameWithNull() {
     assertNull(FileUtils.baseName(null))
   }

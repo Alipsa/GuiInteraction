@@ -102,13 +102,14 @@ interface GuiInteraction {
   /**
    * Checks if a URL exists and is accessible.
    * <p>
-   * Performs an HTTP HEAD request, falling back to GET when HEAD is not supported,
+   * Performs an HTTP HEAD request, falling back to GET when HEAD returns a 4xx response,
    * to verify the URL is reachable.
    *
    * @param urlString the URL to check
    * @param timeout overall timeout budget in milliseconds, including redirect hops and retries
    * @return {@code true} if the URL returns a successful 2xx response after redirects,
-   *         {@code false} otherwise
+   *         {@code false} for non-HTTP(S) URLs or any other unsuccessful response
+   * @throws IllegalArgumentException if {@code timeout} is negative
    */
   boolean urlExists(String urlString, int timeout)
 

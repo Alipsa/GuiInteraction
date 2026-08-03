@@ -95,6 +95,15 @@ class FileUtils {
   }
 
   /**
+   * Reads and decodes XML content from a URL, honoring its XML declaration and byte-order mark.
+   */
+  static String readXml(URL url) throws IOException {
+    try (InputStream input = url.openStream()) {
+      return decodeXml(input.readAllBytes())
+    }
+  }
+
+  /**
    * Finds a resource using multiple classloader strategies.
    * <p>
    * Resolution order:
