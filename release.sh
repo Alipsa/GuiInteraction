@@ -14,7 +14,7 @@
 #   ./release.sh --dry-run    - Show what would be released without publishing
 #
 # If the version has a -SNAPSHOT suffix, it will be removed to create the release version.
-# The README.md will be updated automatically with the release version.
+# The README.md and release.md will be updated automatically with the release version.
 #
 set -e
 
@@ -118,15 +118,15 @@ check_readme_version() {
     return 0
 }
 
-# Generate changelog entry
-generate_changelog() {
+# Generate release notes entry
+generate_release_notes() {
     local version=$1
     local date=$(date +%Y-%m-%d)
-    local changelog_file="CHANGELOG.md"
+    local release_notes_file="release.md"
 
-    if [ ! -f "$changelog_file" ]; then
-        echo "# Changelog" > "$changelog_file"
-        echo "" >> "$changelog_file"
+    if [ ! -f "$release_notes_file" ]; then
+        echo "# Gui Interaction Release Notes" > "$release_notes_file"
+        echo "" >> "$release_notes_file"
     fi
 
     # Get commits since last tag
@@ -138,8 +138,8 @@ generate_changelog() {
         commits=$(git log --oneline -20 2>/dev/null || echo "")
     fi
 
-    # Create changelog entry
-    local entry="## [${version}] - ${date}\n\n"
+    # Create release notes entry
+    local entry="## ${version} - ${date}\n\n"
     if [ -n "$commits" ]; then
         entry+="### Changes\n\n"
         while IFS= read -r line; do
@@ -150,14 +150,14 @@ generate_changelog() {
     fi
     entry+="\n"
 
-    # Insert after first line (# Changelog)
-    if [ -f "$changelog_file" ]; then
+    # Insert after the release notes header
+    if [ -f "$release_notes_file" ]; then
         local temp_file=$(mktemp)
-        head -2 "$changelog_file" > "$temp_file"
+        head -2 "$release_notes_file" > "$temp_file"
         echo -e "$entry" >> "$temp_file"
-        tail -n +3 "$changelog_file" >> "$temp_file"
-        mv "$temp_file" "$changelog_file"
-        echo -e "${GREEN}Updated ${changelog_file}${NC}"
+        tail -n +3 "$release_notes_file" >> "$temp_file"
+        mv "$temp_file" "$release_notes_file"
+        echo -e "${GREEN}Updated ${release_notes_file}${NC}"
     fi
 }
 
@@ -185,13 +185,13 @@ commit_release_version() {
     local release_version=$1
     update_version "$release_version"
     update_readme_version "$release_version"
-    generate_changelog "$release_version"
+    generate_release_notes "$release_version"
 
-    if ! git add build.gradle README.md CHANGELOG.md; then
+    if ! git add build.gradle README.md release.md; then
         echo -e "${RED}Error: Failed to add files to git. Please resolve the issue and try again.${NC}" >&2
         exit 1
     fi
-    if ! git commit -m "Release version ${release_version}" -- build.gradle README.md CHANGELOG.md; then
+    if ! git commit -m "Release version ${release_version}" -- build.gradle README.md release.md; then
         echo -e "${RED}Error: Failed to commit version change. Please resolve the issue and try again.${NC}" >&2
         exit 1
     fi
