@@ -129,8 +129,10 @@ tasks.named("dependencyUpdates").configure {
 
 // OWASP Dependency Check configuration
 // Run with: ./gradlew dependencyCheckAnalyze
-// Reports are generated in build/reports/dependency-check-report.html
+// Reports are generated in build/reports/dependency-check/
 dependencyCheck {
+    // Read the NVD API key from the environment; never commit it to the repository.
+    nvd.apiKey = providers.environmentVariable('NVD_API_KEY').orNull
     // Scan all configurations including test dependencies
     scanConfigurations = ['runtimeClasspath', 'testRuntimeClasspath']
     // Fail the build if a CVSS score of 7 or higher is found (HIGH/CRITICAL)
@@ -140,4 +142,10 @@ dependencyCheck {
     // Suppress false positives (create suppressions.xml if needed)
     suppressionFile = file("${rootDir}/config/owasp-suppressions.xml").exists() ?
             "${rootDir}/config/owasp-suppressions.xml" : null
+    analyzers.ossIndex {
+        enabled = true
+        url = 'https://api.guide.sonatype.com'
+        username = providers.environmentVariable('SONATYPE_GUIDE_USERNAME').orNull
+        password = providers.environmentVariable('SONATYPE_GUIDE_PAT').orNull
+    }
 }

@@ -78,7 +78,7 @@ publishing {
       pom {
         name = 'Gade standalone GUI interaction library for Swing'
         description = "${project.description}"
-        url = "https://github.com/Alipsa/GuiInteraction/gi-swing"
+        url = "https://github.com/Alipsa/GuiInteraction/tree/main/gi-swing"
         licenses {
           license {
             name = 'MIT License'

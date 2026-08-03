@@ -49,7 +49,7 @@ PDFs or Office documents), add the full parser package:
 
 ```groovy
 dependencies {
-    implementation 'se.alipsa.gi:gi-common:0.3.0'
+    implementation 'se.alipsa.gi:gi-common:0.4.0'
     // Add full Tika parsers for document content extraction
     implementation 'org.apache.tika:tika-parsers-standard-package:3.2.3'
 }
@@ -68,7 +68,7 @@ The fat JARs (`gi-swing-fatjar`, `gi-fx-fatjar`, etc.) include all dependencies
 and are designed for standalone Groovy scripts:
 
 ```groovy
-@Grab(group:'se.alipsa.gi', module:'gi-swing', version:'0.3.0', classifier:'fatjar')
+@Grab(group:'se.alipsa.gi', module:'gi-swing', version:'0.4.0', classifier:'fatjar')
 import se.alipsa.gi.swing.InOut
 ```
 
@@ -87,12 +87,18 @@ To see the full dependency tree:
 The project includes the OWASP Dependency Check plugin to scan for known vulnerabilities (CVEs):
 
 ```bash
-# Run security scan
-./gradlew dependencyCheckAnalyze
+# Set an NVD API key for the current shell (request one at
+# https://nvd.nist.gov/developers/request-an-api-key)
+export NVD_API_KEY='your-nvd-api-key'
 
-# View report
-open build/reports/dependency-check-report.html
+# Run the security scan
+./gradlew dependencyCheckAnalyze --no-configuration-cache --console=plain
 ```
+
+Reports are written below `build/reports/dependency-check/`. The build fails when a
+dependency has a CVSS score of 7 or higher.
+
+Keep `NVD_API_KEY` in your shell/CI secret store; do not commit it to the repository.
 
 Configuration in `build.gradle`:
 - Fails build on CVSS score >= 7.0 (HIGH/CRITICAL)

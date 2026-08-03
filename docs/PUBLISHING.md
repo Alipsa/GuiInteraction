@@ -178,7 +178,7 @@ Before releasing:
 
 - [ ] All tests pass: `./gradlew test`
 - [ ] Version is not SNAPSHOT: check `build.gradle`
-- [ ] Changelog is updated: check `CHANGELOG.md`
+- [ ] Release notes are updated: check `release.md`
 - [ ] Documentation is current
 - [ ] No uncommitted changes: `git status`
 

@@ -54,7 +54,7 @@ publishing {
             pom {
                 name = 'Gade standalone UI interaction library for the console'
                 description = "${project.description}"
-                url = "https://github.com/Alipsa/GuiInteraction/gi-console"
+                url = "https://github.com/Alipsa/GuiInteraction/tree/main/gi-console"
                 licenses {
                     license {
                         name = 'MIT License'
