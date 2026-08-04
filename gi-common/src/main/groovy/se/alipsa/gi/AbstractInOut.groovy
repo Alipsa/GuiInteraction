@@ -2,6 +2,7 @@ package se.alipsa.gi
 
 import groovy.transform.CompileDynamic
 import groovy.transform.CompileStatic
+import groovy.transform.PackageScope
 import org.commonmark.ext.gfm.tables.TablesExtension;
 import org.commonmark.parser.Parser;
 import org.commonmark.renderer.html.HtmlRenderer;
@@ -14,8 +15,14 @@ import java.awt.datatransfer.DataFlavor
 import java.awt.datatransfer.StringSelection
 import java.awt.datatransfer.Transferable
 import java.nio.file.Paths
-import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutionException
+import java.util.concurrent.ExecutorService
+import java.util.concurrent.Executors
+import java.util.concurrent.Future
+import java.util.concurrent.ThreadFactory
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.TimeoutException
+import java.util.concurrent.atomic.AtomicInteger
 
 @CompileStatic
 abstract class AbstractInOut implements GuiInteraction {
@@ -158,6 +165,183 @@ abstract class AbstractInOut implements GuiInteraction {
   @Override
   URL getResourceUrl(String resource) {
     return FileUtils.getResourceUrl(resource)
+  }
+
+  @Override
+  String sh(String command) throws IOException, InterruptedException {
+    sh(command, false)
+  }
+
+  @Override
+  String sh(String command, boolean quiet) throws IOException, InterruptedException {
+    shell(command, quiet).stdout
+  }
+
+  @Override
+  String sh(String command, boolean quiet, long timeoutMillis)
+      throws IOException, InterruptedException, TimeoutException {
+    shell(command, quiet, timeoutMillis).stdout
+  }
+
+  @Override
+  ShellResult shell(String command) throws IOException, InterruptedException {
+    shell(command, true)
+  }
+
+  @Override
+  ShellResult shell(String command, boolean quiet) throws IOException, InterruptedException {
+    shell(command, quiet, 0)
+  }
+
+  @Override
+  ShellResult shell(String command, boolean quiet, long timeoutMillis)
+      throws IOException, InterruptedException, TimeoutException {
+    if (command == null || command.trim().isEmpty()) {
+      throw new IllegalArgumentException('command cannot be null or empty')
+    }
+    if (timeoutMillis < 0) {
+      throw new IllegalArgumentException('timeoutMillis cannot be negative')
+    }
+
+    Process process = new ProcessBuilder(shellCommand(command)).start()
+    process.outputStream.close()
+
+    StringBuilder stdout = new StringBuilder()
+    StringBuilder stderr = new StringBuilder()
+    ExecutorService readers = Executors.newFixedThreadPool(2, daemonThreadFactory())
+    PrintStream outputStream = getShellOutputStream()
+    PrintStream errorStream = getShellErrorStream()
+    Future<?> stdoutReader = readers.submit({
+      readProcessOutput(process.inputReader(), stdout, outputStream, quiet)
+    } as Runnable)
+    Future<?> stderrReader = readers.submit({
+      readProcessOutput(process.errorReader(), stderr, errorStream, quiet)
+    } as Runnable)
+    long deadline = timeoutMillis > 0 ?
+        System.nanoTime() + TimeUnit.MILLISECONDS.toNanos(timeoutMillis) : Long.MAX_VALUE
+
+    try {
+      if (timeoutMillis > 0) {
+        if (!process.waitFor(remainingMillis(deadline), TimeUnit.MILLISECONDS)) {
+          throw new TimeoutException("Command timed out after ${timeoutMillis} ms")
+        }
+        awaitOutput(stdoutReader, remainingMillis(deadline))
+        awaitOutput(stderrReader, remainingMillis(deadline))
+      } else {
+        process.waitFor()
+        awaitOutput(stdoutReader)
+        awaitOutput(stderrReader)
+      }
+      int exitCode = process.exitValue()
+      return new ShellResult(stdout.toString(), stderr.toString(), exitCode)
+    } catch (InterruptedException e) {
+      destroyProcess(process)
+      Thread.currentThread().interrupt()
+      throw e
+    } catch (TimeoutException e) {
+      destroyProcess(process)
+      throw e
+    } finally {
+      readers.shutdownNow()
+      if (process.isAlive()) {
+        destroyProcess(process)
+      }
+    }
+  }
+
+  /**
+   * Returns the destination for streamed shell standard output. GUI implementations
+   * can override this to route command output into a visible application view.
+   */
+  protected PrintStream getShellOutputStream() {
+    System.out
+  }
+
+  /**
+   * Returns the destination for streamed shell standard error. GUI implementations
+   * can override this to route command errors into a visible application view.
+   */
+  protected PrintStream getShellErrorStream() {
+    System.err
+  }
+
+  private static ThreadFactory daemonThreadFactory() {
+    AtomicInteger readerNumber = new AtomicInteger()
+    return { Runnable task ->
+      String stream = readerNumber.getAndIncrement() == 0 ? 'stdout' : 'stderr'
+      Thread thread = new Thread(task, "gi-shell-${stream}-reader")
+      thread.setDaemon(true)
+      thread
+    } as ThreadFactory
+  }
+
+  private static void destroyProcess(Process process) {
+    process.descendants().forEach { descendant -> descendant.destroyForcibly() }
+    process.destroyForcibly()
+  }
+
+  private static List<String> shellCommand(String command) {
+    if (isWindows()) {
+      String commandInterpreter = System.getenv('ComSpec')
+      commandInterpreter = commandInterpreter ?: 'cmd.exe'
+      return [commandInterpreter, '/d', '/s', '/c', command]
+    }
+    return ['/bin/sh', '-c', command]
+  }
+
+  @PackageScope
+  static boolean isWindows() {
+    System.getProperty('os.name', '').toLowerCase(Locale.ROOT).contains('win')
+  }
+
+  private static void readProcessOutput(
+      Reader reader, StringBuilder capture, PrintStream destination, boolean quiet) {
+    try {
+      char[] buffer = new char[1024]
+      int count
+      while ((count = reader.read(buffer)) >= 0) {
+        if (count == 0) {
+          continue
+        }
+        String chunk = new String(buffer, 0, count)
+        capture.append(chunk)
+        if (!quiet) {
+          destination.print(chunk)
+          destination.flush()
+        }
+      }
+    } finally {
+      reader.close()
+    }
+  }
+
+  private static void awaitOutput(Future<?> reader) throws IOException, InterruptedException {
+    awaitOutput(reader, 0)
+  }
+
+  private static void awaitOutput(Future<?> reader, long timeoutMillis)
+      throws IOException, InterruptedException, TimeoutException {
+    try {
+      if (timeoutMillis > 0) {
+        reader.get(timeoutMillis, TimeUnit.MILLISECONDS)
+      } else {
+        reader.get()
+      }
+    } catch (ExecutionException e) {
+      Throwable cause = e.cause
+      if (cause instanceof IOException) {
+        throw (IOException) cause
+      }
+      throw new IOException('Failed to read command output', cause)
+    }
+  }
+
+  private static long remainingMillis(long deadline) throws TimeoutException {
+    long remainingNanos = deadline - System.nanoTime()
+    if (remainingNanos <= 0) {
+      throw new TimeoutException('Command timed out')
+    }
+    Math.max(1, TimeUnit.NANOSECONDS.toMillis(remainingNanos))
   }
 
   @Override

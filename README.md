@@ -20,6 +20,7 @@ GuiInteraction enables standalone Groovy applications to have the same user inte
 - HTML and Markdown content viewing
 - Table/Matrix display
 - Clipboard operations
+- Shell command execution with captured output and exit status
 - Content type detection (via Apache Tika)
 - Resource loading utilities
 

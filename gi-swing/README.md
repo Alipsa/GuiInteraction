@@ -18,6 +18,7 @@ This module provides Swing-based dialogs and viewers for user interaction. It wo
 - Table display with JTable
 - Clipboard operations
 - Chart display via Matrix Charts integration
+- Shell command execution with captured output and exit status
 
 ## Installation
 

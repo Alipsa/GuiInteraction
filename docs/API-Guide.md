@@ -230,6 +230,55 @@ if (clipboardFile != null) {
 
 ## Utility Methods
 
+### Shell Commands
+
+`sh` is the concise form for interactive or ad-hoc shell commands. It returns
+standard output as a `String` and streams standard output and standard error
+while the command runs unless `quiet` is `true`:
+
+```groovy
+def listing = io.sh('ls -a')
+def filtered = io.sh('ls re* | grep matrix', true)
+```
+
+`sh` intentionally does not expose the exit status; use `shell` when the
+success or failure of the command matters.
+
+Use `shell` when a script needs the exit status and both output streams:
+
+```groovy
+def result = io.shell('ls re* | grep matrix > out.txt')
+
+if (!result.success) {
+    println("Command failed with exit code ${result.exitCode}: ${result.stderr}")
+} else {
+    println(new File('out.txt').text)
+}
+```
+
+`ShellResult` provides `stdout`, `stderr`, `exitCode`, and `success`. Shell
+redirection is performed by the operating system shell, so redirected output
+is written to the target file and is not present in `result.stdout`.
+
+Use the timeout overload when a command must have a bounded execution time:
+
+```groovy
+def result = io.shell('long-running-command', true, 10_000)
+```
+
+The timeout is in milliseconds and applies to both the shell and draining its
+output streams; `0` means no timeout. Without a timeout, a command that starts
+a background child inheriting standard output or error can remain blocked after
+the shell exits until that child closes the pipe.
+
+The same timeout form is available on `sh` when only standard output is needed:
+`io.sh('long-running-command', true, 10_000)`.
+
+Commands are executed through `/bin/sh` on Unix-like systems and `cmd.exe` on
+Windows. Shell syntax is therefore platform-dependent. These methods execute
+arbitrary commands; never concatenate untrusted user input into a shell
+command.
+
 ### URL Existence Check
 
 ```groovy

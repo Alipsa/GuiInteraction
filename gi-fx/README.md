@@ -18,6 +18,7 @@ This module provides JavaFX-based dialogs and viewers for user interaction. It o
 - WebView-based HTML rendering
 - Markdown viewing with full formatting support
 - Chart display via Matrix Charts integration
+- Shell command execution with captured output and exit status
 
 ## Installation
 

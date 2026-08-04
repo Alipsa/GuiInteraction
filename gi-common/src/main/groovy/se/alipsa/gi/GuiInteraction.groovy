@@ -8,6 +8,7 @@ import javax.swing.JComponent
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeoutException;
 
 /**
  * Core interface for GUI interaction capabilities.
@@ -143,6 +144,93 @@ interface GuiInteraction {
    * @return the URL representation of the resource, or {@code null} if it does not exist
    */
   URL getResourceUrl(String resource)
+
+  /**
+   * Executes a command through the platform shell and returns standard output.
+   *
+   * <p>Standard output and standard error are streamed to the current process
+   * while the command runs. Use {@link #sh(String, boolean)} to suppress live
+   * output.</p>
+   *
+   * @param command the shell command to execute
+   * @return the command's captured standard output
+   * @throws IOException if the shell cannot be started or output cannot be read
+   * @throws InterruptedException if the current thread is interrupted
+   */
+  String sh(String command) throws IOException, InterruptedException
+
+  /**
+   * Executes a command through the platform shell and returns standard output.
+   *
+   * @param command the shell command to execute
+   * @param quiet whether to suppress live output
+   * @return the command's captured standard output
+   * @throws IOException if the shell cannot be started or output cannot be read
+   * @throws InterruptedException if the current thread is interrupted
+   */
+  String sh(String command, boolean quiet) throws IOException, InterruptedException
+
+  /**
+   * Executes a command through the platform shell and returns standard output,
+   * stopping if the supplied timeout is exceeded.
+   *
+   * <p>A timeout of {@code 0} disables the timeout. The timeout covers both
+   * the shell process and draining its output streams.</p>
+   *
+   * @param command the shell command to execute
+   * @param quiet whether to suppress live output
+   * @param timeoutMillis maximum execution time in milliseconds, or {@code 0} for no timeout
+   * @return the command's captured standard output
+   * @throws IOException if the shell cannot be started or output cannot be read
+   * @throws InterruptedException if the current thread is interrupted
+   * @throws TimeoutException if the timeout is exceeded
+   */
+  String sh(String command, boolean quiet, long timeoutMillis)
+      throws IOException, InterruptedException, TimeoutException
+
+  /**
+   * Executes a command through the platform shell and returns its complete result.
+   *
+   * <p>The default is quiet so scripts can inspect the result without producing
+   * unsolicited console output.</p>
+   *
+   * @param command the shell command to execute
+   * @return captured output, error output, and exit code
+   * @throws IOException if the shell cannot be started or output cannot be read
+   * @throws InterruptedException if the current thread is interrupted
+   */
+  ShellResult shell(String command) throws IOException, InterruptedException
+
+  /**
+   * Executes a command through the platform shell and returns its complete result.
+   *
+   * @param command the shell command to execute
+   * @param quiet whether to suppress live output
+   * @return captured output, error output, and exit code
+   * @throws IOException if the shell cannot be started or output cannot be read
+   * @throws InterruptedException if the current thread is interrupted
+   */
+  ShellResult shell(String command, boolean quiet) throws IOException, InterruptedException
+
+  /**
+   * Executes a command through the platform shell and returns its complete result,
+   * stopping if the supplied timeout is exceeded.
+   *
+   * <p>A timeout of {@code 0} disables the timeout. The timeout covers both
+   * the shell process and draining its output streams. Without a timeout, a
+   * command that leaves a child process holding standard output or standard
+   * error open can keep this call blocked after the shell itself exits.</p>
+   *
+   * @param command the shell command to execute
+   * @param quiet whether to suppress live output
+   * @param timeoutMillis maximum execution time in milliseconds, or {@code 0} for no timeout
+   * @return captured output, error output, and exit code
+   * @throws IOException if the shell cannot be started or output cannot be read
+   * @throws InterruptedException if the current thread is interrupted
+   * @throws TimeoutException if the timeout is exceeded
+   */
+  ShellResult shell(String command, boolean quiet, long timeoutMillis)
+      throws IOException, InterruptedException, TimeoutException
 
   /**
    * A prompt method with support for named parameters in Groovy.
