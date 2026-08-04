@@ -1,7 +1,7 @@
 # Gui Interaction Release Notes
 
 ## Unreleased
-- Common: added shell command execution with captured/streamed output, exit status, and optional timeouts. These methods execute arbitrary platform shell commands and should not receive untrusted input.
+- Common: added `sh` and `shell` methods for executing platform shell commands. `sh` returns captured standard output and can stream output while the command runs; `shell` returns a `ShellResult` containing standard output, standard error, exit code, and success status. Both support optional timeouts. These methods execute arbitrary commands and should not receive untrusted input.
 
 ## 0.4.0 - 2026-08-03
 - Breaking: `FileUtils.getResourceUrl` returns `null` for paths that do not exist; use `File` for output targets that will be created later.
