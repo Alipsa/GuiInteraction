@@ -230,6 +230,41 @@ if (clipboardFile != null) {
 
 ## Utility Methods
 
+### Shell Commands
+
+`sh` is the concise form for interactive or ad-hoc shell commands. It returns
+standard output as a `String` and streams standard output and standard error
+while the command runs unless `quiet` is `true`:
+
+```groovy
+def listing = io.sh('ls -a')
+def filtered = io.sh('ls re* | grep matrix', true)
+```
+
+`sh` intentionally does not expose the exit status; use `shell` when the
+success or failure of the command matters.
+
+Use `shell` when a script needs the exit status and both output streams:
+
+```groovy
+def result = io.shell('ls re* | grep matrix > out.txt')
+
+if (!result.success) {
+    println("Command failed with exit code ${result.exitCode}: ${result.stderr}")
+} else {
+    println(new File('out.txt').text)
+}
+```
+
+`ShellResult` provides `stdout`, `stderr`, `exitCode`, and `success`. Shell
+redirection is performed by the operating system shell, so redirected output
+is written to the target file and is not present in `result.stdout`.
+
+Commands are executed through `/bin/sh` on Unix-like systems and `cmd.exe` on
+Windows. Shell syntax is therefore platform-dependent. These methods execute
+arbitrary commands; never concatenate untrusted user input into a shell
+command.
+
 ### URL Existence Check
 
 ```groovy

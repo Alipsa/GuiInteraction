@@ -13,9 +13,15 @@ import java.awt.datatransfer.ClipboardOwner
 import java.awt.datatransfer.DataFlavor
 import java.awt.datatransfer.StringSelection
 import java.awt.datatransfer.Transferable
+import java.io.InputStream
+import java.nio.charset.Charset
 import java.nio.file.Paths
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService
+import java.util.concurrent.Executors
+import java.util.concurrent.Future
 import java.util.concurrent.TimeUnit
+import java.util.Locale
 
 @CompileStatic
 abstract class AbstractInOut implements GuiInteraction {
@@ -158,6 +164,99 @@ abstract class AbstractInOut implements GuiInteraction {
   @Override
   URL getResourceUrl(String resource) {
     return FileUtils.getResourceUrl(resource)
+  }
+
+  @Override
+  String sh(String command) throws IOException, InterruptedException {
+    sh(command, false)
+  }
+
+  @Override
+  String sh(String command, boolean quiet) throws IOException, InterruptedException {
+    shell(command, quiet).stdout
+  }
+
+  @Override
+  ShellResult shell(String command) throws IOException, InterruptedException {
+    shell(command, true)
+  }
+
+  @Override
+  ShellResult shell(String command, boolean quiet) throws IOException, InterruptedException {
+    if (command == null || command.trim().isEmpty()) {
+      throw new IllegalArgumentException('command cannot be null or empty')
+    }
+
+    Process process = new ProcessBuilder(shellCommand(command)).start()
+    process.outputStream.close()
+
+    StringBuilder stdout = new StringBuilder()
+    StringBuilder stderr = new StringBuilder()
+    ExecutorService readers = Executors.newFixedThreadPool(2)
+    Future<?> stdoutReader = readers.submit({
+      readProcessOutput(process.inputStream, stdout, System.out, quiet)
+    } as Runnable)
+    Future<?> stderrReader = readers.submit({
+      readProcessOutput(process.errorStream, stderr, System.err, quiet)
+    } as Runnable)
+
+    try {
+      int exitCode = process.waitFor()
+      awaitOutput(stdoutReader)
+      awaitOutput(stderrReader)
+      return new ShellResult(stdout.toString(), stderr.toString(), exitCode)
+    } catch (InterruptedException e) {
+      process.destroyForcibly()
+      Thread.currentThread().interrupt()
+      throw e
+    } finally {
+      readers.shutdownNow()
+    }
+  }
+
+  private static List<String> shellCommand(String command) {
+    if (isWindows()) {
+      String commandInterpreter = System.getenv('ComSpec')
+      commandInterpreter = commandInterpreter ?: 'cmd.exe'
+      return [commandInterpreter, '/d', '/s', '/c', command]
+    }
+    return ['/bin/sh', '-c', command]
+  }
+
+  private static boolean isWindows() {
+    System.getProperty('os.name', '').toLowerCase(Locale.ROOT).contains('win')
+  }
+
+  private static void readProcessOutput(
+      InputStream stream, StringBuilder capture, PrintStream destination, boolean quiet) {
+    Charset charset = Charset.defaultCharset()
+    stream.withReader(charset.name()) { reader ->
+      char[] buffer = new char[1024]
+      int count
+      while ((count = reader.read(buffer)) >= 0) {
+        if (count == 0) {
+          continue
+        }
+        String chunk = new String(buffer, 0, count)
+        capture.append(chunk)
+        if (!quiet) {
+          destination.print(chunk)
+          destination.flush()
+        }
+      }
+    }
+  }
+
+  private static void awaitOutput(Future<?> reader) throws IOException, InterruptedException {
+    try {
+      reader.get()
+    } catch (java.util.concurrent.ExecutionException e) {
+      Throwable cause = e.cause
+      if (cause instanceof IOException) {
+        throw (IOException) cause
+      }
+      throw new IOException('Failed to read command output', cause)
+    }
   }
 
   @Override

@@ -17,6 +17,7 @@ This module provides console-based (text mode) interaction capabilities. It's de
 - File path input via console
 - Table output using Matrix text formatting
 - HTML content displayed as plain text (via Jsoup)
+- Shell command execution with streamed or captured output
 - System clipboard access (when not running headless)
 
 ## Installation

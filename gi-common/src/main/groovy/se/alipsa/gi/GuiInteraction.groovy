@@ -145,6 +145,56 @@ interface GuiInteraction {
   URL getResourceUrl(String resource)
 
   /**
+   * Executes a command through the platform shell and returns standard output.
+   *
+   * <p>When {@code quiet} is false, standard output and standard error are also
+   * streamed to the current process while the command runs. The complete
+   * standard output is returned after the command exits.</p>
+   *
+   * @param command the shell command to execute
+   * @param quiet whether to suppress live output
+   * @return the command's captured standard output
+   * @throws IOException if the shell cannot be started or output cannot be read
+   * @throws InterruptedException if the current thread is interrupted
+   */
+  String sh(String command)
+
+  /**
+   * Executes a command through the platform shell and returns standard output.
+   *
+   * @param command the shell command to execute
+   * @param quiet whether to suppress live output
+   * @return the command's captured standard output
+   * @throws IOException if the shell cannot be started or output cannot be read
+   * @throws InterruptedException if the current thread is interrupted
+   */
+  String sh(String command, boolean quiet)
+
+  /**
+   * Executes a command through the platform shell and returns its complete result.
+   *
+   * <p>The default is quiet so scripts can inspect the result without producing
+   * unsolicited console output.</p>
+   *
+   * @param command the shell command to execute
+   * @return captured output, error output, and exit code
+   * @throws IOException if the shell cannot be started or output cannot be read
+   * @throws InterruptedException if the current thread is interrupted
+   */
+  ShellResult shell(String command)
+
+  /**
+   * Executes a command through the platform shell and returns its complete result.
+   *
+   * @param command the shell command to execute
+   * @param quiet whether to suppress live output
+   * @return captured output, error output, and exit code
+   * @throws IOException if the shell cannot be started or output cannot be read
+   * @throws InterruptedException if the current thread is interrupted
+   */
+  ShellResult shell(String command, boolean quiet)
+
+  /**
    * A prompt method with support for named parameters in Groovy.
    * Example usage:
    * applicationId =  io.prompt(

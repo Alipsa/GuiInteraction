@@ -11,8 +11,12 @@ import se.alipsa.groovy.svg.Svg
 import se.alipsa.matrix.core.Matrix
 
 import javax.swing.JComponent
+import java.io.ByteArrayOutputStream
+import java.io.PrintStream
 import java.time.LocalDate
 import java.time.YearMonth
+import java.nio.charset.StandardCharsets
+import java.util.Locale
 import com.sun.net.httpserver.HttpServer
 import java.net.InetSocketAddress
 import java.util.concurrent.atomic.AtomicInteger
@@ -46,6 +50,79 @@ class AbstractInOutTest {
     File result = inOut.projectFile("sub/dir/test.txt")
     assertNotNull(result)
     assertEquals("test.txt", result.name)
+  }
+
+  @Test
+  void shReturnsStandardOutput() {
+    assertEquals('shell-output', inOut.sh('echo shell-output').trim())
+  }
+
+  @Test
+  void shellReturnsOutputAndExitCode() {
+    ShellResult result = inOut.shell(failingCommand())
+
+    assertFalse(result.success)
+    assertEquals(7, result.exitCode)
+    assertTrue(result.stderr.contains('shell-failure'))
+  }
+
+  @Test
+  void shellSupportsGlobsPipesAndRedirects(@TempDir File commandDir) {
+    org.junit.jupiter.api.Assumptions.assumeFalse(isWindows())
+    new File(commandDir, 'matrix-one.txt').text = 'one'
+    new File(commandDir, 'other.txt').text = 'two'
+    File outputFile = new File(commandDir, 'out.txt')
+    String directory = shellQuote(commandDir.absolutePath)
+    String output = shellQuote(outputFile.absolutePath)
+
+    ShellResult result = inOut.shell(
+        "printf '%s\\n' ${directory}/*.txt | grep matrix > ${output}")
+
+    assertTrue(result.success, result.stderr)
+    assertTrue(outputFile.text.contains('matrix-one.txt'))
+  }
+
+  @Test
+  void shStreamsOutputBeforeTheCommandCompletes() {
+    org.junit.jupiter.api.Assumptions.assumeFalse(isWindows())
+    PrintStream originalOut = System.out
+    ByteArrayOutputStream bytes = new ByteArrayOutputStream()
+    PrintStream capturedOut = new PrintStream(bytes, true, StandardCharsets.UTF_8)
+    Thread worker
+    try {
+      System.setOut(capturedOut)
+      worker = new Thread({ inOut.sh('printf first; sleep 1; printf second') } as Runnable)
+      worker.start()
+      long deadline = System.nanoTime() + 2_000_000_000L
+      while (worker.isAlive() && !bytes.toString(StandardCharsets.UTF_8).contains('first') &&
+          System.nanoTime() < deadline) {
+        Thread.sleep(10)
+      }
+      assertTrue(bytes.toString(StandardCharsets.UTF_8).contains('first'))
+      assertTrue(worker.isAlive())
+      worker.join(3000)
+      assertFalse(worker.isAlive())
+      assertTrue(bytes.toString(StandardCharsets.UTF_8).contains('second'))
+    } finally {
+      if (worker != null && worker.isAlive()) {
+        worker.interrupt()
+        worker.join(3000)
+      }
+      System.setOut(originalOut)
+      capturedOut.close()
+    }
+  }
+
+  private static String failingCommand() {
+    isWindows() ? 'echo shell-failure 1>&2 & exit /b 7' : 'echo shell-failure 1>&2; exit 7'
+  }
+
+  private static boolean isWindows() {
+    System.getProperty('os.name', '').toLowerCase(Locale.ROOT).contains('win')
+  }
+
+  private static String shellQuote(String value) {
+    "'${value.replace("'", "'\\''")}'"
   }
 
   @Test
