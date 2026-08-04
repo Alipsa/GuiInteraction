@@ -169,18 +169,20 @@ abstract class AbstractInOut implements GuiInteraction {
 
   @Override
   String sh(String command) throws IOException, InterruptedException {
-    sh(command, false)
+    return sh(command, false)
   }
 
   @Override
   String sh(String command, boolean quiet) throws IOException, InterruptedException {
-    shell(command, quiet).stdout
+    ShellResult result = shell(command, quiet)
+    return result.stdout
   }
 
   @Override
   String sh(String command, boolean quiet, long timeoutMillis)
       throws IOException, InterruptedException, TimeoutException {
-    shell(command, quiet, timeoutMillis).stdout
+    ShellResult result = shell(command, quiet, timeoutMillis)
+    return result.stdout
   }
 
   @Override

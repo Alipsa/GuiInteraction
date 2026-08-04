@@ -233,8 +233,8 @@ if (clipboardFile != null) {
 ### Shell Commands
 
 `sh` is the concise form for interactive or ad-hoc shell commands. It returns
-standard output as a `String` and streams standard output and standard error
-while the command runs unless `quiet` is `true`:
+standard output as a `String` and writes standard output to `System.out` and
+standard error to `System.err` while the command runs unless `quiet` is `true`:
 
 ```groovy
 def listing = io.sh('ls -a')

@@ -59,6 +59,22 @@ class AbstractInOutTest {
   }
 
   @Test
+  void shPrintsStandardOutputToSystemOut() {
+    PrintStream originalOut = System.out
+    ByteArrayOutputStream outBytes = new ByteArrayOutputStream()
+    PrintStream capturedOut = new PrintStream(outBytes, true, StandardCharsets.UTF_8)
+    try {
+      System.setOut(capturedOut)
+
+      assertEquals('printed-output', inOut.sh('printf printed-output'))
+      assertEquals('printed-output', outBytes.toString(StandardCharsets.UTF_8))
+    } finally {
+      System.setOut(originalOut)
+      capturedOut.close()
+    }
+  }
+
+  @Test
   void shQuietOverloadSuppressesLiveOutput() {
     PrintStream originalOut = System.out
     PrintStream originalErr = System.err
