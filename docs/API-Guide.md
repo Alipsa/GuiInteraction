@@ -260,6 +260,20 @@ if (!result.success) {
 redirection is performed by the operating system shell, so redirected output
 is written to the target file and is not present in `result.stdout`.
 
+Use the timeout overload when a command must have a bounded execution time:
+
+```groovy
+def result = io.shell('long-running-command', true, 10_000)
+```
+
+The timeout is in milliseconds and applies to both the shell and draining its
+output streams; `0` means no timeout. Without a timeout, a command that starts
+a background child inheriting standard output or error can remain blocked after
+the shell exits until that child closes the pipe.
+
+The same timeout form is available on `sh` when only standard output is needed:
+`io.sh('long-running-command', true, 10_000)`.
+
 Commands are executed through `/bin/sh` on Unix-like systems and `cmd.exe` on
 Windows. Shell syntax is therefore platform-dependent. These methods execute
 arbitrary commands; never concatenate untrusted user input into a shell

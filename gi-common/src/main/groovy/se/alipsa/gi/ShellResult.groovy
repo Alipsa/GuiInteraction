@@ -35,10 +35,12 @@ final class ShellResult {
   }
 
   /**
-   * Makes the result convenient to use in Groovy string interpolation.
+   * Returns a diagnostic representation including the exit status and both
+   * output streams. Use {@code stdout} or {@code sh(...)} when only text is
+   * wanted in an interpolated string.
    */
   @Override
   String toString() {
-    stdout
+    "ShellResult(exitCode=${exitCode}, stdout='${stdout}', stderr='${stderr}')"
   }
 }
