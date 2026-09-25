@@ -199,6 +199,10 @@ io.view([
 ], "Products")
 ```
 
+A list-of-lists is rendered with `c1`..`cN` placeholder headers, where `N` is the
+width of the **widest** row; narrower rows are padded with empty cells. An empty
+list, or a list of empty rows, renders an empty table rather than phantom columns.
+
 ### Files and Images
 
 ```groovy

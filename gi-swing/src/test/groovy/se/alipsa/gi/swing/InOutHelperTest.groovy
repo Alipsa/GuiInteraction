@@ -23,4 +23,34 @@ class InOutHelperTest {
   void aSuppliedInitialDirectoryIsPassedThrough() {
     assertEquals(new File('/tmp'), InOut.toInitialDirectory('/tmp'))
   }
+
+  @Test
+  void noColumnsMeansNoGeneratedNames() {
+    assertEquals([], InOut.defaultColumnNames(0))
+    assertEquals([], InOut.defaultColumnNames(-1))
+  }
+
+  @Test
+  void generatedNamesAreOneBasedAndAscending() {
+    assertEquals(['c1', 'c2', 'c3'], InOut.defaultColumnNames(3))
+  }
+
+  @Test
+  void theColumnCountCoversTheWidestRowNotJustTheFirst() {
+    assertEquals(0, InOut.widestRow([]))
+    assertEquals(0, InOut.widestRow([[]]))
+    assertEquals(3, InOut.widestRow([[1], [1, 2, 3], [1, 2]]))
+    assertEquals(2, InOut.widestRow([[1, 2], null]))
+  }
+
+  @Test
+  void alignmentFlagsNeverOutrunTheColumnModel() {
+    // view(Matrix) derives rightAlign from the first row but columns from
+    // columnNames(); a short first row would otherwise index past the model.
+    assertEquals([true, false], InOut.alignmentFlags([true, false, true], 2))
+    assertEquals([true], InOut.alignmentFlags([true, false], 1))
+    assertEquals([], InOut.alignmentFlags([true], 0))
+    assertEquals([true], InOut.alignmentFlags([true], 5))
+    assertEquals([], InOut.alignmentFlags(null, 3))
+  }
 }

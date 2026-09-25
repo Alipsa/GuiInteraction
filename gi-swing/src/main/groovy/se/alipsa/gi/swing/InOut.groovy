@@ -106,6 +106,44 @@ class InOut extends AbstractInOut {
         null : new File(initialDirectory)
   }
 
+  /**
+   * Generates c1..cN placeholder column names. Returns an empty list for a
+   * non-positive count: (1..0) is a reverse range in Groovy and would otherwise
+   * yield two columns named c1 and c0.
+   */
+  @PackageScope
+  static List<String> defaultColumnNames(int columnCount) {
+    if (columnCount <= 0) {
+      return []
+    }
+    return (1..columnCount).collect { "c$it".toString() }
+  }
+
+  /** Returns the size of the widest row, so ragged input does not lose columns. */
+  @PackageScope
+  static int widestRow(List<List<?>> matrix) {
+    int widest = 0
+    matrix.each { List<?> row ->
+      if (row != null && row.size() > widest) {
+        widest = row.size()
+      }
+    }
+    return widest
+  }
+
+  /**
+   * Clamps the right-alignment flags to the number of columns the table model
+   * actually has. The flags are derived from the first row while the columns come
+   * from the header list, so the two diverge whenever the first row is shorter.
+   */
+  @PackageScope
+  static List<Boolean> alignmentFlags(List<Boolean> rightAlign, int columnCount) {
+    if (rightAlign == null || columnCount <= 0) {
+      return []
+    }
+    return rightAlign.size() <= columnCount ? rightAlign : rightAlign.subList(0, columnCount)
+  }
+
 
   @Override
   YearMonth promptYearMonth(String message) {
@@ -265,7 +303,7 @@ class InOut extends AbstractInOut {
     DefaultTableCellRenderer rightRenderer = new DefaultTableCellRenderer()
     rightRenderer.setHorizontalAlignment(JLabel.RIGHT)
     def model = jTable.getColumnModel()
-    rightAlign.eachWithIndex { boolean ra, int i ->
+    alignmentFlags(rightAlign, model.getColumnCount()).eachWithIndex { boolean ra, int i ->
       if (ra) {
         model.getColumn(i).setCellRenderer(rightRenderer);
       }
@@ -280,31 +318,28 @@ class InOut extends AbstractInOut {
 
   @Override
   void view(List<List<?>> matrix, String... title) {
+    def name = title.length > 0 ? title[0] : ""
     if (matrix == null || matrix.isEmpty()) {
-      JTable jTable = new JTable(new Vector(), new Vector())
-      def name = title.length > 0 ? title[0] : ""
-      viewTable(jTable, [], name)
+      viewTable(new JTable(new Vector(), new Vector()), [], name)
       return
     }
+    int nCol = widestRow(matrix)
     Vector rows = new Vector(matrix.size())
     List<Boolean> rightAlign = []
     boolean firstRow = true
-    int nCol = 0
     matrix.each { r ->
       Vector row = new Vector()
-      r.each { val ->
+      r?.each { val ->
         row.add(String.valueOf(val))
         if (firstRow) {
           rightAlign << (val instanceof Number)
-          nCol++
         }
       }
       rows.add(row)
       firstRow = false
     }
 
-    JTable jTable = new JTable(rows, (1..nCol).collect({ "c$it" }) as Vector)
-    def name = title.length > 0 ? title[0] : ""
+    JTable jTable = new JTable(rows, defaultColumnNames(nCol) as Vector)
     viewTable(jTable, rightAlign, name)
   }
 
