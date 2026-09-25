@@ -375,6 +375,7 @@ if (file == null) {
 ### gi-console
 
 - Best for headless/CI environments
-- `display()` and `display(Chart)` print messages instead of showing UI
+- `display(File)` opens the file with the system's default application when the platform supports the Desktop OPEN action; otherwise it prints a message. A missing file, a null file, and a failed open are all reported on stdout rather than thrown.
+- `display(JComponent)` and `display(Svg)` print messages instead of showing UI
 - Password input is masked when `System.console()` is available; otherwise stdin input is visible and a warning is logged
 - Tables displayed as text using Matrix.content()

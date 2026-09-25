@@ -1,6 +1,7 @@
 package se.alipsa.gi.console
 
 import groovy.transform.CompileStatic
+import groovy.transform.PackageScope
 import org.jsoup.Jsoup
 import se.alipsa.gi.AbstractInOut
 import se.alipsa.gi.ImageTransferable
@@ -239,17 +240,30 @@ class InOut extends AbstractInOut {
     display(new File(fileName), title)
   }
 
+  /**
+   * Desktop.getDesktop() throws HeadlessException, and a supported Desktop does
+   * not necessarily support the OPEN action, so both must be checked in order.
+   */
+  @PackageScope
+  static boolean canOpenWithDesktop() {
+    return Desktop.isDesktopSupported() && Desktop.getDesktop().isSupported(Desktop.Action.OPEN)
+  }
+
   @Override
   void display(File file, String... title) {
-    if (Desktop.isDesktopSupported()) {
-      Desktop desktop = Desktop.getDesktop()
-      if (file.exists()) {
-        desktop.open(file)
-      } else {
-        println("File $file does not exist")
-      }
-    } else {
-      println("Desktop is not supported on this platform")
+    if (file == null || !file.exists()) {
+      println("File $file does not exist")
+      return
+    }
+    if (!canOpenWithDesktop()) {
+      println("Opening files with the desktop is not supported on this platform")
+      return
+    }
+    try {
+      Desktop.getDesktop().open(file)
+    } catch (IOException | UnsupportedOperationException e) {
+      log.warn("Failed to open {} with the desktop application", file, e)
+      println("Could not open $file")
     }
   }
 

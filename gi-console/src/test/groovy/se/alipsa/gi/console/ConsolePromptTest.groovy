@@ -2,12 +2,15 @@ package se.alipsa.gi.console
 
 import org.junit.jupiter.api.Test
 
+import java.nio.charset.StandardCharsets
 import java.time.LocalDate
 import java.time.YearMonth
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow
 import static org.junit.jupiter.api.Assertions.assertEquals
 import static org.junit.jupiter.api.Assertions.assertNull
 import static org.junit.jupiter.api.Assertions.assertThrows
+import static org.junit.jupiter.api.Assertions.assertTrue
 
 class ConsolePromptTest {
 
@@ -60,5 +63,38 @@ class ConsolePromptTest {
     assertThrows(IllegalArgumentException) {
       inOut.promptSelect('title', '', 'choice', [], null)
     }
+  }
+
+  @Test
+  void displayingAMissingFileReportsItWithoutThrowing() {
+    InOut inOut = new InOut()
+
+    assertTrue(captureStdout { inOut.display(new File('/nonexistent/missing.txt')) }
+        .contains('does not exist'))
+  }
+
+  @Test
+  void displayingANullFileReportsItWithoutThrowing() {
+    InOut inOut = new InOut()
+
+    assertTrue(captureStdout { inOut.display((File) null) }.contains('does not exist'))
+  }
+
+  @Test
+  void theDesktopCheckNeverThrows() {
+    // Desktop.getDesktop() throws HeadlessException, so isDesktopSupported must gate it.
+    assertDoesNotThrow({ InOut.canOpenWithDesktop() } as org.junit.jupiter.api.function.Executable)
+  }
+
+  private static String captureStdout(Closure<?> body) {
+    PrintStream original = System.out
+    ByteArrayOutputStream captured = new ByteArrayOutputStream()
+    System.setOut(new PrintStream(captured, true, StandardCharsets.UTF_8))
+    try {
+      body.call()
+    } finally {
+      System.setOut(original)
+    }
+    return captured.toString(StandardCharsets.UTF_8)
   }
 }
