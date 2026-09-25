@@ -38,9 +38,4 @@ class InOutHelperTest {
     assertEquals('chosen', InOut.svgTitle(new Svg(), 'chosen'))
   }
 
-  @Test
-  void aNullSvgIsNotDisplayable() {
-    assertFalse(InOut.isDisplayable(null))
-    assertTrue(InOut.isDisplayable(new Svg()))
-  }
 }

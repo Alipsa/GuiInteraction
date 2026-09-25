@@ -144,6 +144,30 @@ class InOut extends AbstractInOut {
     return rightAlign.size() <= columnCount ? rightAlign : rightAlign.subList(0, columnCount)
   }
 
+  /**
+   * Aligns a column according to its first non-null value, so ragged rows do
+   * not leave later numeric columns without an alignment decision.
+   */
+  @PackageScope
+  static List<Boolean> rightAlignments(List<List<?>> matrix, int columnCount) {
+    List<Boolean> alignments = new ArrayList<>(columnCount)
+    for (int i = 0; i < columnCount; i++) {
+      alignments.add(null)
+    }
+    for (List<?> row : matrix) {
+      if (row == null) {
+        continue
+      }
+      int rowColumns = Math.min(row.size(), columnCount)
+      for (int i = 0; i < rowColumns; i++) {
+        if (alignments.get(i) == null && row.get(i) != null) {
+          alignments.set(i, row.get(i) instanceof Number)
+        }
+      }
+    }
+    return alignments.collect { it ?: false }
+  }
+
 
   @Override
   YearMonth promptYearMonth(String message) {
@@ -299,24 +323,22 @@ class InOut extends AbstractInOut {
   @Override
   void view(Matrix tableMatrix, String... title) {
     Vector rows = new Vector(tableMatrix.rowCount())
-    List<Boolean> rightAlign = []
-    boolean firstRow = true
+    List<List<?>> values = []
     tableMatrix.each { r ->
       Vector row = new Vector()
+      List<Object> rowValues = []
       r.each { val ->
         row.add(String.valueOf(val))
-        if (firstRow) {
-          rightAlign << (val instanceof Number)
-        }
+        rowValues.add(val)
       }
       rows.add(row)
-      firstRow = false
+      values.add(rowValues)
     }
 
     JTable jTable = new JTable(rows, tableMatrix.columnNames() as Vector)
     jTable.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS)
     def name = title.length > 0 ? title[0] : tableMatrix.matrixName
-    viewTable(jTable, rightAlign, name)
+    viewTable(jTable, rightAlignments(values, tableMatrix.columnNames().size()), name)
   }
 
   private viewTable(JTable jTable, List<Boolean> rightAlign, String title) {
@@ -345,32 +367,25 @@ class InOut extends AbstractInOut {
     }
     int nCol = widestRow(matrix)
     Vector rows = new Vector(matrix.size())
-    List<Boolean> rightAlign = []
-    boolean firstRow = true
     matrix.each { r ->
       Vector row = new Vector()
       r?.each { val ->
         row.add(String.valueOf(val))
-        if (firstRow) {
-          rightAlign << (val instanceof Number)
-        }
       }
       rows.add(row)
-      firstRow = false
     }
 
     JTable jTable = new JTable(rows, defaultColumnNames(nCol) as Vector)
-    viewTable(jTable, rightAlign, name)
+    viewTable(jTable, rightAlignments(matrix, nCol), name)
   }
 
-  /**
-   * An SVG is recognised by its detected content type, or by its name when
-   * detection is unavailable or disagrees. Tika reports some valid SVG files as
-   * generic XML, so the name check must not be an else-branch.
-   */
+  /** An SVG name is used when detection is absent or non-committal. */
   @PackageScope
   static boolean isSvg(String contentType, URL resource) {
-    return "image/svg+xml" == contentType || FileUtils.isSvgResource(resource)
+    if (contentType == null || contentType in ['application/xml', 'text/xml']) {
+      return FileUtils.isSvgResource(resource)
+    }
+    return "image/svg+xml" == contentType
   }
 
   @Override
@@ -394,8 +409,7 @@ class InOut extends AbstractInOut {
       try {
         contentType = getContentType(file)
       } catch (IOException e) {
-        log.error("Error detecting content type", e)
-        return
+        log.warn("Content type detection failed for {}; falling back to the name", file, e)
       }
     }
     if (isSvg(contentType, resource)) {
@@ -454,15 +468,9 @@ class InOut extends AbstractInOut {
     f.setVisible(true)
   }
 
-  /** An Svg can only be rendered when one was actually supplied. */
-  @PackageScope
-  static boolean isDisplayable(Svg svg) {
-    return svg != null
-  }
-
   @Override
   void display(Svg chart, String... titleOpt) {
-    if (!isDisplayable(chart)) {
+    if (chart == null) {
       log.warn("Cannot display svg: svg is null")
       return
     }

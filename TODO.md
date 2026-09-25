@@ -14,6 +14,15 @@ See `req/2026-09-25-fixes.md` for the plan and `release.md` for the changelog.
 - [x] Release: `release.sh` version read-back and partial-publish reporting
 - [x] Docs: sample scripts updated to 0.4.0 and current Matrix package names
 
+## Deferred
+
+- [x] Swing table alignment now derives each column from its first non-null value (resolved in this PR follow-up).
+- [x] SVG display uses direct null guards rather than redundant `isDisplayable` helpers (resolved in this PR follow-up).
+- [ ] Define the intended null-handling behavior for console `display(String)`.
+- [ ] Tidy the cosmetic Swing dialog title inconsistency.
+- [ ] Finish the root `test.groovy` sample update.
+- [ ] Review whether JavaFX `TableData` should remain publicly visible.
+
 # Version 0.3.0
 
 ## Bug fixes

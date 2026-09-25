@@ -389,6 +389,9 @@ class InOut extends AbstractInOut {
     if (clipboard == null) {
       return null
     }
+    if (!clipboard.isDataFlavorAvailable(DataFlavor.javaFileListFlavor)) {
+      return null
+    }
     List<File> files = clipboard.getData(DataFlavor.javaFileListFlavor) as List<File>
     files == null || files.isEmpty() ? null : files.get(0)
   }

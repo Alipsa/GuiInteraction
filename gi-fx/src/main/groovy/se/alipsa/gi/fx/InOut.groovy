@@ -414,17 +414,11 @@ class InOut extends AbstractInOut {
      */
     @Override
     void display(Svg svg, String... titleOpt) {
-        if (!isDisplayable(svg)) {
+        if (svg == null) {
             log.warn("Cannot display svg: svg is null")
             return
         }
         display(ChartToJfx.export(svg), svgTitle(svg, titleOpt))
-    }
-
-    /** An Svg can only be rendered when one was actually supplied. */
-    @PackageScope
-    static boolean isDisplayable(Svg svg) {
-        return svg != null
     }
 
     /**

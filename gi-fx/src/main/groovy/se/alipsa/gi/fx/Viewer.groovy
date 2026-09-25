@@ -1,6 +1,7 @@
 package se.alipsa.gi.fx
 
 import groovy.transform.CompileStatic
+import groovy.transform.PackageScope
 import javafx.beans.binding.Bindings
 import javafx.beans.property.SimpleStringProperty
 import javafx.collections.FXCollections
@@ -203,18 +204,40 @@ class Viewer {
             viewTable(Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), title)
             return
         }
-        // assume uniform format
+        int nCol = widestRow(rows)
+        if (nCol == 0) {
+            viewTable(Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), title)
+            return
+        }
+        // assume uniform format; probe the first non-empty row
         String type = "STRING"
-        if (grid.getAt(0,0) instanceof Number) {
-            type = "NUMBER"
+        for (List<?> row : rows) {
+            if (row != null && !row.isEmpty()) {
+                if (row.get(0) instanceof Number) {
+                    type = "NUMBER"
+                }
+                break
+            }
         }
         List<String> typeList = new ArrayList<>()
         List<String> headerList = new ArrayList<>()
-        for (int i = 0; i < grid[0].size(); i++) {
+        for (int i = 0; i < nCol; i++) {
             typeList.add(type)
             headerList.add("c${i+1}" as String)
         }
         viewTable(headerList, rows, typeList, title)
+    }
+
+    /** Returns the size of the widest row, so ragged grids retain every column. */
+    @PackageScope
+    static int widestRow(List<List<Object>> rows) {
+        int widest = 0
+        for (List<?> row : rows) {
+            if (row != null && row.size() > widest) {
+                widest = row.size()
+            }
+        }
+        return widest
     }
 
     static void viewTable(List<String> headerList, List<List<Object>> rowList, List<String> columnTypes, String... title) {

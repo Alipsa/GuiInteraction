@@ -420,7 +420,11 @@ abstract class AbstractInOut implements GuiInteraction {
   @CompileDynamic
   @Override
   File getFileFromClipboard() throws ExecutionException, InterruptedException {
-    List<File> files = getClipboard().getData(DataFlavor.javaFileListFlavor) as List<File>
+    def cb = getClipboard()
+    if (!cb.isDataFlavorAvailable(DataFlavor.javaFileListFlavor)) {
+      return null
+    }
+    List<File> files = cb.getData(DataFlavor.javaFileListFlavor) as List<File>
     firstFile(files)
   }
 

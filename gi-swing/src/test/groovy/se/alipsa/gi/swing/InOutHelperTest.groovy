@@ -61,6 +61,12 @@ class InOutHelperTest {
   }
 
   @Test
+  void alignmentUsesTheFirstNonNullValueInEachColumn() {
+    assertEquals([false, true], InOut.rightAlignments([['a'], [1, 2]], 2))
+    assertEquals([true, false], InOut.rightAlignments([[null, null], [1, 'text']], 2))
+  }
+
+  @Test
   void anExplicitTitleWinsOverTheSvgTitle() {
     Svg svg = new Svg()
     svg.addTitle('from svg')
@@ -96,20 +102,16 @@ class InOutHelperTest {
   }
 
   @Test
-  void svgIsDetectedByContentTypeOrByName() {
+  void svgDetectionUsesTheNameOnlyWhenTheContentTypeIsAbsentOrGenericXml() {
     URL svgByName = URI.create('file:/tmp/plot.svg').toURL()
     URL pngByName = URI.create('file:/tmp/plot.png').toURL()
 
     assertTrue(InOut.isSvg('image/svg+xml', pngByName), 'content type wins')
     assertTrue(InOut.isSvg('application/xml', svgByName), 'name is the fallback')
     assertTrue(InOut.isSvg(null, svgByName), 'name is used when detection failed')
+    assertFalse(InOut.isSvg('image/png', svgByName), 'confident detection wins')
     assertFalse(InOut.isSvg('image/png', pngByName))
     assertFalse(InOut.isSvg(null, pngByName))
   }
 
-  @Test
-  void aNullSvgIsNotDisplayable() {
-    assertFalse(InOut.isDisplayable(null))
-    assertTrue(InOut.isDisplayable(new Svg()))
-  }
 }

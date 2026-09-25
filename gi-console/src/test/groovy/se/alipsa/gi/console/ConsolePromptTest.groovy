@@ -88,27 +88,6 @@ class ConsolePromptTest {
   }
 
   @Test
-  void theStdinCharsetFollowsTheSystemPropertyWhenItIsUsable() {
-    String original = System.getProperty('stdin.encoding')
-    try {
-      System.setProperty('stdin.encoding', 'ISO-8859-1')
-      assertEquals(Charset.forName('ISO-8859-1'), InOut.stdinCharset())
-
-      System.setProperty('stdin.encoding', 'not-a-charset')
-      assertEquals(Charset.defaultCharset(), InOut.stdinCharset())
-
-      System.clearProperty('stdin.encoding')
-      assertEquals(Charset.defaultCharset(), InOut.stdinCharset())
-    } finally {
-      if (original == null) {
-        System.clearProperty('stdin.encoding')
-      } else {
-        System.setProperty('stdin.encoding', original)
-      }
-    }
-  }
-
-  @Test
   void resolveCharsetPrefersTheStdinPropertyThenTheConsoleThenTheDefault() {
     assertEquals(Charset.forName('UTF-16'),
         InOut.resolveCharset('UTF-16', StandardCharsets.ISO_8859_1))

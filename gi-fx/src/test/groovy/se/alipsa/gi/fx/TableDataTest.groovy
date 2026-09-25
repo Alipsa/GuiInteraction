@@ -7,6 +7,13 @@ import static org.junit.jupiter.api.Assertions.assertEquals
 class TableDataTest {
 
   @Test
+  void theGridColumnCountCoversTheWidestNonEmptyRow() {
+    assertEquals(0, Viewer.widestRow([[]]))
+    assertEquals(3, Viewer.widestRow([[1], [2, 3, 4], []]))
+    assertEquals(2, Viewer.widestRow([[1, 2], null]))
+  }
+
+  @Test
   void aCellBeyondTheEndOfARowRendersEmpty() {
     assertEquals('', TableData.cellAt(['a'], 1))
     assertEquals('', TableData.cellAt([], 0))

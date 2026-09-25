@@ -11,6 +11,8 @@ import se.alipsa.groovy.svg.Svg
 import se.alipsa.matrix.core.Matrix
 
 import javax.swing.JComponent
+import java.awt.datatransfer.Clipboard
+import java.awt.datatransfer.StringSelection
 import java.io.ByteArrayOutputStream
 import java.io.PrintStream
 import java.time.LocalDate
@@ -512,12 +514,25 @@ class AbstractInOutTest {
     assertEquals(first, AbstractInOut.firstFile([first, second]))
   }
 
+  @Test
+  void aClipboardWithoutAFileListReturnsNull() {
+    Clipboard clipboard = new Clipboard('test')
+    clipboard.setContents(new StringSelection('text only'), null)
+    inOut.useClipboard(clipboard)
+
+    assertNull(inOut.getFileFromClipboard())
+  }
+
   /**
    * Concrete implementation of AbstractInOut for testing purposes.
    * Provides minimal stub implementations for abstract methods.
    */
   @CompileStatic
   static class TestableInOut extends AbstractInOut {
+
+    void useClipboard(Clipboard newClipboard) {
+      clipboard = newClipboard
+    }
 
     @Override
     File chooseFile(String title, File initialDirectory, String description, String... extensions) {

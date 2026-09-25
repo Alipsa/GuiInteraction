@@ -79,7 +79,7 @@ while [[ $# -gt 0 ]]; do
             shift 2
             ;;
         --skip)
-            SKIP_MODULES="$2"
+            SKIP_MODULES="${2// /}"
             shift 2
             ;;
         *)
@@ -214,6 +214,7 @@ publish() {
     local sub=$1
     if is_skipped "$sub"; then
         echo -e "${YELLOW}Skipping $sub (already published; --skip was given)${NC}"
+        PUBLISHED_MODULES="${PUBLISHED_MODULES}${PUBLISHED_MODULES:+, }${sub}"
         return 0
     fi
     echo -e "${YELLOW}Publishing $sub to Maven Central...${NC}"
