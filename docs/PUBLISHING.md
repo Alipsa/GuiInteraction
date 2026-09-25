@@ -269,6 +269,8 @@ comma-separated and in any order, e.g.:
 The script accepts only the four release modules and asks you to type
 `already published` before proceeding. Confirm only after verifying that every
 skipped module was published with this exact version.
+Do not combine `--skip` with `--bump`: a partial release must be resumed at its
+original version.
 
 This re-runs the version/tag/test steps but publishes only the remaining modules,
 then continues on to pushing the commit and creating the GitHub release.

@@ -89,7 +89,7 @@ class ConsolePromptTest {
 
   @Test
   void listViewsNormalizeRaggedAndNullRowsBeforeBuildingAMatrix() {
-    assertEquals([['first', null], [null, null], ['second', 'third']],
+    assertEquals([['first', ''], ['', ''], ['second', 'third']],
         InOut.normalizeRows([['first'], null, ['second', 'third']]))
     assertDoesNotThrow({ new InOut().view([['first'], null, ['second', 'third']]) }
         as org.junit.jupiter.api.function.Executable)

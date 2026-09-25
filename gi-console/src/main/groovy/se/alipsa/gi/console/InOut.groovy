@@ -272,7 +272,7 @@ class InOut extends AbstractInOut {
     println(built.content())
   }
 
-  /** Pads ragged rows and turns null rows into empty rows for Matrix.builder(). */
+  /** Pads ragged rows and turns null rows or cells into empty cells for Matrix.builder(). */
   @PackageScope
   static List<List<?>> normalizeRows(List<List<?>> matrix) {
     int columnCount = 0
@@ -290,7 +290,8 @@ class InOut extends AbstractInOut {
     for (List<?> row : matrix) {
       List<Object> normalizedRow = new ArrayList<>(columnCount)
       for (int i = 0; i < columnCount; i++) {
-        normalizedRow.add(row != null && i < row.size() ? row.get(i) : null)
+        Object cell = row != null && i < row.size() ? row.get(i) : ''
+        normalizedRow.add(cell == null ? '' : cell)
       }
       normalized.add(normalizedRow)
     }

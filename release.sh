@@ -94,6 +94,11 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
+if [ -n "$BUMP_TYPE" ] && [ -n "$SKIP_MODULES" ]; then
+    echo -e "${RED}--skip cannot be combined with --bump; resume a partial release with its original version.${NC}" >&2
+    exit 1
+fi
+
 # Whether a module name appears in the comma-separated --skip list
 is_skipped() {
     local sub=$1
