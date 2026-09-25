@@ -1,9 +1,11 @@
 package se.alipsa.gi.fx
 
 import org.junit.jupiter.api.Test
+import se.alipsa.groovy.svg.Svg
 
 import static org.junit.jupiter.api.Assertions.assertEquals
 import static org.junit.jupiter.api.Assertions.assertFalse
+import static org.junit.jupiter.api.Assertions.assertNull
 
 /**
  * Unit tests for the pure helpers of {@link InOut}. The InOut constructor throws
@@ -22,5 +24,16 @@ class InOutHelperTest {
   @Test
   void aSuppliedFilterDescriptionIsPassedThrough() {
     assertEquals('Data files', InOut.filterDescription('Data files'))
+  }
+
+  @Test
+  void aTitlelessSvgYieldsNullInsteadOfThrowing() {
+    assertNull(InOut.svgTitle(new Svg()))
+    assertNull(InOut.svgTitle(null))
+  }
+
+  @Test
+  void anExplicitTitleWinsOverTheSvgTitle() {
+    assertEquals('chosen', InOut.svgTitle(new Svg(), 'chosen'))
   }
 }

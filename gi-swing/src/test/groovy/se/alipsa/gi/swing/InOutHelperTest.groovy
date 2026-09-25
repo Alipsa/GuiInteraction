@@ -1,6 +1,7 @@
 package se.alipsa.gi.swing
 
 import org.junit.jupiter.api.Test
+import se.alipsa.groovy.svg.Svg
 
 import static org.junit.jupiter.api.Assertions.assertEquals
 import static org.junit.jupiter.api.Assertions.assertNull
@@ -52,5 +53,27 @@ class InOutHelperTest {
     assertEquals([], InOut.alignmentFlags([true], 0))
     assertEquals([true], InOut.alignmentFlags([true], 5))
     assertEquals([], InOut.alignmentFlags(null, 3))
+  }
+
+  @Test
+  void anExplicitTitleWinsOverTheSvgTitle() {
+    Svg svg = new Svg()
+    svg.addTitle('from svg')
+
+    assertEquals('chosen', InOut.svgTitle(svg, 'chosen'))
+  }
+
+  @Test
+  void aTitlelessSvgYieldsNullInsteadOfThrowing() {
+    assertNull(InOut.svgTitle(new Svg()))
+    assertNull(InOut.svgTitle(null))
+  }
+
+  @Test
+  void theSvgTitleIsUsedWhenNoTitleIsSupplied() {
+    Svg svg = new Svg()
+    svg.addTitle('from svg')
+
+    assertEquals('from svg', InOut.svgTitle(svg))
   }
 }

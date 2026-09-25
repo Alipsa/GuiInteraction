@@ -430,7 +430,17 @@ class InOut extends AbstractInOut {
   void display(Svg chart, String... titleOpt) {
     var img = SvgRenderer.toBufferedImage(chart)
     JLabel label = new JLabel(new ImageIcon(img))
-    display(label, titleOpt.length > 0 ? titleOpt[0] : chart.title.getContent())
+    display(label, svgTitle(chart, titleOpt))
+  }
+
+  /**
+   * Resolves the window title for an SVG: an explicit title wins, otherwise the
+   * SVG's own title element, otherwise null. Both the Svg and its title element
+   * may be absent.
+   */
+  @PackageScope
+  static String svgTitle(Svg svg, String... titleOpt) {
+    return titleOpt.length > 0 ? titleOpt[0] : svg?.title?.content
   }
 
   void saveToClipboard(Image img) {

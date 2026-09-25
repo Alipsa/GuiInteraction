@@ -437,7 +437,9 @@ interface GuiInteraction {
    * Note: Not supported in console mode.
    *
    * @param svg the svg to display
-   * @param titleOpt optional title for the display window
+   * @param titleOpt optional title for the display window; when omitted, the
+   *        SVG's own title element is used, and the window is left untitled if
+   *        the SVG has none
    */
   void display(Svg svg, String... titleOpt);
 

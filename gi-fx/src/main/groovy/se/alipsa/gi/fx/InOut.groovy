@@ -414,8 +414,17 @@ class InOut extends AbstractInOut {
      */
     @Override
     void display(Svg svg, String... titleOpt) {
-        String title = titleOpt.length > 0 ? titleOpt[0] : svg.title?.content
-        display(ChartToJfx.export(svg), title)
+        display(ChartToJfx.export(svg), svgTitle(svg, titleOpt))
+    }
+
+    /**
+     * Resolves the window title for an SVG: an explicit title wins, otherwise the
+     * SVG's own title element, otherwise null. Both the Svg and its title element
+     * may be absent.
+     */
+    @PackageScope
+    static String svgTitle(Svg svg, String... titleOpt) {
+        return titleOpt.length > 0 ? titleOpt[0] : svg?.title?.content
     }
 
     void display(Node node, String... title) {
