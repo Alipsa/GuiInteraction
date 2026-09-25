@@ -106,4 +106,10 @@ class InOutHelperTest {
     assertFalse(InOut.isSvg('image/png', pngByName))
     assertFalse(InOut.isSvg(null, pngByName))
   }
+
+  @Test
+  void aNullSvgIsNotDisplayable() {
+    assertFalse(InOut.isDisplayable(null))
+    assertTrue(InOut.isDisplayable(new Svg()))
+  }
 }

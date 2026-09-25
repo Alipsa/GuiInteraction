@@ -454,8 +454,18 @@ class InOut extends AbstractInOut {
     f.setVisible(true)
   }
 
+  /** An Svg can only be rendered when one was actually supplied. */
+  @PackageScope
+  static boolean isDisplayable(Svg svg) {
+    return svg != null
+  }
+
   @Override
   void display(Svg chart, String... titleOpt) {
+    if (!isDisplayable(chart)) {
+      log.warn("Cannot display svg: svg is null")
+      return
+    }
     var img = SvgRenderer.toBufferedImage(chart)
     JLabel label = new JLabel(new ImageIcon(img))
     display(label, svgTitle(chart, titleOpt))

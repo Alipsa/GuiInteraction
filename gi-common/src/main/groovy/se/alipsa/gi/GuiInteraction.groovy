@@ -437,6 +437,8 @@ interface GuiInteraction {
    * Displays an Svg image or chart.
    * <p>
    * Note: Not supported in console mode.
+   * <p>
+   * A null {@code svg} is logged and ignored; no exception is thrown.
    *
    * @param svg the svg to display
    * @param titleOpt optional title for the display window; when omitted, the
