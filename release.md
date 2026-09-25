@@ -7,16 +7,18 @@
 - Fixed: `gi-swing` and `gi-console` published `gi-common` at `runtime` scope, so consumers could not compile against `AbstractInOut`, `GuiInteraction`, or `Matrix`. It is now `api`/`compile` scope, matching `gi-fx`.
 - Fixed: Swing `chooseFile(String, String, ...)` and `chooseDir(String, String)` threw `NullPointerException` for a null initial directory; they now fall back to the platform default like the JavaFX implementation.
 - Fixed: `getFileFromClipboard()` threw `NoSuchElementException` when the clipboard held an empty file list; it now returns `null` as documented.
-- Fixed: Swing `display(Svg)` threw `NullPointerException` for an SVG without a title element.
+- Fixed: Swing `display(Svg)` threw `NullPointerException` for an SVG without a title element, or for a null `svg` argument. JavaFX `display(Svg)` now guards the same null case.
 - Fixed: Swing `view(File)` let a checked `IOException` from `JEditorPane.setPage` escape a `void` method; it now logs and returns.
 - Fixed: Swing `view(List<List<?>>)` produced two phantom columns (`c1`, `c0`) for an empty first row and dropped columns from rows wider than the first. Column count now follows the widest row.
 - Fixed: Swing display treated a `.svg` file as an image whenever Tika reported a content type other than `image/svg+xml`.
 - Fixed: JavaFX table views threw `IndexOutOfBoundsException` for ragged rows or a short column-type list; short rows now render empty cells and untyped columns default to `STRING`.
 - Fixed: console `display(File)` called `Desktop.open` without checking that the OPEN action is supported, and threw on a null file. Both are now reported on stdout.
-- Fixed: console input is decoded with the `stdin.encoding` charset rather than the JVM default.
+- Fixed: console input now honors `stdin.encoding` (JDK 25+) or the platform console's charset (JDK 17+) instead of always using the JVM default.
 - Fixed: `saveToClipboard(File)` wrote `Lost ownership` to stdout when clipboard ownership changed.
 - Build: CI now runs `./gradlew check --no-configuration-cache`, which is the only invocation under which Spotless and SpotBugs are applied. The scheduled dependency-check job is reachable again.
-- Build: `release.sh` verifies the version was actually written to `build.gradle` and names the modules already published when a release fails partway.
+- Build: `release.sh` verifies the version was actually written to `build.gradle`, names the modules already published when a release fails partway, and accepts `--skip <module,...>` to resume a partial release without re-publishing them.
+- Fixed: publishing `gi-console`, `gi-fx`, or `gi-swing` failed with "multiple artifacts with the identical extension and classifier" because the Shadow migration both declared the fat-jar artifact explicitly and let Shadow's own publication variant add it. The explicit declaration is removed; Shadow's variant is sufficient.
+- Fixed: fat jars now also merge `META-INF/groovy/org.codehaus.groovy.runtime.ExtensionModule`, so bundling multiple Groovy extension-module jars (e.g. `matrix-core` and `matrix-groovy-ext`) no longer silently hides one's extension methods behind the other's.
 
 ## 0.4.0 - 2026-08-03
 - Breaking: `FileUtils.getResourceUrl` returns `null` for paths that do not exist; use `File` for output targets that will be created later.
