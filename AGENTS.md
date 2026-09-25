@@ -31,6 +31,7 @@
 - PRs should list the touched modules (`gi-common`, `gi-fx`, etc.), describe behavior changes, and link issues/tickets.
 - Include screenshots or gifs for visual tweaks in `gi-fx`/`gi-swing`; note platform specifics if a change is OS-dependent.
 - Keep release/publishing secrets (signing keys, Sonatype creds) out of the repo; supply them via local `gradle.properties` when needed.
+- The `test.gsh` sample scripts in each module pin the latest **released** version for Grape. Bump them as part of a release, not as part of a SNAPSHOT bump.
 
 ## Implementation Guidelines
 - A task has 3 parts, implementation, tests, and documentation. A task is not done until all 3 parts are completed.
