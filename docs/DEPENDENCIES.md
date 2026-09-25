@@ -159,3 +159,12 @@ implementation's `InOut` extends `se.alipsa.gi.AbstractInOut` and returns
 part of the published API and must be on a consumer's compile classpath.
 Declaring `gi-common` as `implementation` would publish it at `runtime` scope and
 break compilation for consumers.
+
+## Fat JARs
+
+The `se.alipsa.gi.fatjar-conventions` convention plugin applies GradleUp Shadow and
+configures `shadowJar` with `archiveClassifier = 'fatjar'`, so the published artifact
+is `<module>-<version>-fatjar.jar`. `mergeServiceFiles()` is required: several
+transitive `ph-*` (ph-css/gsvg) jars and `tika-core` declare the same
+`META-INF/services/*` paths, and a plain `Jar` task with
+`DuplicatesStrategy.EXCLUDE` keeps only the first and silently discards the rest.
