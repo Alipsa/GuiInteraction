@@ -8,10 +8,10 @@ plugins {
     id 'signing'
     id 'maven-publish'
     id('io.github.gradle-nexus.publish-plugin') version '2.0.0'
-    id "io.github.ben-manes.versions" version "0.59.0"
+    id "io.github.ben-manes.versions" version "0.64.0"
     id "org.owasp.dependencycheck" version "13.0.0"
-    id "com.diffplug.spotless" version "8.9.0" apply false
-    id "com.github.spotbugs" version "6.5.9" apply false
+    id "com.diffplug.spotless" version "8.10.2" apply false
+    id "com.github.spotbugs" version "6.5.11" apply false
 }
 
 group = 'se.alipsa.gi'
@@ -66,7 +66,7 @@ subprojects {
     if (enableSpotbugs) {
         apply plugin: 'com.github.spotbugs'
         spotbugs {
-            toolVersion = '4.10.3'
+            toolVersion = '4.10.4'
             effort = 'max'
             reportLevel = 'medium'
             excludeFilter = rootProject.file('config/spotbugs-exclude.xml')

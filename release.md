@@ -1,6 +1,7 @@
 # Gui Interaction Release Notes
 
 ## Unreleased
+- Build: upgraded Groovy to 5.1.3, Matrix BOM to 2.6.0, CommonMark to 0.30.0, jsoup to 1.23.2, JUnit to 6.1.3, Gradle Versions to 0.64.0, Spotless to 8.10.2, and SpotBugs (plugin/engine) to 6.5.11/4.10.4.
 - Common: added `sh` and `shell` methods for executing platform shell commands. `sh` returns captured standard output and can stream output while the command runs; `shell` returns a `ShellResult` containing standard output, standard error, exit code, and success status. Both support optional timeouts. These methods execute arbitrary commands and should not receive untrusted input.
 - Breaking (packaging): fat JARs are now built with GradleUp Shadow via the `shadowJar` task instead of a hand-rolled `fatJar` task. The published artifact name is unchanged (`<module>-<version>-fatjar.jar`), but the Gradle task is now `shadowJar`.
 - Fixed: fat JARs dropped all but the first copy of each `META-INF/services` entry, disabling most ph-css/gsvg service registrations and part of Tika's. Service files are now merged.
