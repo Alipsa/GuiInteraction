@@ -253,10 +253,18 @@ Example workflow step using modern in-memory signing:
 
 `release.sh` publishes `gi-common`, `gi-console`, `gi-fx`, and `gi-swing` in that
 order, and stops at the first failure. When it stops it names the modules already
-published; those cannot be unpublished from Maven Central. At that point the
-version commit exists locally but has not been pushed and no tag has been created.
+published; those cannot be unpublished from Maven Central, and re-publishing the
+same module/version to Central is rejected as a duplicate, which would fail the
+script again on the very module that already succeeded. At that point the version
+commit exists locally but has not been pushed and no tag has been created.
 
-Fix the cause of the failure and re-run `./release.sh` with the **same** version.
-The tag check will warn that the version looks already-released — answer `y`. The
-already-published modules will be re-uploaded and rejected as duplicates, which is
-harmless; the remaining modules publish normally.
+Fix the cause of the failure, then re-run `./release.sh` with the **same** version
+and `--skip` naming the modules the failure message listed as already published,
+comma-separated and in any order, e.g.:
+
+```bash
+./release.sh --skip gi-common,gi-console
+```
+
+This re-runs the version/tag/test steps but publishes only the remaining modules,
+then continues on to pushing the commit and creating the GitHub release.

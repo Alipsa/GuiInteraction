@@ -12,6 +12,9 @@
 #   ./release.sh              - Release current version (strips -SNAPSHOT if present)
 #   ./release.sh --bump minor - Bump version and release (major, minor, patch)
 #   ./release.sh --dry-run    - Show what would be released without publishing
+#   ./release.sh --skip gi-common,gi-console
+#                              - Skip modules already published in a prior partial
+#                                run; use with the SAME version as that run
 #
 # If the version has a -SNAPSHOT suffix, it will be removed to create the release version.
 # The README.md and release.md will be updated automatically with the release version.
@@ -62,6 +65,7 @@ DRY_RUN=false
 BUMP_TYPE=""
 README_NEEDS_UPDATE=false
 PUBLISHED_MODULES=""
+SKIP_MODULES=""
 
 # Parse arguments
 while [[ $# -gt 0 ]]; do
@@ -74,12 +78,22 @@ while [[ $# -gt 0 ]]; do
             BUMP_TYPE="$2"
             shift 2
             ;;
+        --skip)
+            SKIP_MODULES="$2"
+            shift 2
+            ;;
         *)
             echo -e "${RED}Unknown option: $1${NC}"
             exit 1
             ;;
     esac
 done
+
+# Whether a module name appears in the comma-separated --skip list
+is_skipped() {
+    local sub=$1
+    [[ ",${SKIP_MODULES}," == *",${sub},"* ]]
+}
 
 # Get current version from build.gradle
 get_version() {
@@ -198,6 +212,10 @@ generate_release_notes() {
 # Publish a subproject
 publish() {
     local sub=$1
+    if is_skipped "$sub"; then
+        echo -e "${YELLOW}Skipping $sub (already published; --skip was given)${NC}"
+        return 0
+    fi
     echo -e "${YELLOW}Publishing $sub to Maven Central...${NC}"
     if [ "$DRY_RUN" = true ]; then
         echo -e "${YELLOW}[DRY RUN] Would execute: ./gradlew :${sub}:clean :${sub}:build :${sub}:release${NC}"
@@ -209,7 +227,8 @@ publish() {
             echo -e "${RED}These modules were ALREADY published to Maven Central and cannot be unpublished:${NC}" >&2
             echo -e "${RED}  ${PUBLISHED_MODULES}${NC}" >&2
             echo -e "${YELLOW}The release commit is local and unpushed, and no tag was created.${NC}" >&2
-            echo -e "${YELLOW}Resolve the failure, then re-run with the SAME version to publish the remaining modules.${NC}" >&2
+            echo -e "${YELLOW}Resolve the failure, then re-run with the SAME version and:${NC}" >&2
+            echo -e "${YELLOW}  --skip ${PUBLISHED_MODULES// /}${NC}" >&2
         fi
         exit 1
     fi
