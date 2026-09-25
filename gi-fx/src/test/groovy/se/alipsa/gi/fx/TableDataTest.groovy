@@ -2,6 +2,8 @@ package se.alipsa.gi.fx
 
 import org.junit.jupiter.api.Test
 
+import java.text.NumberFormat
+
 import static org.junit.jupiter.api.Assertions.assertEquals
 
 class TableDataTest {
@@ -11,6 +13,15 @@ class TableDataTest {
     assertEquals(0, Viewer.widestRow([[]]))
     assertEquals(3, Viewer.widestRow([[1], [2, 3, 4], []]))
     assertEquals(2, Viewer.widestRow([[1, 2], null]))
+  }
+
+  @Test
+  void aNullRowFormatsAsAnEmptyRow() {
+    NumberFormat numberFormatter = NumberFormat.getInstance()
+    numberFormatter.setGroupingUsed(false)
+
+    assertEquals([], Viewer.formatRow(null, numberFormatter))
+    assertEquals(['1', 'text'], Viewer.formatRow([1, 'text'], numberFormatter))
   }
 
   @Test

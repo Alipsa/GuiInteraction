@@ -199,7 +199,10 @@ class Viewer {
     }
 
     static void viewTable(Grid grid, String... title) {
-        List<List<Object>> rows = grid.getRowList()
+        viewTable(grid.getRowList(), title)
+    }
+
+    static void viewTable(List<? extends List<?>> rows, String... title) {
         if (rows == null || rows.isEmpty()) {
             viewTable(Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), title)
             return
@@ -230,7 +233,7 @@ class Viewer {
 
     /** Returns the size of the widest row, so ragged grids retain every column. */
     @PackageScope
-    static int widestRow(List<List<Object>> rows) {
+    static int widestRow(List<? extends List<?>> rows) {
         int widest = 0
         for (List<?> row : rows) {
             if (row != null && row.size() > widest) {
@@ -240,7 +243,7 @@ class Viewer {
         return widest
     }
 
-    static void viewTable(List<String> headerList, List<List<Object>> rowList, List<String> columnTypes, String... title) {
+    static void viewTable(List<String> headerList, List<? extends List<?>> rowList, List<String> columnTypes, String... title) {
         try {
 
             NumberFormat numberFormatter = NumberFormat.getInstance()
@@ -295,15 +298,7 @@ class Viewer {
             }
             ObservableList<List<String>> data = FXCollections.observableArrayList();
             for (List<?> row : rowList) {
-                List<String> obsRow = new ArrayList<>()
-                for (Object obj : row) {
-                    if (obj instanceof Number) {
-                        obsRow.add(numberFormatter.format(obj))
-                    } else {
-                        obsRow.add(String.valueOf(obj))
-                    }
-                }
-                data.add(obsRow)
+                data.add(formatRow(row, numberFormatter))
             }
             tableView.setItems(data)
             Tab tab = new Tab()
@@ -330,6 +325,23 @@ class Viewer {
         } catch (RuntimeException e) {
             log.error("Failed to view table", e)
         }
+    }
+
+    /** Formats a row for display; a null row is an empty row. */
+    @PackageScope
+    static List<String> formatRow(List<?> row, NumberFormat numberFormatter) {
+        List<String> formatted = new ArrayList<>()
+        if (row == null) {
+            return formatted
+        }
+        for (Object obj : row) {
+            if (obj instanceof Number) {
+                formatted.add(numberFormatter.format(obj))
+            } else {
+                formatted.add(String.valueOf(obj))
+            }
+        }
+        return formatted
     }
 
     private static boolean shouldRightAlign(String type) {

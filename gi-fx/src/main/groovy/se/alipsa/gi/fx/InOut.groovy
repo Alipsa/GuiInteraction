@@ -27,7 +27,6 @@ import javafx.stage.Window
 import se.alipsa.gi.*
 import se.alipsa.groovy.svg.Svg
 import se.alipsa.matrix.chartexport.ChartToJfx
-import se.alipsa.matrix.core.Grid
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.ymp.YearMonthPicker
 
@@ -437,9 +436,16 @@ class InOut extends AbstractInOut {
 
     @Override
     void view(List<List<?>> matrix, String... title) {
+        List<List<?>> rows = rowsForViewer(matrix)
         Platform.runLater {
-            Viewer.viewTable(matrix as Grid, title)
+            Viewer.viewTable(rows, title)
         }
+    }
+
+    /** Preserves ragged and null rows for the JavaFX table renderer. */
+    @PackageScope
+    static List<List<?>> rowsForViewer(List<List<?>> matrix) {
+        return matrix
     }
 
     @Override

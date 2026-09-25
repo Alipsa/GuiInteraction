@@ -6,7 +6,7 @@ import se.alipsa.groovy.svg.Svg
 import static org.junit.jupiter.api.Assertions.assertEquals
 import static org.junit.jupiter.api.Assertions.assertFalse
 import static org.junit.jupiter.api.Assertions.assertNull
-import static org.junit.jupiter.api.Assertions.assertTrue
+import static org.junit.jupiter.api.Assertions.assertSame
 
 /**
  * Unit tests for the pure helpers of {@link InOut}. The InOut constructor throws
@@ -36,6 +36,13 @@ class InOutHelperTest {
   @Test
   void anExplicitTitleWinsOverTheSvgTitle() {
     assertEquals('chosen', InOut.svgTitle(new Svg(), 'chosen'))
+  }
+
+  @Test
+  void viewingAListPreservesRaggedAndNullRowsForTheViewer() {
+    List<List<?>> rows = [['first'], null, ['second', 'third']]
+
+    assertSame(rows, InOut.rowsForViewer(rows))
   }
 
 }

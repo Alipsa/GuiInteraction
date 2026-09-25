@@ -16,7 +16,7 @@
 - Fixed: console input now honors `stdin.encoding` (JDK 25+) or the platform console's charset (JDK 17+) instead of always using the JVM default.
 - Fixed: `saveToClipboard(File)` wrote `Lost ownership` to stdout when clipboard ownership changed.
 - Build: CI now runs `./gradlew check --no-configuration-cache`, which is the only invocation under which Spotless and SpotBugs are applied. The scheduled dependency-check job is reachable again.
-- Build: `release.sh` verifies the version was actually written to `build.gradle`, names the modules already published when a release fails partway, and accepts `--skip <module,...>` to resume a partial release without re-publishing them.
+- Build: `release.sh` verifies the version was actually written to `build.gradle`, names the modules already published when a release fails partway, and validates/explicitly confirms `--skip <module,...>` before resuming without re-publishing them.
 - Fixed: publishing `gi-console`, `gi-fx`, or `gi-swing` failed with "multiple artifacts with the identical extension and classifier" because the Shadow migration both declared the fat-jar artifact explicitly and let Shadow's own publication variant add it. The explicit declaration is removed; Shadow's variant is sufficient.
 - Fixed: fat jars now also merge `META-INF/groovy/org.codehaus.groovy.runtime.ExtensionModule`, so bundling multiple Groovy extension-module jars (e.g. `matrix-core` and `matrix-groovy-ext`) no longer silently hides one's extension methods behind the other's.
 

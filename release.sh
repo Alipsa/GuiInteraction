@@ -14,7 +14,8 @@
 #   ./release.sh --dry-run    - Show what would be released without publishing
 #   ./release.sh --skip gi-common,gi-console
 #                              - Skip modules already published in a prior partial
-#                                run; use with the SAME version as that run
+#                                run; use with the SAME version and explicitly
+#                                confirm that every listed module was published
 #
 # If the version has a -SNAPSHOT suffix, it will be removed to create the release version.
 # The README.md and release.md will be updated automatically with the release version.
@@ -79,6 +80,10 @@ while [[ $# -gt 0 ]]; do
             shift 2
             ;;
         --skip)
+            if [ -z "${2:-}" ]; then
+                echo -e "${RED}--skip requires a comma-separated module list.${NC}" >&2
+                exit 1
+            fi
             SKIP_MODULES="${2// /}"
             shift 2
             ;;
@@ -94,6 +99,48 @@ is_skipped() {
     local sub=$1
     [[ ",${SKIP_MODULES}," == *",${sub},"* ]]
 }
+
+# Reject typos and require an explicit acknowledgement before a release omits
+# modules. Maven Central cannot be used to repair a release missing an artifact.
+validate_skipped_modules() {
+    if [ -z "$SKIP_MODULES" ]; then
+        return
+    fi
+    if [[ "$SKIP_MODULES" == ,* || "$SKIP_MODULES" == *, || "$SKIP_MODULES" == *,,* ]]; then
+        echo -e "${RED}--skip must contain comma-separated module names without empty entries.${NC}" >&2
+        exit 1
+    fi
+
+    local sub seen="," confirmation
+    local skipped_modules=()
+    IFS=',' read -r -a skipped_modules <<< "$SKIP_MODULES"
+    for sub in "${skipped_modules[@]}"; do
+        case "$sub" in
+            gi-common|gi-console|gi-fx|gi-swing) ;;
+            *)
+                echo -e "${RED}Unknown module in --skip: ${sub}.${NC}" >&2
+                exit 1
+                ;;
+        esac
+        if [[ "$seen" == *",${sub},"* ]]; then
+            echo -e "${RED}Module appears more than once in --skip: ${sub}.${NC}" >&2
+            exit 1
+        fi
+        seen="${seen}${sub},"
+    done
+
+    if [ "$DRY_RUN" = true ]; then
+        echo -e "${YELLOW}[DRY RUN] Would require confirmation that skipped modules are already published: ${SKIP_MODULES}${NC}"
+        return
+    fi
+    echo -e "${YELLOW}Skipping ${SKIP_MODULES} means their artifacts will not be published by this release.${NC}"
+    if ! read -r -p "Type 'already published' to confirm they were published with this version: " confirmation || [ "$confirmation" != "already published" ]; then
+        echo -e "${RED}Release aborted: skipped modules were not confirmed as already published.${NC}" >&2
+        exit 1
+    fi
+}
+
+validate_skipped_modules
 
 # Get current version from build.gradle
 get_version() {
