@@ -247,6 +247,24 @@ class InOut extends AbstractInOut {
     return inputField.getText()
   }
 
+  /**
+   * Loads a file into an editor pane. JEditorPane.setPage throws a checked
+   * IOException, which would otherwise escape the void view(File, String...)
+   * signature that callers cannot declare a catch for.
+   *
+   * @return true when the page loaded, false when it could not be read
+   */
+  @PackageScope
+  static boolean loadPage(JEditorPane pane, File file) {
+    try {
+      pane.setPage(file.toURI().toURL())
+      return true
+    } catch (IOException e) {
+      log.warn("Cannot view file: failed to load {}", file, e)
+      return false
+    }
+  }
+
   @Override
   void view(File file, String... title) {
     if (file == null || !file.exists()) {
@@ -254,7 +272,9 @@ class InOut extends AbstractInOut {
       return
     }
     JEditorPane jep = new JEditorPane()
-    jep.setPage(file.toURI().toURL())
+    if (!loadPage(jep, file)) {
+      return
+    }
     JScrollPane scrollPane = new JScrollPane(jep)
     JFrame f = new JFrame(title.length > 0 ? title[0] : file.toString())
     f.getContentPane().add(scrollPane)

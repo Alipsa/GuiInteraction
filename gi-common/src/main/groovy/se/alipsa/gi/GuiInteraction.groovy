@@ -354,6 +354,8 @@ interface GuiInteraction {
 
   /**
    * Displays file content in a viewer (browser or HTML panel).
+   * <p>
+   * A missing or unreadable file is logged and ignored; no exception is thrown.
    *
    * @param file the file to view
    * @param title optional title for the viewer window

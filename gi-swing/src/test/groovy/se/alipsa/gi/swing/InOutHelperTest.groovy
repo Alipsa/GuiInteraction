@@ -1,10 +1,15 @@
 package se.alipsa.gi.swing
 
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.io.TempDir
 import se.alipsa.groovy.svg.Svg
 
+import javax.swing.JEditorPane
+
 import static org.junit.jupiter.api.Assertions.assertEquals
+import static org.junit.jupiter.api.Assertions.assertFalse
 import static org.junit.jupiter.api.Assertions.assertNull
+import static org.junit.jupiter.api.Assertions.assertTrue
 
 /**
  * Unit tests for the pure helpers of {@link InOut}. The InOut constructor throws
@@ -75,5 +80,18 @@ class InOutHelperTest {
     svg.addTitle('from svg')
 
     assertEquals('from svg', InOut.svgTitle(svg))
+  }
+
+  @Test
+  void loadingAMissingPageReportsFailureInsteadOfThrowing() {
+    assertFalse(InOut.loadPage(new JEditorPane(), new File('/nonexistent/missing.html')))
+  }
+
+  @Test
+  void loadingARealPageReportsSuccess(@TempDir File tempDir) {
+    File page = new File(tempDir, 'page.html')
+    page.text = '<html><body><h1>ok</h1></body></html>'
+
+    assertTrue(InOut.loadPage(new JEditorPane(), page))
   }
 }
