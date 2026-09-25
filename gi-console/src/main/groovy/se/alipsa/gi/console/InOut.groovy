@@ -266,10 +266,35 @@ class InOut extends AbstractInOut {
   @Override
   void view(List<List<?>> matrix, String... title) {
     Matrix built = Matrix.builder()
-        .rows(matrix)
+        .rows(normalizeRows(matrix))
         .matrixName(title.length > 0 ? title[0] : "")
         .build()
     println(built.content())
+  }
+
+  /** Pads ragged rows and turns null rows into empty rows for Matrix.builder(). */
+  @PackageScope
+  static List<List<?>> normalizeRows(List<List<?>> matrix) {
+    int columnCount = 0
+    if (matrix != null) {
+      for (List<?> row : matrix) {
+        if (row != null && row.size() > columnCount) {
+          columnCount = row.size()
+        }
+      }
+    }
+    List<List<?>> normalized = []
+    if (matrix == null) {
+      return normalized
+    }
+    for (List<?> row : matrix) {
+      List<Object> normalizedRow = new ArrayList<>(columnCount)
+      for (int i = 0; i < columnCount; i++) {
+        normalizedRow.add(row != null && i < row.size() ? row.get(i) : null)
+      }
+      normalized.add(normalizedRow)
+    }
+    return normalized
   }
 
   @Override

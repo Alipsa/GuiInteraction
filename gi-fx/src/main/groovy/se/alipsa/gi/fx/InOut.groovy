@@ -292,8 +292,8 @@ class InOut extends AbstractInOut {
 
     @Override
     void view(File file, String... title) {
-        if (file == null) {
-            log.warn("view file: File argument cannot be null")
+        if (!isViewableFile(file)) {
+            log.warn("Cannot view file: missing or unreadable {}", file)
             return
         }
         Platform.runLater(() -> {
@@ -303,6 +303,12 @@ class InOut extends AbstractInOut {
                 log.error("Failed to view html", e)
             }
         })
+    }
+
+    /** A viewer can only open an existing, readable regular file. */
+    @PackageScope
+    static boolean isViewableFile(File file) {
+        return file != null && file.isFile() && file.canRead()
     }
 
     @Override

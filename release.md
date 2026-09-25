@@ -12,6 +12,8 @@
 - Fixed: Swing `view(List<List<?>>)` produced two phantom columns (`c1`, `c0`) for an empty first row and dropped columns from rows wider than the first. Column count now follows the widest row.
 - Fixed: Swing display uses a `.svg` filename as a fallback when Tika detection is absent or inconclusive, including generic XML.
 - Fixed: JavaFX table views threw `IndexOutOfBoundsException` for ragged rows or a short column-type list; short rows now render empty cells and untyped columns default to `STRING`.
+- Fixed: JavaFX `view(File)` now logs and ignores missing or unreadable files instead of treating their paths as HTML content.
+- Fixed: console list-of-lists views now pad ragged rows and treat null rows as empty, matching the documented widest-row behavior.
 - Fixed: console `display(File)` called `Desktop.open` without checking that the OPEN action is supported, and threw on a null file. Both are now reported on stdout.
 - Fixed: console input now honors `stdin.encoding` (JDK 25+) or the platform console's charset (JDK 17+) instead of always using the JVM default.
 - Fixed: `saveToClipboard(File)` wrote `Lost ownership` to stdout when clipboard ownership changed.

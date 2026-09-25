@@ -88,6 +88,14 @@ class ConsolePromptTest {
   }
 
   @Test
+  void listViewsNormalizeRaggedAndNullRowsBeforeBuildingAMatrix() {
+    assertEquals([['first', null], [null, null], ['second', 'third']],
+        InOut.normalizeRows([['first'], null, ['second', 'third']]))
+    assertDoesNotThrow({ new InOut().view([['first'], null, ['second', 'third']]) }
+        as org.junit.jupiter.api.function.Executable)
+  }
+
+  @Test
   void resolveCharsetPrefersTheStdinPropertyThenTheConsoleThenTheDefault() {
     assertEquals(Charset.forName('UTF-16'),
         InOut.resolveCharset('UTF-16', StandardCharsets.ISO_8859_1))
