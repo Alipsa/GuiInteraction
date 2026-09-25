@@ -108,6 +108,17 @@ class ConsolePromptTest {
     }
   }
 
+  @Test
+  void resolveCharsetPrefersTheStdinPropertyThenTheConsoleThenTheDefault() {
+    assertEquals(Charset.forName('UTF-16'),
+        InOut.resolveCharset('UTF-16', StandardCharsets.ISO_8859_1))
+    assertEquals(StandardCharsets.ISO_8859_1,
+        InOut.resolveCharset(null, StandardCharsets.ISO_8859_1))
+    assertEquals(StandardCharsets.ISO_8859_1,
+        InOut.resolveCharset('not-a-charset', StandardCharsets.ISO_8859_1))
+    assertEquals(Charset.defaultCharset(), InOut.resolveCharset(null, null))
+  }
+
   private static String captureStdout(Closure<?> body) {
     PrintStream original = System.out
     ByteArrayOutputStream captured = new ByteArrayOutputStream()

@@ -27,21 +27,39 @@ class InOut extends AbstractInOut {
   private static final Logger log = Logger.getLogger(InOut.class)
 
   /**
+   * Resolves the stdin charset from an explicit stdin.encoding declaration and
+   * the console's own charset, falling back to the JVM default when neither is
+   * usable. Split out from stdinCharset() so the console fallback -- which
+   * depends on a live System.console(), unavailable under a test runner -- can
+   * be exercised with an explicit value.
+   */
+  @PackageScope
+  static Charset resolveCharset(String stdinEncoding, Charset consoleCharset) {
+    if (stdinEncoding != null && !stdinEncoding.trim().isEmpty()) {
+      try {
+        return Charset.forName(stdinEncoding.trim())
+      } catch (IllegalArgumentException ignored) {
+        // Unknown or malformed declaration; fall through.
+      }
+    }
+    if (consoleCharset != null) {
+      return consoleCharset
+    }
+    return Charset.defaultCharset()
+  }
+
+  /**
    * The charset the terminal actually sends. Since JEP 400 the JVM default
-   * charset is UTF-8 regardless of the console encoding, so an explicit
-   * stdin.encoding must be honoured where the JVM provides one.
+   * charset is UTF-8 regardless of the console encoding, so stdin.encoding
+   * (JDK 25+) must be honoured where the JVM provides it. On earlier JDKs that
+   * property does not exist, so System.console()'s charset (JDK 17+, reflects
+   * the platform's actual console encoding) is the next-best signal before
+   * falling back to the JVM default.
    */
   @PackageScope
   static Charset stdinCharset() {
-    String name = System.getProperty('stdin.encoding')
-    if (name != null && !name.trim().isEmpty()) {
-      try {
-        return Charset.forName(name.trim())
-      } catch (IllegalArgumentException ignored) {
-        // Unknown or malformed declaration; fall through to the JVM default.
-      }
-    }
-    return Charset.defaultCharset()
+    Console console = System.console()
+    return resolveCharset(System.getProperty('stdin.encoding'), console?.charset())
   }
 
   BufferedReader sysin = new BufferedReader(new InputStreamReader(System.in, stdinCharset()))
