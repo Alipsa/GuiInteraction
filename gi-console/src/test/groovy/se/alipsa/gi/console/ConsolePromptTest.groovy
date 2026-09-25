@@ -2,6 +2,7 @@ package se.alipsa.gi.console
 
 import org.junit.jupiter.api.Test
 
+import java.nio.charset.Charset
 import java.nio.charset.StandardCharsets
 import java.time.LocalDate
 import java.time.YearMonth
@@ -84,6 +85,27 @@ class ConsolePromptTest {
   void theDesktopCheckNeverThrows() {
     // Desktop.getDesktop() throws HeadlessException, so isDesktopSupported must gate it.
     assertDoesNotThrow({ InOut.canOpenWithDesktop() } as org.junit.jupiter.api.function.Executable)
+  }
+
+  @Test
+  void theStdinCharsetFollowsTheSystemPropertyWhenItIsUsable() {
+    String original = System.getProperty('stdin.encoding')
+    try {
+      System.setProperty('stdin.encoding', 'ISO-8859-1')
+      assertEquals(Charset.forName('ISO-8859-1'), InOut.stdinCharset())
+
+      System.setProperty('stdin.encoding', 'not-a-charset')
+      assertEquals(Charset.defaultCharset(), InOut.stdinCharset())
+
+      System.clearProperty('stdin.encoding')
+      assertEquals(Charset.defaultCharset(), InOut.stdinCharset())
+    } finally {
+      if (original == null) {
+        System.clearProperty('stdin.encoding')
+      } else {
+        System.setProperty('stdin.encoding', original)
+      }
+    }
   }
 
   private static String captureStdout(Closure<?> body) {

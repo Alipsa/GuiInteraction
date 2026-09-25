@@ -380,3 +380,4 @@ if (file == null) {
 - `display(JComponent)` and `display(Svg)` print messages instead of showing UI
 - Password input is masked when `System.console()` is available; otherwise stdin input is visible and a warning is logged
 - Tables displayed as text using Matrix.content()
+- Console input is decoded with the `stdin.encoding` charset when the JVM reports one, falling back to the default charset; `sysin` can be reassigned to redirect input in tests.

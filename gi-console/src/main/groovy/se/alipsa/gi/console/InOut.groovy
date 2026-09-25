@@ -15,6 +15,7 @@ import java.awt.Image
 import java.awt.GraphicsEnvironment
 import java.awt.datatransfer.Clipboard
 import java.awt.datatransfer.DataFlavor
+import java.nio.charset.Charset
 import java.time.LocalDate
 import java.time.YearMonth
 import java.time.format.DateTimeParseException
@@ -25,7 +26,25 @@ class InOut extends AbstractInOut {
 
   private static final Logger log = Logger.getLogger(InOut.class)
 
-  BufferedReader sysin = new BufferedReader(new InputStreamReader(System.in))
+  /**
+   * The charset the terminal actually sends. Since JEP 400 the JVM default
+   * charset is UTF-8 regardless of the console encoding, so an explicit
+   * stdin.encoding must be honoured where the JVM provides one.
+   */
+  @PackageScope
+  static Charset stdinCharset() {
+    String name = System.getProperty('stdin.encoding')
+    if (name != null && !name.trim().isEmpty()) {
+      try {
+        return Charset.forName(name.trim())
+      } catch (IllegalArgumentException ignored) {
+        // Unknown or malformed declaration; fall through to the JVM default.
+      }
+    }
+    return Charset.defaultCharset()
+  }
+
+  BufferedReader sysin = new BufferedReader(new InputStreamReader(System.in, stdinCharset()))
 
   String read(String prompt) {
     print(prompt)
