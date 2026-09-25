@@ -1,6 +1,7 @@
 package se.alipsa.gi.swing
 
 import groovy.transform.CompileStatic
+import groovy.transform.PackageScope
 import se.alipsa.datepicker.DatePicker
 import se.alipsa.groovy.svg.Svg
 import se.alipsa.groovy.svg.export.SvgRenderer
@@ -74,7 +75,7 @@ class InOut extends AbstractInOut {
   }
 
   File chooseFile(String title, String initialDirectory, String description, String... extensions) {
-    return chooseFile(title, new File(initialDirectory), description, extensions)
+    return chooseFile(title, toInitialDirectory(initialDirectory), description, extensions)
   }
 
   @Override
@@ -91,7 +92,80 @@ class InOut extends AbstractInOut {
 
   @Override
   File chooseDir(String title, String initialDirectory) {
-    return chooseDir(title, new File(initialDirectory))
+    return chooseDir(title, toInitialDirectory(initialDirectory))
+  }
+
+  /**
+   * Converts a directory path to a File, treating a missing or blank path as
+   * "no preference" rather than an error. JFileChooser accepts a null initial
+   * directory and falls back to the platform default.
+   */
+  @PackageScope
+  static File toInitialDirectory(String initialDirectory) {
+    return initialDirectory == null || initialDirectory.trim().isEmpty() ?
+        null : new File(initialDirectory)
+  }
+
+  /**
+   * Generates c1..cN placeholder column names. Returns an empty list for a
+   * non-positive count: (1..0) is a reverse range in Groovy and would otherwise
+   * yield two columns named c1 and c0.
+   */
+  @PackageScope
+  static List<String> defaultColumnNames(int columnCount) {
+    if (columnCount <= 0) {
+      return []
+    }
+    return (1..columnCount).collect { "c$it".toString() }
+  }
+
+  /** Returns the size of the widest row, so ragged input does not lose columns. */
+  @PackageScope
+  static int widestRow(List<List<?>> matrix) {
+    int widest = 0
+    matrix.each { List<?> row ->
+      if (row != null && row.size() > widest) {
+        widest = row.size()
+      }
+    }
+    return widest
+  }
+
+  /**
+   * Clamps the right-alignment flags to the number of columns the table model
+   * actually has. The flags are derived from the first row while the columns come
+   * from the header list, so the two diverge whenever the first row is shorter.
+   */
+  @PackageScope
+  static List<Boolean> alignmentFlags(List<Boolean> rightAlign, int columnCount) {
+    if (rightAlign == null || columnCount <= 0) {
+      return []
+    }
+    return rightAlign.size() <= columnCount ? rightAlign : rightAlign.subList(0, columnCount)
+  }
+
+  /**
+   * Aligns a column according to its first non-null value, so ragged rows do
+   * not leave later numeric columns without an alignment decision.
+   */
+  @PackageScope
+  static List<Boolean> rightAlignments(List<List<?>> matrix, int columnCount) {
+    List<Boolean> alignments = new ArrayList<>(columnCount)
+    for (int i = 0; i < columnCount; i++) {
+      alignments.add(null)
+    }
+    for (List<?> row : matrix) {
+      if (row == null) {
+        continue
+      }
+      int rowColumns = Math.min(row.size(), columnCount)
+      for (int i = 0; i < rowColumns; i++) {
+        if (alignments.get(i) == null && row.get(i) != null) {
+          alignments.set(i, row.get(i) instanceof Number)
+        }
+      }
+    }
+    return alignments.collect { it ?: false }
   }
 
 
@@ -197,6 +271,24 @@ class InOut extends AbstractInOut {
     return inputField.getText()
   }
 
+  /**
+   * Loads a file into an editor pane. JEditorPane.setPage throws a checked
+   * IOException, which would otherwise escape the void view(File, String...)
+   * signature that callers cannot declare a catch for.
+   *
+   * @return true when the page loaded, false when it could not be read
+   */
+  @PackageScope
+  static boolean loadPage(JEditorPane pane, File file) {
+    try {
+      pane.setPage(file.toURI().toURL())
+      return true
+    } catch (IOException e) {
+      log.warn("Cannot view file: failed to load {}", file, e)
+      return false
+    }
+  }
+
   @Override
   void view(File file, String... title) {
     if (file == null || !file.exists()) {
@@ -204,7 +296,9 @@ class InOut extends AbstractInOut {
       return
     }
     JEditorPane jep = new JEditorPane()
-    jep.setPage(file.toURI().toURL())
+    if (!loadPage(jep, file)) {
+      return
+    }
     JScrollPane scrollPane = new JScrollPane(jep)
     JFrame f = new JFrame(title.length > 0 ? title[0] : file.toString())
     f.getContentPane().add(scrollPane)
@@ -229,31 +323,29 @@ class InOut extends AbstractInOut {
   @Override
   void view(Matrix tableMatrix, String... title) {
     Vector rows = new Vector(tableMatrix.rowCount())
-    List<Boolean> rightAlign = []
-    boolean firstRow = true
+    List<List<?>> values = []
     tableMatrix.each { r ->
       Vector row = new Vector()
+      List<Object> rowValues = []
       r.each { val ->
         row.add(String.valueOf(val))
-        if (firstRow) {
-          rightAlign << (val instanceof Number)
-        }
+        rowValues.add(val)
       }
       rows.add(row)
-      firstRow = false
+      values.add(rowValues)
     }
 
     JTable jTable = new JTable(rows, tableMatrix.columnNames() as Vector)
     jTable.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS)
     def name = title.length > 0 ? title[0] : tableMatrix.matrixName
-    viewTable(jTable, rightAlign, name)
+    viewTable(jTable, rightAlignments(values, tableMatrix.columnNames().size()), name)
   }
 
   private viewTable(JTable jTable, List<Boolean> rightAlign, String title) {
     DefaultTableCellRenderer rightRenderer = new DefaultTableCellRenderer()
     rightRenderer.setHorizontalAlignment(JLabel.RIGHT)
     def model = jTable.getColumnModel()
-    rightAlign.eachWithIndex { boolean ra, int i ->
+    alignmentFlags(rightAlign, model.getColumnCount()).eachWithIndex { boolean ra, int i ->
       if (ra) {
         model.getColumn(i).setCellRenderer(rightRenderer);
       }
@@ -268,32 +360,32 @@ class InOut extends AbstractInOut {
 
   @Override
   void view(List<List<?>> matrix, String... title) {
+    def name = title.length > 0 ? title[0] : ""
     if (matrix == null || matrix.isEmpty()) {
-      JTable jTable = new JTable(new Vector(), new Vector())
-      def name = title.length > 0 ? title[0] : ""
-      viewTable(jTable, [], name)
+      viewTable(new JTable(new Vector(), new Vector()), [], name)
       return
     }
+    int nCol = widestRow(matrix)
     Vector rows = new Vector(matrix.size())
-    List<Boolean> rightAlign = []
-    boolean firstRow = true
-    int nCol = 0
     matrix.each { r ->
       Vector row = new Vector()
-      r.each { val ->
+      r?.each { val ->
         row.add(String.valueOf(val))
-        if (firstRow) {
-          rightAlign << (val instanceof Number)
-          nCol++
-        }
       }
       rows.add(row)
-      firstRow = false
     }
 
-    JTable jTable = new JTable(rows, (1..nCol).collect({ "c$it" }) as Vector)
-    def name = title.length > 0 ? title[0] : ""
-    viewTable(jTable, rightAlign, name)
+    JTable jTable = new JTable(rows, defaultColumnNames(nCol) as Vector)
+    viewTable(jTable, rightAlignments(matrix, nCol), name)
+  }
+
+  /** An SVG name is used when detection is absent or non-committal. */
+  @PackageScope
+  static boolean isSvg(String contentType, URL resource) {
+    if (contentType == null || contentType in ['application/xml', 'text/xml']) {
+      return FileUtils.isSvgResource(resource)
+    }
+    return "image/svg+xml" == contentType
   }
 
   @Override
@@ -312,18 +404,15 @@ class InOut extends AbstractInOut {
         return
       }
     }
+    String contentType = null
     if (file != null && file.exists()) {
       try {
-        String contentType = getContentType(file)
-        if ("image/svg+xml" == contentType) {
-          displaySvg(resource, title)
-          return
-        }
+        contentType = getContentType(file)
       } catch (IOException e) {
-        log.error("Error detecting content type", e)
-        return
+        log.warn("Content type detection failed for {}; falling back to the name", file, e)
       }
-    } else if (FileUtils.isSvgResource(resource)) {
+    }
+    if (isSvg(contentType, resource)) {
       displaySvg(resource, title)
       return
     }
@@ -381,9 +470,23 @@ class InOut extends AbstractInOut {
 
   @Override
   void display(Svg chart, String... titleOpt) {
+    if (chart == null) {
+      log.warn("Cannot display svg: svg is null")
+      return
+    }
     var img = SvgRenderer.toBufferedImage(chart)
     JLabel label = new JLabel(new ImageIcon(img))
-    display(label, titleOpt.length > 0 ? titleOpt[0] : chart.title.getContent())
+    display(label, svgTitle(chart, titleOpt))
+  }
+
+  /**
+   * Resolves the window title for an SVG: an explicit title wins, otherwise the
+   * SVG's own title element, otherwise null. Both the Svg and its title element
+   * may be absent.
+   */
+  @PackageScope
+  static String svgTitle(Svg svg, String... titleOpt) {
+    return titleOpt.length > 0 ? titleOpt[0] : svg?.title?.content
   }
 
   void saveToClipboard(Image img) {

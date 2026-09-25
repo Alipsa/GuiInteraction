@@ -9,11 +9,8 @@ import org.commonmark.renderer.html.HtmlRenderer;
 import org.apache.tika.Tika
 
 import java.awt.Toolkit
-import java.awt.datatransfer.Clipboard
-import java.awt.datatransfer.ClipboardOwner
 import java.awt.datatransfer.DataFlavor
 import java.awt.datatransfer.StringSelection
-import java.awt.datatransfer.Transferable
 import java.nio.file.Paths
 import java.util.concurrent.ExecutionException
 import java.util.concurrent.ExecutorService
@@ -411,12 +408,7 @@ abstract class AbstractInOut implements GuiInteraction {
 
     FileTransferable ft = new FileTransferable(listOfFiles);
 
-    getClipboard().setContents(ft, new ClipboardOwner() {
-          @Override
-          void lostOwnership(Clipboard clipboard, Transferable contents) {
-            System.out.println("Lost ownership")
-          }
-        })
+    getClipboard().setContents(ft, null)
   }
 
   @CompileDynamic
@@ -428,8 +420,17 @@ abstract class AbstractInOut implements GuiInteraction {
   @CompileDynamic
   @Override
   File getFileFromClipboard() throws ExecutionException, InterruptedException {
-    List<File> files = getClipboard().getData(DataFlavor.javaFileListFlavor) as List<File>
-    files?.getFirst()
+    def cb = getClipboard()
+    if (!cb.isDataFlavorAvailable(DataFlavor.javaFileListFlavor)) {
+      return null
+    }
+    List<File> files = cb.getData(DataFlavor.javaFileListFlavor) as List<File>
+    firstFile(files)
+  }
+
+  @PackageScope
+  static File firstFile(List<File> files) {
+    return files == null || files.isEmpty() ? null : files.get(0)
   }
 
   @CompileDynamic

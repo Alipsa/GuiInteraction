@@ -248,3 +248,29 @@ Example workflow step using modern in-memory signing:
 ```
 
 **Note:** The `signingKey` property uses the in-memory approach, which avoids creating temporary key files on CI runners. The ASCII-armored key from `GPG_SIGNING_KEY` is decoded automatically by Gradle.
+
+## Recovering from a partial release
+
+`release.sh` publishes `gi-common`, `gi-console`, `gi-fx`, and `gi-swing` in that
+order, and stops at the first failure. When it stops it names the modules already
+published; those cannot be unpublished from Maven Central, and re-publishing the
+same module/version to Central is rejected as a duplicate, which would fail the
+script again on the very module that already succeeded. At that point the version
+commit exists locally but has not been pushed and no tag has been created.
+
+Fix the cause of the failure, then re-run `./release.sh` with the **same** version
+and `--skip` naming the modules the failure message listed as already published,
+comma-separated and in any order, e.g.:
+
+```bash
+./release.sh --skip gi-common,gi-console
+```
+
+The script accepts only the four release modules and asks you to type
+`already published` before proceeding. Confirm only after verifying that every
+skipped module was published with this exact version.
+Do not combine `--skip` with `--bump`: a partial release must be resumed at its
+original version.
+
+This re-runs the version/tag/test steps but publishes only the remaining modules,
+then continues on to pushing the commit and creating the GitHub release.

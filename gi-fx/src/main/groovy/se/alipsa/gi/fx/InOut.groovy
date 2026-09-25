@@ -1,6 +1,7 @@
 package se.alipsa.gi.fx
 
 import groovy.transform.CompileStatic
+import groovy.transform.PackageScope
 import javafx.application.Platform
 import javafx.collections.ObservableList
 import javafx.embed.swing.JFXPanel
@@ -26,7 +27,6 @@ import javafx.stage.Window
 import se.alipsa.gi.*
 import se.alipsa.groovy.svg.Svg
 import se.alipsa.matrix.chartexport.ChartToJfx
-import se.alipsa.matrix.core.Grid
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.ymp.YearMonthPicker
 
@@ -93,7 +93,7 @@ class InOut extends AbstractInOut {
                     }
                 }
                 chooser.getExtensionFilters().addAll(
-                        new FileChooser.ExtensionFilter(description, ext)
+                        new FileChooser.ExtensionFilter(filterDescription(description), ext)
                 )
             }
             return chooser.showOpenDialog(ownerWindow)
@@ -121,6 +121,16 @@ class InOut extends AbstractInOut {
     @Override
     File chooseDir(String title, String initialDirectory) {
         return chooseDir(title, initialDirectory ? new File(initialDirectory) : null)
+    }
+
+    /**
+     * FileChooser.ExtensionFilter rejects a null or empty description, so a caller
+     * who supplies extensions but no description would get an exception instead of
+     * a dialog. Fall back to a generic label.
+     */
+    @PackageScope
+    static String filterDescription(String description) {
+        return description == null || description.trim().isEmpty() ? 'Files' : description
     }
 
     @Override
@@ -282,8 +292,8 @@ class InOut extends AbstractInOut {
 
     @Override
     void view(File file, String... title) {
-        if (file == null) {
-            log.warn("view file: File argument cannot be null")
+        if (!isViewableFile(file)) {
+            log.warn("Cannot view file: missing or unreadable {}", file)
             return
         }
         Platform.runLater(() -> {
@@ -293,6 +303,12 @@ class InOut extends AbstractInOut {
                 log.error("Failed to view html", e)
             }
         })
+    }
+
+    /** A viewer can only open an existing, readable regular file. */
+    @PackageScope
+    static boolean isViewableFile(File file) {
+        return file != null && file.isFile() && file.canRead()
     }
 
     @Override
@@ -403,8 +419,21 @@ class InOut extends AbstractInOut {
      */
     @Override
     void display(Svg svg, String... titleOpt) {
-        String title = titleOpt.length > 0 ? titleOpt[0] : svg.title?.content
-        display(ChartToJfx.export(svg), title)
+        if (svg == null) {
+            log.warn("Cannot display svg: svg is null")
+            return
+        }
+        display(ChartToJfx.export(svg), svgTitle(svg, titleOpt))
+    }
+
+    /**
+     * Resolves the window title for an SVG: an explicit title wins, otherwise the
+     * SVG's own title element, otherwise null. Both the Svg and its title element
+     * may be absent.
+     */
+    @PackageScope
+    static String svgTitle(Svg svg, String... titleOpt) {
+        return titleOpt.length > 0 ? titleOpt[0] : svg?.title?.content
     }
 
     void display(Node node, String... title) {
@@ -413,9 +442,16 @@ class InOut extends AbstractInOut {
 
     @Override
     void view(List<List<?>> matrix, String... title) {
+        List<List<?>> rows = rowsForViewer(matrix)
         Platform.runLater {
-            Viewer.viewTable(matrix as Grid, title)
+            Viewer.viewTable(rows, title)
         }
+    }
+
+    /** Preserves ragged and null rows for the JavaFX table renderer. */
+    @PackageScope
+    static List<List<?>> rowsForViewer(List<List<?>> matrix) {
+        return matrix
     }
 
     @Override

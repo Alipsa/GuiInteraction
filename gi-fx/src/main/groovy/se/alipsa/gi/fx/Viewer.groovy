@@ -1,6 +1,7 @@
 package se.alipsa.gi.fx
 
 import groovy.transform.CompileStatic
+import groovy.transform.PackageScope
 import javafx.beans.binding.Bindings
 import javafx.beans.property.SimpleStringProperty
 import javafx.collections.FXCollections
@@ -198,26 +199,51 @@ class Viewer {
     }
 
     static void viewTable(Grid grid, String... title) {
-        List<List<Object>> rows = grid.getRowList()
+        viewTable(grid.getRowList(), title)
+    }
+
+    static void viewTable(List<? extends List<?>> rows, String... title) {
         if (rows == null || rows.isEmpty()) {
             viewTable(Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), title)
             return
         }
-        // assume uniform format
+        int nCol = widestRow(rows)
+        if (nCol == 0) {
+            viewTable(Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), title)
+            return
+        }
+        // assume uniform format; probe the first non-empty row
         String type = "STRING"
-        if (grid.getAt(0,0) instanceof Number) {
-            type = "NUMBER"
+        for (List<?> row : rows) {
+            if (row != null && !row.isEmpty()) {
+                if (row.get(0) instanceof Number) {
+                    type = "NUMBER"
+                }
+                break
+            }
         }
         List<String> typeList = new ArrayList<>()
         List<String> headerList = new ArrayList<>()
-        for (int i = 0; i < grid[0].size(); i++) {
+        for (int i = 0; i < nCol; i++) {
             typeList.add(type)
             headerList.add("c${i+1}" as String)
         }
         viewTable(headerList, rows, typeList, title)
     }
 
-    static void viewTable(List<String> headerList, List<List<Object>> rowList, List<String> columnTypes, String... title) {
+    /** Returns the size of the widest row, so ragged grids retain every column. */
+    @PackageScope
+    static int widestRow(List<? extends List<?>> rows) {
+        int widest = 0
+        for (List<?> row : rows) {
+            if (row != null && row.size() > widest) {
+                widest = row.size()
+            }
+        }
+        return widest
+    }
+
+    static void viewTable(List<String> headerList, List<? extends List<?>> rowList, List<String> columnTypes, String... title) {
         try {
 
             NumberFormat numberFormatter = NumberFormat.getInstance()
@@ -258,28 +284,21 @@ class Viewer {
                 final int j = i
                 String colName = String.valueOf(headerList.get(i))
                 TableColumn<List<String>, String> col = new TableColumn<>()
-                if (shouldRightAlign(columnTypes.get(i))) {
+                String columnType = TableData.typeAt(columnTypes, i)
+                if (shouldRightAlign(columnType)) {
                     col.setStyle("-fx-alignment: CENTER-RIGHT;")
                 }
                 Label colLabel = new Label(colName)
-                colLabel.setTooltip(new Tooltip(columnTypes.get(i)))
+                colLabel.setTooltip(new Tooltip(columnType))
                 col.setGraphic(colLabel)
                 col.setPrefWidth(new Text(colName).getLayoutBounds().getWidth() * 1.25 + 12.0)
 
                 tableView.getColumns().add(col)
-                col.setCellValueFactory(param -> new SimpleStringProperty(param.getValue().get(j)));
+                col.setCellValueFactory(param -> new SimpleStringProperty(TableData.cellAt(param.getValue(), j)));
             }
             ObservableList<List<String>> data = FXCollections.observableArrayList();
             for (List<?> row : rowList) {
-                List<String> obsRow = new ArrayList<>()
-                for (Object obj : row) {
-                    if (obj instanceof Number) {
-                        obsRow.add(numberFormatter.format(obj))
-                    } else {
-                        obsRow.add(String.valueOf(obj))
-                    }
-                }
-                data.add(obsRow)
+                data.add(formatRow(row, numberFormatter))
             }
             tableView.setItems(data)
             Tab tab = new Tab()
@@ -306,6 +325,23 @@ class Viewer {
         } catch (RuntimeException e) {
             log.error("Failed to view table", e)
         }
+    }
+
+    /** Formats a row for display; a null row is an empty row. */
+    @PackageScope
+    static List<String> formatRow(List<?> row, NumberFormat numberFormatter) {
+        List<String> formatted = new ArrayList<>()
+        if (row == null) {
+            return formatted
+        }
+        for (Object obj : row) {
+            if (obj instanceof Number) {
+                formatted.add(numberFormatter.format(obj))
+            } else {
+                formatted.add(String.valueOf(obj))
+            }
+        }
+        return formatted
     }
 
     private static boolean shouldRightAlign(String type) {

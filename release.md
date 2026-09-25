@@ -2,6 +2,25 @@
 
 ## Unreleased
 - Common: added `sh` and `shell` methods for executing platform shell commands. `sh` returns captured standard output and can stream output while the command runs; `shell` returns a `ShellResult` containing standard output, standard error, exit code, and success status. Both support optional timeouts. These methods execute arbitrary commands and should not receive untrusted input.
+- Breaking (packaging): fat JARs are now built with GradleUp Shadow via the `shadowJar` task instead of a hand-rolled `fatJar` task. The published artifact name is unchanged (`<module>-<version>-fatjar.jar`), but the Gradle task is now `shadowJar`.
+- Fixed: fat JARs dropped all but the first copy of each `META-INF/services` entry, disabling most ph-css/gsvg service registrations and part of Tika's. Service files are now merged.
+- Fixed: `gi-swing` and `gi-console` published `gi-common` at `runtime` scope, so consumers could not compile against `AbstractInOut`, `GuiInteraction`, or `Matrix`. It is now `api`/`compile` scope, matching `gi-fx`.
+- Fixed: Swing `chooseFile(String, String, ...)` and `chooseDir(String, String)` threw `NullPointerException` for a null initial directory; they now fall back to the platform default like the JavaFX implementation.
+- Fixed: `getFileFromClipboard()` threw `NoSuchElementException` when the clipboard held an empty file list; it now returns `null` as documented.
+- Fixed: Swing `display(Svg)` threw `NullPointerException` for an SVG without a title element, or for a null `svg` argument. JavaFX `display(Svg)` now guards the same null case.
+- Fixed: Swing `view(File)` let a checked `IOException` from `JEditorPane.setPage` escape a `void` method; it now logs and returns.
+- Fixed: Swing `view(List<List<?>>)` produced two phantom columns (`c1`, `c0`) for an empty first row and dropped columns from rows wider than the first. Column count now follows the widest row.
+- Fixed: Swing display uses a `.svg` filename as a fallback when Tika detection is absent or inconclusive, including generic XML.
+- Fixed: JavaFX table views threw `IndexOutOfBoundsException` for ragged rows or a short column-type list; short rows now render empty cells and untyped columns default to `STRING`.
+- Fixed: JavaFX `view(File)` now logs and ignores missing or unreadable files instead of treating their paths as HTML content.
+- Fixed: console list-of-lists views now pad ragged rows and render null rows or cells as empty, matching the documented widest-row behavior.
+- Fixed: console `display(File)` called `Desktop.open` without checking that the OPEN action is supported, and threw on a null file. Both are now reported on stdout.
+- Fixed: console input now honors `stdin.encoding` (JDK 25+) or the platform console's charset (JDK 17+) instead of always using the JVM default.
+- Fixed: `saveToClipboard(File)` wrote `Lost ownership` to stdout when clipboard ownership changed.
+- Build: CI now runs `./gradlew check --no-configuration-cache`, which is the only invocation under which Spotless and SpotBugs are applied. The scheduled dependency-check job is reachable again.
+- Build: `release.sh` verifies the version was actually written to `build.gradle`, names the modules already published when a release fails partway, validates/explicitly confirms `--skip <module,...>` before resuming without re-publishing them, and rejects `--skip` with `--bump`.
+- Fixed: publishing `gi-console`, `gi-fx`, or `gi-swing` failed with "multiple artifacts with the identical extension and classifier" because the Shadow migration both declared the fat-jar artifact explicitly and let Shadow's own publication variant add it. The explicit declaration is removed; Shadow's variant is sufficient.
+- Fixed: fat jars now also merge `META-INF/groovy/org.codehaus.groovy.runtime.ExtensionModule`, so bundling multiple Groovy extension-module jars (e.g. `matrix-core` and `matrix-groovy-ext`) no longer silently hides one's extension methods behind the other's.
 
 ## 0.4.0 - 2026-08-03
 - Breaking: `FileUtils.getResourceUrl` returns `null` for paths that do not exist; use `File` for output targets that will be created later.

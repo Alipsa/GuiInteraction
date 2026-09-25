@@ -1,6 +1,7 @@
 package se.alipsa.gi.console
 
 import groovy.transform.CompileStatic
+import groovy.transform.PackageScope
 import org.jsoup.Jsoup
 import se.alipsa.gi.AbstractInOut
 import se.alipsa.gi.ImageTransferable
@@ -14,6 +15,7 @@ import java.awt.Image
 import java.awt.GraphicsEnvironment
 import java.awt.datatransfer.Clipboard
 import java.awt.datatransfer.DataFlavor
+import java.nio.charset.Charset
 import java.time.LocalDate
 import java.time.YearMonth
 import java.time.format.DateTimeParseException
@@ -24,7 +26,43 @@ class InOut extends AbstractInOut {
 
   private static final Logger log = Logger.getLogger(InOut.class)
 
-  BufferedReader sysin = new BufferedReader(new InputStreamReader(System.in))
+  /**
+   * Resolves the stdin charset from an explicit stdin.encoding declaration and
+   * the console's own charset, falling back to the JVM default when neither is
+   * usable. Split out from stdinCharset() so the console fallback -- which
+   * depends on a live System.console(), unavailable under a test runner -- can
+   * be exercised with an explicit value.
+   */
+  @PackageScope
+  static Charset resolveCharset(String stdinEncoding, Charset consoleCharset) {
+    if (stdinEncoding != null && !stdinEncoding.trim().isEmpty()) {
+      try {
+        return Charset.forName(stdinEncoding.trim())
+      } catch (IllegalArgumentException ignored) {
+        // Unknown or malformed declaration; fall through.
+      }
+    }
+    if (consoleCharset != null) {
+      return consoleCharset
+    }
+    return Charset.defaultCharset()
+  }
+
+  /**
+   * The charset the terminal actually sends. Since JEP 400 the JVM default
+   * charset is UTF-8 regardless of the console encoding, so stdin.encoding
+   * (JDK 25+) must be honoured where the JVM provides it. On earlier JDKs that
+   * property does not exist, so System.console()'s charset (JDK 17+, reflects
+   * the platform's actual console encoding) is the next-best signal before
+   * falling back to the JVM default.
+   */
+  @PackageScope
+  static Charset stdinCharset() {
+    Console console = System.console()
+    return resolveCharset(System.getProperty('stdin.encoding'), console?.charset())
+  }
+
+  BufferedReader sysin = new BufferedReader(new InputStreamReader(System.in, stdinCharset()))
 
   String read(String prompt) {
     print(prompt)
@@ -228,10 +266,36 @@ class InOut extends AbstractInOut {
   @Override
   void view(List<List<?>> matrix, String... title) {
     Matrix built = Matrix.builder()
-        .rows(matrix)
+        .rows(normalizeRows(matrix))
         .matrixName(title.length > 0 ? title[0] : "")
         .build()
     println(built.content())
+  }
+
+  /** Pads ragged rows and turns null rows or cells into empty cells for Matrix.builder(). */
+  @PackageScope
+  static List<List<?>> normalizeRows(List<List<?>> matrix) {
+    int columnCount = 0
+    if (matrix != null) {
+      for (List<?> row : matrix) {
+        if (row != null && row.size() > columnCount) {
+          columnCount = row.size()
+        }
+      }
+    }
+    List<List<?>> normalized = []
+    if (matrix == null) {
+      return normalized
+    }
+    for (List<?> row : matrix) {
+      List<Object> normalizedRow = new ArrayList<>(columnCount)
+      for (int i = 0; i < columnCount; i++) {
+        Object cell = row != null && i < row.size() ? row.get(i) : ''
+        normalizedRow.add(cell == null ? '' : cell)
+      }
+      normalized.add(normalizedRow)
+    }
+    return normalized
   }
 
   @Override
@@ -239,17 +303,30 @@ class InOut extends AbstractInOut {
     display(new File(fileName), title)
   }
 
+  /**
+   * Desktop.getDesktop() throws HeadlessException, and a supported Desktop does
+   * not necessarily support the OPEN action, so both must be checked in order.
+   */
+  @PackageScope
+  static boolean canOpenWithDesktop() {
+    return Desktop.isDesktopSupported() && Desktop.getDesktop().isSupported(Desktop.Action.OPEN)
+  }
+
   @Override
   void display(File file, String... title) {
-    if (Desktop.isDesktopSupported()) {
-      Desktop desktop = Desktop.getDesktop()
-      if (file.exists()) {
-        desktop.open(file)
-      } else {
-        println("File $file does not exist")
-      }
-    } else {
-      println("Desktop is not supported on this platform")
+    if (file == null || !file.exists()) {
+      println("File $file does not exist")
+      return
+    }
+    if (!canOpenWithDesktop()) {
+      println("Opening files with the desktop is not supported on this platform")
+      return
+    }
+    try {
+      Desktop.getDesktop().open(file)
+    } catch (IOException | UnsupportedOperationException e) {
+      log.warn("Failed to open {} with the desktop application", file, e)
+      println("Could not open $file")
     }
   }
 
@@ -338,8 +415,11 @@ class InOut extends AbstractInOut {
     if (clipboard == null) {
       return null
     }
+    if (!clipboard.isDataFlavorAvailable(DataFlavor.javaFileListFlavor)) {
+      return null
+    }
     List<File> files = clipboard.getData(DataFlavor.javaFileListFlavor) as List<File>
-    files?.getFirst()
+    files == null || files.isEmpty() ? null : files.get(0)
   }
 
   private boolean clipboardUnavailable() {

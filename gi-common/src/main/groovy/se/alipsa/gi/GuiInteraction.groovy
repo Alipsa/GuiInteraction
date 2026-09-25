@@ -354,6 +354,8 @@ interface GuiInteraction {
 
   /**
    * Displays file content in a viewer (browser or HTML panel).
+   * <p>
+   * A missing or unreadable file is logged and ignored; no exception is thrown.
    *
    * @param file the file to view
    * @param title optional title for the viewer window
@@ -435,9 +437,13 @@ interface GuiInteraction {
    * Displays an Svg image or chart.
    * <p>
    * Note: Not supported in console mode.
+   * <p>
+   * A null {@code svg} is logged and ignored; no exception is thrown.
    *
    * @param svg the svg to display
-   * @param titleOpt optional title for the display window
+   * @param titleOpt optional title for the display window; when omitted, the
+   *        SVG's own title element is used, and the window is left untitled if
+   *        the SVG has none
    */
   void display(Svg svg, String... titleOpt);
 
@@ -466,7 +472,8 @@ interface GuiInteraction {
   /**
    * Retrieves a file reference from the system clipboard.
    *
-   * @return the first file from the clipboard, or {@code null} if none
+   * @return the first file from the clipboard, or {@code null} if the clipboard
+   *         holds no file list or holds an empty one
    * @throws Exception if clipboard access fails
    */
   File getFileFromClipboard() throws Exception;

@@ -1,5 +1,26 @@
 # TODO / Roadmap
 
+# Version 0.4.1
+
+## Review fixes (2026-09-25)
+See `req/2026-09-25-fixes.md` for the plan and `release.md` for the changelog.
+- [x] Publishing: `gi-common` published at compile scope from `gi-swing` and `gi-console`
+- [x] Packaging: fat JARs built with Shadow so `META-INF/services` entries merge
+- [x] CI: Spotless and SpotBugs actually run; dependency-check job reachable
+- [x] Swing: null initial directory, phantom columns, ragged rows, per-column numeric alignment, SVG null/title handling, escaping `IOException`, SVG detection fall-through
+- [x] JavaFX: ragged rows and short column-type lists in `Viewer.viewTable`
+- [x] Console: `Desktop.Action.OPEN` check, null file handling, `stdin.encoding`
+- [x] Common: empty clipboard file list returns `null`; stray stdout removed
+- [x] Release: `release.sh` version read-back and partial-publish reporting
+- [x] Docs: sample scripts updated to 0.4.0 and current Matrix package names
+
+## Deferred
+
+- [ ] Define the intended null-handling behavior for console `display(String)`.
+- [ ] Tidy the cosmetic Swing dialog title inconsistency.
+- [ ] Finish the root `test.groovy` sample update.
+- [ ] Review whether JavaFX `TableData` should remain publicly visible.
+
 # Version 0.3.0
 
 ## Bug fixes

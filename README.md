@@ -85,11 +85,14 @@ println("File chosen was $file")
 ./gradlew build
 ```
 
-When `org.gradle.configuration-cache=true` is enabled, `build` skips applying Spotless and SpotBugs because their current Gradle tasks are not configuration-cache compatible on Gradle 9. Run the full verification lifecycle explicitly with:
+When `org.gradle.configuration-cache=true` is enabled, `build` skips applying Spotless and SpotBugs because their current Gradle tasks are not configuration-cache compatible on Gradle 9. CI therefore runs both commands, and so should you before pushing:
 
 ```bash
+./gradlew build
 ./gradlew check --no-configuration-cache
 ```
+
+`check.sh` runs the second command with `spotlessApply` so formatting is fixed rather than merely reported.
 
 ## Requirements
 

@@ -12,6 +12,10 @@
 #   ./release.sh              - Release current version (strips -SNAPSHOT if present)
 #   ./release.sh --bump minor - Bump version and release (major, minor, patch)
 #   ./release.sh --dry-run    - Show what would be released without publishing
+#   ./release.sh --skip gi-common,gi-console
+#                              - Skip modules already published in a prior partial
+#                                run; use with the SAME version and explicitly
+#                                confirm that every listed module was published
 #
 # If the version has a -SNAPSHOT suffix, it will be removed to create the release version.
 # The README.md and release.md will be updated automatically with the release version.
@@ -61,6 +65,8 @@ PROJECT=$(basename "$PWD")
 DRY_RUN=false
 BUMP_TYPE=""
 README_NEEDS_UPDATE=false
+PUBLISHED_MODULES=""
+SKIP_MODULES=""
 
 # Parse arguments
 while [[ $# -gt 0 ]]; do
@@ -73,12 +79,73 @@ while [[ $# -gt 0 ]]; do
             BUMP_TYPE="$2"
             shift 2
             ;;
+        --skip)
+            if [ -z "${2:-}" ]; then
+                echo -e "${RED}--skip requires a comma-separated module list.${NC}" >&2
+                exit 1
+            fi
+            SKIP_MODULES="${2// /}"
+            shift 2
+            ;;
         *)
             echo -e "${RED}Unknown option: $1${NC}"
             exit 1
             ;;
     esac
 done
+
+if [ -n "$BUMP_TYPE" ] && [ -n "$SKIP_MODULES" ]; then
+    echo -e "${RED}--skip cannot be combined with --bump; resume a partial release with its original version.${NC}" >&2
+    exit 1
+fi
+
+# Whether a module name appears in the comma-separated --skip list
+is_skipped() {
+    local sub=$1
+    [[ ",${SKIP_MODULES}," == *",${sub},"* ]]
+}
+
+# Reject typos and require an explicit acknowledgement before a release omits
+# modules. Maven Central cannot be used to repair a release missing an artifact.
+validate_skipped_modules() {
+    if [ -z "$SKIP_MODULES" ]; then
+        return
+    fi
+    if [[ "$SKIP_MODULES" == ,* || "$SKIP_MODULES" == *, || "$SKIP_MODULES" == *,,* ]]; then
+        echo -e "${RED}--skip must contain comma-separated module names without empty entries.${NC}" >&2
+        exit 1
+    fi
+
+    local sub seen="," confirmation
+    local skipped_modules=()
+    IFS=',' read -r -a skipped_modules <<< "$SKIP_MODULES"
+    for sub in "${skipped_modules[@]}"; do
+        case "$sub" in
+            gi-common|gi-console|gi-fx|gi-swing) ;;
+            *)
+                echo -e "${RED}Unknown module in --skip: ${sub}.${NC}" >&2
+                exit 1
+                ;;
+        esac
+        if [[ "$seen" == *",${sub},"* ]]; then
+            echo -e "${RED}Module appears more than once in --skip: ${sub}.${NC}" >&2
+            exit 1
+        fi
+        seen="${seen}${sub},"
+    done
+
+    if [ "$DRY_RUN" = true ]; then
+        echo -e "${YELLOW}[DRY RUN] Would require confirmation that skipped modules are already published: ${SKIP_MODULES}${NC}"
+        return
+    fi
+    echo -e "${YELLOW}Skipping ${SKIP_MODULES} means their artifacts will not be published by this release.${NC}"
+    if ! read -r -p "Type 'already published' to confirm they were published with this version: " confirmation || [ "$confirmation" != "already published" ]; then
+        echo -e "${RED}Release aborted: skipped modules were not confirmed as already published.${NC}" >&2
+        exit 1
+    fi
+}
+
+validate_skipped_modules
 
 # Get current version from build.gradle
 get_version() {
@@ -118,8 +185,14 @@ bump_version() {
 # Update version in build.gradle
 update_version() {
     local new_version=$1
-    sed -i.bak "s/^version = '.*'/version = '${new_version}'/" build.gradle
+    sed -i.bak -E "s/^([[:space:]]*)version[[:space:]]*=[[:space:]]*'[^']*'/\1version = '${new_version}'/" build.gradle
     rm build.gradle.bak
+    local written
+    written=$(get_version)
+    if [ "$written" != "$new_version" ]; then
+        echo -e "${RED}Error: build.gradle still reports version '${written}' after updating to '${new_version}'.${NC}" >&2
+        exit 1
+    fi
     echo -e "${GREEN}Updated build.gradle version to ${new_version}${NC}"
 }
 
@@ -191,12 +264,28 @@ generate_release_notes() {
 # Publish a subproject
 publish() {
     local sub=$1
+    if is_skipped "$sub"; then
+        echo -e "${YELLOW}Skipping $sub (already published; --skip was given)${NC}"
+        PUBLISHED_MODULES="${PUBLISHED_MODULES}${PUBLISHED_MODULES:+, }${sub}"
+        return 0
+    fi
     echo -e "${YELLOW}Publishing $sub to Maven Central...${NC}"
     if [ "$DRY_RUN" = true ]; then
         echo -e "${YELLOW}[DRY RUN] Would execute: ./gradlew :${sub}:clean :${sub}:build :${sub}:release${NC}"
-    else
-        ./gradlew ":${sub}:clean" ":${sub}:build" ":${sub}:release" --no-configuration-cache
+        return 0
     fi
+    if ! ./gradlew ":${sub}:clean" ":${sub}:build" ":${sub}:release" --no-configuration-cache; then
+        echo -e "${RED}Error: publishing ${sub} failed.${NC}" >&2
+        if [ -n "$PUBLISHED_MODULES" ]; then
+            echo -e "${RED}These modules were ALREADY published to Maven Central and cannot be unpublished:${NC}" >&2
+            echo -e "${RED}  ${PUBLISHED_MODULES}${NC}" >&2
+            echo -e "${YELLOW}The release commit is local and unpushed, and no tag was created.${NC}" >&2
+            echo -e "${YELLOW}Resolve the failure, then re-run with the SAME version and:${NC}" >&2
+            echo -e "${YELLOW}  --skip ${PUBLISHED_MODULES// /}${NC}" >&2
+        fi
+        exit 1
+    fi
+    PUBLISHED_MODULES="${PUBLISHED_MODULES}${PUBLISHED_MODULES:+, }${sub}"
 }
 
 # Main script

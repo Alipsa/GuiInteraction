@@ -9,7 +9,7 @@
 ## Build, Test, and Development Commands
 - `./gradlew build` — compile all modules, run tests where present.
 - `./gradlew test` or `./gradlew :gi-fx:test` — run the full suite or a single module; tests execute on JUnit Platform.
-- `./gradlew :gi-swing:fatJar` (likewise `:gi-fx:fatJar`, `:gi-console:fatJar`) — produce self-contained artifacts.
+- `./gradlew :gi-swing:shadowJar` (likewise `:gi-fx:shadowJar`, `:gi-console:shadowJar`) — produce self-contained artifacts (`*-fatjar.jar`). Note these bundle the runtime classpath but not Groovy, which is a `compileOnly` dependency the consumer supplies.
 - `./gradlew dependencyUpdates` — check for newer dependencies with the versions plugin.
 - Use a JDK with JavaFX when building/running `gi-fx` (e.g., Bellsoft Full JDK); `gi-swing` and `gi-console` work on any Java 21 JDK.
 
@@ -17,7 +17,7 @@
 - Groovy first, with `@CompileStatic` where practical; keep indentation at 2 spaces and UTF-8 encoding.
 - Classes: `PascalCase`; methods/fields: `camelCase`; constants: `UPPER_SNAKE_CASE`.
 - Prefer reusable helpers in `gi-common`; UI-specific behavior stays inside the corresponding module.
-- Fat-jar tasks already exclude duplicate META-INF entries—reuse them instead of custom packaging scripts.
+- Fat-jar packaging goes through the `se.alipsa.gi.fatjar-conventions` plugin, which uses Shadow so duplicate `META-INF/services` entries are merged rather than dropped. Reuse it instead of custom packaging scripts.
 
 ## Testing Guidelines
 - JUnit Jupiter is configured; place specs under `module/src/test/groovy` with `*Test.groovy` naming.
@@ -31,6 +31,7 @@
 - PRs should list the touched modules (`gi-common`, `gi-fx`, etc.), describe behavior changes, and link issues/tickets.
 - Include screenshots or gifs for visual tweaks in `gi-fx`/`gi-swing`; note platform specifics if a change is OS-dependent.
 - Keep release/publishing secrets (signing keys, Sonatype creds) out of the repo; supply them via local `gradle.properties` when needed.
+- The `test.gsh` sample scripts in each module pin the latest **released** version for Grape. Bump them as part of a release, not as part of a SNAPSHOT bump.
 
 ## Implementation Guidelines
 - A task has 3 parts, implementation, tests, and documentation. A task is not done until all 3 parts are completed.

@@ -39,7 +39,7 @@ dependencies {
   }
   def javaFxVersion = libs.versions.javafx.get()
 
-  implementation project(':gi-common')
+  api project(':gi-common')
   compileOnly libs.groovy
   implementation libs.swing.widgets
 
@@ -74,7 +74,6 @@ publishing {
   publications {
     maven(MavenPublication) {
       from components.java
-      artifact(tasks.named('fatJar'))
       pom {
         name = 'Gade standalone GUI interaction library for Swing'
         description = "${project.description}"

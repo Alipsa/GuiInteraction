@@ -76,7 +76,6 @@ publishing {
     publications {
         maven(MavenPublication) {
             from components.java
-            artifact(tasks.named('fatJar'))
             pom {
                 name = 'Gade standalone GUI interaction library'
                 description = "${project.description}"

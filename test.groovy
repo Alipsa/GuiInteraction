@@ -85,7 +85,7 @@ io.viewMarkdown("""# example title
 
 
 /*
-import se.alipsa.groovy.matrix.Matrix
+import se.alipsa.matrix.core.Matrix
 Matrix matrix = Matrix.create(
     "Matrix example",
     [
@@ -112,9 +112,9 @@ io.view(rowList, 'List of lists example')
 //io.display(io.projectFile("src/test/resources/areachart2.png"))
 
 /*
-import se.alipsa.groovy.matrix.*
-import se.alipsa.groovy.charts.*
-import static se.alipsa.groovy.matrix.ListConverter.*
+import se.alipsa.matrix.core.*
+import se.alipsa.matrix.charts.*
+import static se.alipsa.matrix.core.ListConverter.*
 empData = Matrix.create(
         emp_id: 1..5,
         emp_name: ["Rick","Dan","Michelle","Ryan","Gary"],

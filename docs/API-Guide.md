@@ -34,6 +34,8 @@ dependencies {
 
 - `gi-fx` dialog and clipboard APIs are safe to call from either the FX Application Thread or a background thread; calls are executed on the FX thread internally.
 - `gi-fx` file and directory choosers ignore invalid initial directories and fall back to the platform default.
+- All implementations accept a `null` or blank `initialDirectory`; the chooser falls back to the platform default rather than throwing.
+- `gi-fx` substitutes a generic label when a file chooser is given extensions but no description.
 
 ## File Operations
 
@@ -197,6 +199,10 @@ io.view([
 ], "Products")
 ```
 
+A list-of-lists is rendered with `c1`..`cN` placeholder headers, where `N` is the
+width of the **widest** row; narrower rows are padded with empty cells. An empty
+list, or a list of empty rows, renders an empty table rather than phantom columns.
+
 ### Files and Images
 
 ```groovy
@@ -358,16 +364,21 @@ if (file == null) {
 - Requires a JVM with JavaFX support
 - SVG rendering via matrix-charts JavaFX integration (a lighter subset than a browser renderer)
 - Rich date pickers with calendar UI
+- Table views tolerate ragged data: a row shorter than the header list renders empty cells, and a column with no declared type is treated as `STRING` and left-aligned.
 
 ### gi-swing
 
 - Works with any JDK
 - SVG rendering via matrix-charts integration
 - Standard Swing look and feel
+- A resource is rendered as SVG when its detected content type is `image/svg+xml`, or when its filename ends in `.svg` and detection is absent or inconclusive (`application/xml` or `text/xml`).
+- Table columns are right-aligned when the first non-null value in that column is numeric.
 
 ### gi-console
 
 - Best for headless/CI environments
-- `display()` and `display(Chart)` print messages instead of showing UI
+- `display(File)` opens the file with the system's default application when the platform supports the Desktop OPEN action; otherwise it prints a message. A missing file, a null file, and a failed open are all reported on stdout rather than thrown.
+- `display(JComponent)` and `display(Svg)` print messages instead of showing UI
 - Password input is masked when `System.console()` is available; otherwise stdin input is visible and a warning is logged
 - Tables displayed as text using Matrix.content()
+- Console input is decoded with the `stdin.encoding` charset when the JVM reports one (JDK 25+); otherwise the platform console's own charset is used when a console is attached (JDK 17+); otherwise the JVM default charset. `sysin` can be reassigned to redirect input in tests.
