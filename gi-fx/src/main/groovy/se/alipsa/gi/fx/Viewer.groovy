@@ -258,16 +258,17 @@ class Viewer {
                 final int j = i
                 String colName = String.valueOf(headerList.get(i))
                 TableColumn<List<String>, String> col = new TableColumn<>()
-                if (shouldRightAlign(columnTypes.get(i))) {
+                String columnType = TableData.typeAt(columnTypes, i)
+                if (shouldRightAlign(columnType)) {
                     col.setStyle("-fx-alignment: CENTER-RIGHT;")
                 }
                 Label colLabel = new Label(colName)
-                colLabel.setTooltip(new Tooltip(columnTypes.get(i)))
+                colLabel.setTooltip(new Tooltip(columnType))
                 col.setGraphic(colLabel)
                 col.setPrefWidth(new Text(colName).getLayoutBounds().getWidth() * 1.25 + 12.0)
 
                 tableView.getColumns().add(col)
-                col.setCellValueFactory(param -> new SimpleStringProperty(param.getValue().get(j)));
+                col.setCellValueFactory(param -> new SimpleStringProperty(TableData.cellAt(param.getValue(), j)));
             }
             ObservableList<List<String>> data = FXCollections.observableArrayList();
             for (List<?> row : rowList) {

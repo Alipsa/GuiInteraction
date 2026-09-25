@@ -364,6 +364,7 @@ if (file == null) {
 - Requires a JVM with JavaFX support
 - SVG rendering via matrix-charts JavaFX integration (a lighter subset than a browser renderer)
 - Rich date pickers with calendar UI
+- Table views tolerate ragged data: a row shorter than the header list renders empty cells, and a column with no declared type is treated as `STRING` and left-aligned.
 
 ### gi-swing
 
