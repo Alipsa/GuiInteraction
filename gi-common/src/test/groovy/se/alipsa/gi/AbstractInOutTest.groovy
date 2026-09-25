@@ -498,6 +498,20 @@ class AbstractInOutTest {
     }
   }
 
+  @Test
+  void firstFileReturnsNullForMissingOrEmptyLists() {
+    assertNull(AbstractInOut.firstFile(null))
+    assertNull(AbstractInOut.firstFile([]))
+  }
+
+  @Test
+  void firstFileReturnsTheLeadingEntry() {
+    File first = new File(tempDir, 'first.txt')
+    File second = new File(tempDir, 'second.txt')
+
+    assertEquals(first, AbstractInOut.firstFile([first, second]))
+  }
+
   /**
    * Concrete implementation of AbstractInOut for testing purposes.
    * Provides minimal stub implementations for abstract methods.

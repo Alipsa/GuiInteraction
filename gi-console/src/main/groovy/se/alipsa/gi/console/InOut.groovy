@@ -339,7 +339,7 @@ class InOut extends AbstractInOut {
       return null
     }
     List<File> files = clipboard.getData(DataFlavor.javaFileListFlavor) as List<File>
-    files?.getFirst()
+    files == null || files.isEmpty() ? null : files.get(0)
   }
 
   private boolean clipboardUnavailable() {

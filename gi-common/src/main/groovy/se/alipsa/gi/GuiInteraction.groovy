@@ -466,7 +466,8 @@ interface GuiInteraction {
   /**
    * Retrieves a file reference from the system clipboard.
    *
-   * @return the first file from the clipboard, or {@code null} if none
+   * @return the first file from the clipboard, or {@code null} if the clipboard
+   *         holds no file list or holds an empty one
    * @throws Exception if clipboard access fails
    */
   File getFileFromClipboard() throws Exception;
