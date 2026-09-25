@@ -61,6 +61,7 @@ PROJECT=$(basename "$PWD")
 DRY_RUN=false
 BUMP_TYPE=""
 README_NEEDS_UPDATE=false
+PUBLISHED_MODULES=""
 
 # Parse arguments
 while [[ $# -gt 0 ]]; do
@@ -118,8 +119,14 @@ bump_version() {
 # Update version in build.gradle
 update_version() {
     local new_version=$1
-    sed -i.bak "s/^version = '.*'/version = '${new_version}'/" build.gradle
+    sed -i.bak -E "s/^([[:space:]]*)version[[:space:]]*=[[:space:]]*'[^']*'/\1version = '${new_version}'/" build.gradle
     rm build.gradle.bak
+    local written
+    written=$(get_version)
+    if [ "$written" != "$new_version" ]; then
+        echo -e "${RED}Error: build.gradle still reports version '${written}' after updating to '${new_version}'.${NC}" >&2
+        exit 1
+    fi
     echo -e "${GREEN}Updated build.gradle version to ${new_version}${NC}"
 }
 
@@ -194,9 +201,19 @@ publish() {
     echo -e "${YELLOW}Publishing $sub to Maven Central...${NC}"
     if [ "$DRY_RUN" = true ]; then
         echo -e "${YELLOW}[DRY RUN] Would execute: ./gradlew :${sub}:clean :${sub}:build :${sub}:release${NC}"
-    else
-        ./gradlew ":${sub}:clean" ":${sub}:build" ":${sub}:release" --no-configuration-cache
+        return 0
     fi
+    if ! ./gradlew ":${sub}:clean" ":${sub}:build" ":${sub}:release" --no-configuration-cache; then
+        echo -e "${RED}Error: publishing ${sub} failed.${NC}" >&2
+        if [ -n "$PUBLISHED_MODULES" ]; then
+            echo -e "${RED}These modules were ALREADY published to Maven Central and cannot be unpublished:${NC}" >&2
+            echo -e "${RED}  ${PUBLISHED_MODULES}${NC}" >&2
+            echo -e "${YELLOW}The release commit is local and unpushed, and no tag was created.${NC}" >&2
+            echo -e "${YELLOW}Resolve the failure, then re-run with the SAME version to publish the remaining modules.${NC}" >&2
+        fi
+        exit 1
+    fi
+    PUBLISHED_MODULES="${PUBLISHED_MODULES}${PUBLISHED_MODULES:+, }${sub}"
 }
 
 # Main script

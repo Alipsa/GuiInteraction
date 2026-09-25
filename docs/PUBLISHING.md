@@ -248,3 +248,15 @@ Example workflow step using modern in-memory signing:
 ```
 
 **Note:** The `signingKey` property uses the in-memory approach, which avoids creating temporary key files on CI runners. The ASCII-armored key from `GPG_SIGNING_KEY` is decoded automatically by Gradle.
+
+## Recovering from a partial release
+
+`release.sh` publishes `gi-common`, `gi-console`, `gi-fx`, and `gi-swing` in that
+order, and stops at the first failure. When it stops it names the modules already
+published; those cannot be unpublished from Maven Central. At that point the
+version commit exists locally but has not been pushed and no tag has been created.
+
+Fix the cause of the failure and re-run `./release.sh` with the **same** version.
+The tag check will warn that the version looks already-released — answer `y`. The
+already-published modules will be re-uploaded and rejected as duplicates, which is
+harmless; the remaining modules publish normally.
