@@ -150,3 +150,12 @@ dependency-check:
 ```
 
 This approach keeps regular CI builds fast while still providing periodic dependency monitoring.
+
+## Module dependency scopes
+
+`gi-common` is an `api` dependency of `gi-swing`, `gi-fx`, and `gi-console`. Each
+implementation's `InOut` extends `se.alipsa.gi.AbstractInOut` and returns
+`se.alipsa.matrix.core.Matrix` and `se.alipsa.groovy.svg.Svg`, so those types are
+part of the published API and must be on a consumer's compile classpath.
+Declaring `gi-common` as `implementation` would publish it at `runtime` scope and
+break compilation for consumers.

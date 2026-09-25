@@ -39,7 +39,7 @@ dependencies {
   }
   def javaFxVersion = libs.versions.javafx.get()
 
-  implementation project(':gi-common')
+  api project(':gi-common')
   compileOnly libs.groovy
   implementation libs.swing.widgets
 
