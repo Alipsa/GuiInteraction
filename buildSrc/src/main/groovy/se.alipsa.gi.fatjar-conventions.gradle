@@ -29,6 +29,15 @@ tasks.named('shadowJar', com.github.jengelman.gradle.plugins.shadow.tasks.Shadow
     // Union every META-INF/services/* file across the bundled jars.
     mergeServiceFiles()
 
+    // Union every META-INF/groovy/org.codehaus.groovy.runtime.ExtensionModule
+    // file across the bundled jars. Without this, INCLUDE writes one unmerged
+    // copy per source jar and the JVM's classloader resolves only one of them,
+    // silently hiding every other jar's Groovy extension methods (e.g.
+    // matrix-core's short-notation extensions disappearing behind
+    // matrix-groovy-ext's) -- the same failure mode mergeServiceFiles() exists
+    // to prevent, on a different META-INF path.
+    mergeGroovyExtensionModules()
+
     // Exclude signature files that cause issues when repackaging signed JARs
     exclude 'META-INF/*.RSA', 'META-INF/*.SF', 'META-INF/*.DSA'
 
