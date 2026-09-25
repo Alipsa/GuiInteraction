@@ -371,7 +371,8 @@ if (file == null) {
 - Works with any JDK
 - SVG rendering via matrix-charts integration
 - Standard Swing look and feel
-- A resource is rendered as SVG when its detected content type is `image/svg+xml` **or** its filename ends in `.svg`, so SVG files that Tika reports as generic XML still render.
+- A resource is rendered as SVG when its detected content type is `image/svg+xml`, or when its filename ends in `.svg` and detection is absent or inconclusive (`application/xml` or `text/xml`).
+- Table columns are right-aligned when the first non-null value in that column is numeric.
 
 ### gi-console
 

@@ -7,7 +7,7 @@ See `req/2026-09-25-fixes.md` for the plan and `release.md` for the changelog.
 - [x] Publishing: `gi-common` published at compile scope from `gi-swing` and `gi-console`
 - [x] Packaging: fat JARs built with Shadow so `META-INF/services` entries merge
 - [x] CI: Spotless and SpotBugs actually run; dependency-check job reachable
-- [x] Swing: null initial directory, phantom columns, ragged rows, missing SVG title, escaping `IOException`, SVG detection fall-through
+- [x] Swing: null initial directory, phantom columns, ragged rows, per-column numeric alignment, SVG null/title handling, escaping `IOException`, SVG detection fall-through
 - [x] JavaFX: ragged rows and short column-type lists in `Viewer.viewTable`
 - [x] Console: `Desktop.Action.OPEN` check, null file handling, `stdin.encoding`
 - [x] Common: empty clipboard file list returns `null`; stray stdout removed
@@ -16,8 +16,6 @@ See `req/2026-09-25-fixes.md` for the plan and `release.md` for the changelog.
 
 ## Deferred
 
-- [x] Swing table alignment now derives each column from its first non-null value (resolved in this PR follow-up).
-- [x] SVG display uses direct null guards rather than redundant `isDisplayable` helpers (resolved in this PR follow-up).
 - [ ] Define the intended null-handling behavior for console `display(String)`.
 - [ ] Tidy the cosmetic Swing dialog title inconsistency.
 - [ ] Finish the root `test.groovy` sample update.

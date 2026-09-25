@@ -10,7 +10,7 @@
 - Fixed: Swing `display(Svg)` threw `NullPointerException` for an SVG without a title element, or for a null `svg` argument. JavaFX `display(Svg)` now guards the same null case.
 - Fixed: Swing `view(File)` let a checked `IOException` from `JEditorPane.setPage` escape a `void` method; it now logs and returns.
 - Fixed: Swing `view(List<List<?>>)` produced two phantom columns (`c1`, `c0`) for an empty first row and dropped columns from rows wider than the first. Column count now follows the widest row.
-- Fixed: Swing display treated a `.svg` file as an image whenever Tika reported a content type other than `image/svg+xml`.
+- Fixed: Swing display uses a `.svg` filename as a fallback when Tika detection is absent or inconclusive, including generic XML.
 - Fixed: JavaFX table views threw `IndexOutOfBoundsException` for ragged rows or a short column-type list; short rows now render empty cells and untyped columns default to `STRING`.
 - Fixed: console `display(File)` called `Desktop.open` without checking that the OPEN action is supported, and threw on a null file. Both are now reported on stdout.
 - Fixed: console input now honors `stdin.encoding` (JDK 25+) or the platform console's charset (JDK 17+) instead of always using the JVM default.
