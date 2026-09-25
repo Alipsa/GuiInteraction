@@ -34,6 +34,8 @@ dependencies {
 
 - `gi-fx` dialog and clipboard APIs are safe to call from either the FX Application Thread or a background thread; calls are executed on the FX thread internally.
 - `gi-fx` file and directory choosers ignore invalid initial directories and fall back to the platform default.
+- All implementations accept a `null` or blank `initialDirectory`; the chooser falls back to the platform default rather than throwing.
+- `gi-fx` substitutes a generic label when a file chooser is given extensions but no description.
 
 ## File Operations
 

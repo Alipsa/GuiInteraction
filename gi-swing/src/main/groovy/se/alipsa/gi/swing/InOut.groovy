@@ -1,6 +1,7 @@
 package se.alipsa.gi.swing
 
 import groovy.transform.CompileStatic
+import groovy.transform.PackageScope
 import se.alipsa.datepicker.DatePicker
 import se.alipsa.groovy.svg.Svg
 import se.alipsa.groovy.svg.export.SvgRenderer
@@ -74,7 +75,7 @@ class InOut extends AbstractInOut {
   }
 
   File chooseFile(String title, String initialDirectory, String description, String... extensions) {
-    return chooseFile(title, new File(initialDirectory), description, extensions)
+    return chooseFile(title, toInitialDirectory(initialDirectory), description, extensions)
   }
 
   @Override
@@ -91,7 +92,18 @@ class InOut extends AbstractInOut {
 
   @Override
   File chooseDir(String title, String initialDirectory) {
-    return chooseDir(title, new File(initialDirectory))
+    return chooseDir(title, toInitialDirectory(initialDirectory))
+  }
+
+  /**
+   * Converts a directory path to a File, treating a missing or blank path as
+   * "no preference" rather than an error. JFileChooser accepts a null initial
+   * directory and falls back to the platform default.
+   */
+  @PackageScope
+  static File toInitialDirectory(String initialDirectory) {
+    return initialDirectory == null || initialDirectory.trim().isEmpty() ?
+        null : new File(initialDirectory)
   }
 
 

@@ -1,6 +1,7 @@
 package se.alipsa.gi.fx
 
 import groovy.transform.CompileStatic
+import groovy.transform.PackageScope
 import javafx.application.Platform
 import javafx.collections.ObservableList
 import javafx.embed.swing.JFXPanel
@@ -93,7 +94,7 @@ class InOut extends AbstractInOut {
                     }
                 }
                 chooser.getExtensionFilters().addAll(
-                        new FileChooser.ExtensionFilter(description, ext)
+                        new FileChooser.ExtensionFilter(filterDescription(description), ext)
                 )
             }
             return chooser.showOpenDialog(ownerWindow)
@@ -121,6 +122,16 @@ class InOut extends AbstractInOut {
     @Override
     File chooseDir(String title, String initialDirectory) {
         return chooseDir(title, initialDirectory ? new File(initialDirectory) : null)
+    }
+
+    /**
+     * FileChooser.ExtensionFilter rejects a null or empty description, so a caller
+     * who supplies extensions but no description would get an exception instead of
+     * a dialog. Fall back to a generic label.
+     */
+    @PackageScope
+    static String filterDescription(String description) {
+        return description == null || description.trim().isEmpty() ? 'Files' : description
     }
 
     @Override
