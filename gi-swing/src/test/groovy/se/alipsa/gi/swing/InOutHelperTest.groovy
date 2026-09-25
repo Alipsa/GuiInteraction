@@ -94,4 +94,16 @@ class InOutHelperTest {
 
     assertTrue(InOut.loadPage(new JEditorPane(), page))
   }
+
+  @Test
+  void svgIsDetectedByContentTypeOrByName() {
+    URL svgByName = URI.create('file:/tmp/plot.svg').toURL()
+    URL pngByName = URI.create('file:/tmp/plot.png').toURL()
+
+    assertTrue(InOut.isSvg('image/svg+xml', pngByName), 'content type wins')
+    assertTrue(InOut.isSvg('application/xml', svgByName), 'name is the fallback')
+    assertTrue(InOut.isSvg(null, svgByName), 'name is used when detection failed')
+    assertFalse(InOut.isSvg('image/png', pngByName))
+    assertFalse(InOut.isSvg(null, pngByName))
+  }
 }

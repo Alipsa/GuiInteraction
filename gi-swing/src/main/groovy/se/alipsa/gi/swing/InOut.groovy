@@ -363,6 +363,16 @@ class InOut extends AbstractInOut {
     viewTable(jTable, rightAlign, name)
   }
 
+  /**
+   * An SVG is recognised by its detected content type, or by its name when
+   * detection is unavailable or disagrees. Tika reports some valid SVG files as
+   * generic XML, so the name check must not be an else-branch.
+   */
+  @PackageScope
+  static boolean isSvg(String contentType, URL resource) {
+    return "image/svg+xml" == contentType || FileUtils.isSvgResource(resource)
+  }
+
   @Override
   void display(String fileName, String... title) {
     URL resource = FileUtils.getResourceUrl(fileName)
@@ -379,18 +389,16 @@ class InOut extends AbstractInOut {
         return
       }
     }
+    String contentType = null
     if (file != null && file.exists()) {
       try {
-        String contentType = getContentType(file)
-        if ("image/svg+xml" == contentType) {
-          displaySvg(resource, title)
-          return
-        }
+        contentType = getContentType(file)
       } catch (IOException e) {
         log.error("Error detecting content type", e)
         return
       }
-    } else if (FileUtils.isSvgResource(resource)) {
+    }
+    if (isSvg(contentType, resource)) {
       displaySvg(resource, title)
       return
     }
