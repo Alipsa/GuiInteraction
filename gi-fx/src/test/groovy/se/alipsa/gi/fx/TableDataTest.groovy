@@ -1,12 +1,39 @@
 package se.alipsa.gi.fx
 
 import org.junit.jupiter.api.Test
+import se.alipsa.matrix.core.Matrix
+import se.alipsa.matrix.core.Grid
 
 import java.text.NumberFormat
 
 import static org.junit.jupiter.api.Assertions.assertEquals
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow
 
 class TableDataTest {
+
+  @Test
+  void unnamedAndExplicitMatrixTitles() {
+    Matrix unnamed = Matrix.builder().rows([[1, 2]]).build()
+    Matrix named = Matrix.builder().matrixName('from matrix').rows([[1, 2]]).build()
+    assertEquals('Table', Viewer.matrixTitle(unnamed))
+    assertEquals('Table', Viewer.matrixTitle(null))
+    assertEquals('chosen', Viewer.matrixTitle(named, 'chosen'))
+    assertEquals('from matrix', Viewer.matrixTitle(named, '   '))
+  }
+
+  @Test
+  void viewingANullMatrixIsIgnoredRatherThanThrowing() {
+    assertDoesNotThrow({ Viewer.viewTable((Matrix) null) } as org.junit.jupiter.api.function.Executable)
+    assertDoesNotThrow({ Viewer.viewTable((Grid) null) } as org.junit.jupiter.api.function.Executable)
+  }
+
+  @Test
+  void aRaggedGridKeepsEveryColumnAndRendersNullRowsAsEmpty() {
+    List<List<?>> rows = [['first'], null, ['second', 'third']]
+    assertEquals(2, Viewer.widestRow(rows))
+    assertEquals([], Viewer.formatRow(rows[1], NumberFormat.getInstance()))
+    assertEquals('', TableData.cellAt(Viewer.formatRow(rows[0], NumberFormat.getInstance()), 1))
+  }
 
   @Test
   void theGridColumnCountCoversTheWidestNonEmptyRow() {

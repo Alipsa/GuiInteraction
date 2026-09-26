@@ -295,7 +295,7 @@ if (io.urlExists("https://example.com/api/health", 5000)) {
 }
 ```
 
-`urlExists` accepts HTTP and HTTPS URLs, follows redirects within the supplied overall timeout budget, and returns `false` unless the final response is 2xx. A negative timeout throws `IllegalArgumentException`; `0` disables the timeout entirely, so the call may block indefinitely.
+`urlExists` accepts HTTP and HTTPS URLs, follows redirects within the supplied overall timeout budget, and returns `false` unless the final response is 2xx. A negative timeout throws `IllegalArgumentException`; `0` disables the timeout entirely, so the call may block indefinitely. Debug diagnostics include the original and current URL without query strings or credentials.
 
 ### Content Type Detection
 
@@ -365,6 +365,7 @@ if (file == null) {
 - SVG rendering via matrix-charts JavaFX integration (a lighter subset than a browser renderer)
 - Rich date pickers with calendar UI
 - Table views tolerate ragged data: a row shorter than the header list renders empty cells, and a column with no declared type is treated as `STRING` and left-aligned.
+- `view((Matrix) null)` is logged and ignored; an unnamed matrix uses the tab title `Table`.
 
 ### gi-swing
 
@@ -373,12 +374,14 @@ if (file == null) {
 - Standard Swing look and feel
 - A resource is rendered as SVG when its detected content type is `image/svg+xml`, or when its filename ends in `.svg` and detection is absent or inconclusive (`application/xml` or `text/xml`).
 - Table columns are right-aligned when the first non-null value in that column is numeric.
+- `view((Matrix) null)` is logged and ignored.
 
 ### gi-console
 
 - Best for headless/CI environments
-- `display(File)` opens the file with the system's default application when the platform supports the Desktop OPEN action; otherwise it prints a message. A missing file, a null file, and a failed open are all reported on stdout rather than thrown.
+- `display(File)` opens the file with the system's default application when the platform supports the Desktop OPEN action; otherwise it prints a message. A missing file, a null file or file name, and a failed open are all reported on stdout rather than thrown.
 - `display(JComponent)` and `display(Svg)` print messages instead of showing UI
-- Password input is masked when `System.console()` is available; otherwise stdin input is visible and a warning is logged
+- Password input is masked when `System.console()` is available; otherwise stdin input is visible and a warning is logged. End of input cancels either path and returns `null`.
 - Tables displayed as text using Matrix.content()
+- `view((Matrix) null)` prints a message instead of throwing.
 - Console input is decoded with the `stdin.encoding` charset when the JVM reports one (JDK 25+); otherwise the platform console's own charset is used when a console is attached (JDK 17+); otherwise the JVM default charset. `sysin` can be reassigned to redirect input in tests.

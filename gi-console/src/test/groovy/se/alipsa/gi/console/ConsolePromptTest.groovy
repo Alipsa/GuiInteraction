@@ -1,6 +1,7 @@
 package se.alipsa.gi.console
 
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.Assumptions
 
 import java.nio.charset.Charset
 import java.nio.charset.StandardCharsets
@@ -14,6 +15,31 @@ import static org.junit.jupiter.api.Assertions.assertThrows
 import static org.junit.jupiter.api.Assertions.assertTrue
 
 class ConsolePromptTest {
+
+  @Test
+  void anEofPasswordIsCancellationRatherThanACrash() {
+    assertNull(InOut.toPassword(null))
+    assertEquals('s3cret', InOut.toPassword('s3cret'.toCharArray()))
+  }
+
+  @Test
+  void theVisiblePasswordFallbackTreatsEofAsCancellation() {
+    Assumptions.assumeTrue(System.console() == null)
+    InOut inOut = new InOut()
+    inOut.sysin = new BufferedReader(new StringReader(''))
+    assertNull(inOut.promptPassword('title', 'password'))
+  }
+
+  @Test
+  void viewingANullMatrixReportsItWithoutThrowing() {
+    assertTrue(captureStdout { new InOut().view((se.alipsa.matrix.core.Matrix) null) }.contains('null'))
+  }
+
+  @Test
+  void displayingANullFileNameReportsItWithoutThrowing() {
+    assertEquals('File name null does not exist',
+        captureStdout { new InOut().display((String) null) }.trim())
+  }
 
   @Test
   void eofIsCancellationForPrompts() {

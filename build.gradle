@@ -18,11 +18,6 @@ group = 'se.alipsa.gi'
 version = '0.4.1-SNAPSHOT'
 description = 'Allows Gade Gui Interactive capabilities from a standalone app'
 
-def requestedTaskNames = gradle.startParameter.taskNames.collect { it.toLowerCase(Locale.ROOT) }
-def configurationCacheRequested = gradle.startParameter.configurationCacheRequested
-def enableSpotless = !configurationCacheRequested || requestedTaskNames.any { it.contains('spotless') }
-def enableSpotbugs = !configurationCacheRequested || requestedTaskNames.any { it.contains('spotbugs') }
-
 java {
     toolchain {
         languageVersion.set(JavaLanguageVersion.of(21))
@@ -32,7 +27,8 @@ java {
 subprojects {
     group = rootProject.group
     version = rootProject.version
-    if (it.plugins.hasPlugin('java')) {
+    // Configure after each module applies Java; this block runs before module scripts.
+    pluginManager.withPlugin('java') {
         java {
             toolchain {
                 languageVersion.set(JavaLanguageVersion.of(21))
@@ -40,51 +36,43 @@ subprojects {
         }
     }
 
-    if (enableSpotless) {
-        apply plugin: 'com.diffplug.spotless'
-        spotless {
-            java {
-                googleJavaFormat('1.34.0')
-            }
-            groovy {
-                excludeJava()
-                leadingTabsToSpaces(2)
-                trimTrailingWhitespace()
-                endWithNewline()
-            }
-            groovyGradle {
-                leadingTabsToSpaces(2)
-                trimTrailingWhitespace()
-                endWithNewline()
-            }
+    apply plugin: 'com.diffplug.spotless'
+    spotless {
+        java {
+            googleJavaFormat('1.34.0')
         }
-        tasks.matching { it.name.startsWith('spotless') }.configureEach {
-            notCompatibleWithConfigurationCache("Spotless does not support configuration cache yet")
+        groovy {
+            excludeJava()
+            leadingTabsToSpaces(2)
+            trimTrailingWhitespace()
+            endWithNewline()
+        }
+        groovyGradle {
+            leadingTabsToSpaces(2)
+            trimTrailingWhitespace()
+            endWithNewline()
         }
     }
 
-    if (enableSpotbugs) {
-        apply plugin: 'com.github.spotbugs'
-        spotbugs {
-            toolVersion = '4.10.4'
-            effort = 'max'
-            reportLevel = 'medium'
-            excludeFilter = rootProject.file('config/spotbugs-exclude.xml')
+    apply plugin: 'com.github.spotbugs'
+    spotbugs {
+        toolVersion = '4.10.4'
+        effort = 'max'
+        reportLevel = 'medium'
+        excludeFilter = rootProject.file('config/spotbugs-exclude.xml')
+    }
+    tasks.withType(com.github.spotbugs.snom.SpotBugsTask).configureEach { spotbugsTask ->
+        String suffix = spotbugsTask.name.startsWith('spotbugs') ?
+            spotbugsTask.name.substring('spotbugs'.length()) : ''
+        String sourceSetName = suffix.isEmpty() ? 'main' :
+            suffix.substring(0, 1).toLowerCase(Locale.ROOT) + suffix.substring(1)
+        def sourceSet = project.sourceSets.findByName(sourceSetName)
+        if (sourceSet != null) {
+            auxClassPaths.from(sourceSet.compileClasspath, sourceSet.runtimeClasspath)
         }
-        tasks.withType(com.github.spotbugs.snom.SpotBugsTask).configureEach { spotbugsTask ->
-            notCompatibleWithConfigurationCache("SpotBugs does not support configuration cache yet")
-            String suffix = spotbugsTask.name.startsWith('spotbugs') ?
-                spotbugsTask.name.substring('spotbugs'.length()) : ''
-            String sourceSetName = suffix.isEmpty() ? 'main' :
-                suffix.substring(0, 1).toLowerCase(Locale.ROOT) + suffix.substring(1)
-            def sourceSet = project.sourceSets.findByName(sourceSetName)
-            if (sourceSet != null) {
-                auxClassPaths.from(sourceSet.compileClasspath, sourceSet.runtimeClasspath)
-            }
-            reports {
-                html.required = true
-                xml.required = false
-            }
+        reports {
+            html.required = true
+            xml.required = false
         }
     }
 }
@@ -131,7 +119,8 @@ tasks.named("dependencyUpdates").configure {
 }
 
 // OWASP Dependency Check configuration
-// Run with: ./gradlew dependencyCheckAnalyze --rerun-tasks --no-configuration-cache --console=plain
+// Run with: ./gradlew dependencyCheckAggregate --rerun-tasks --no-configuration-cache --console=plain
+// The root has no dependencies; the single-project Analyze task scans nothing.
 // Reports are generated in build/reports/dependency-check/
 dependencyCheck {
     // Read the NVD API key from the environment; never commit it to the repository.

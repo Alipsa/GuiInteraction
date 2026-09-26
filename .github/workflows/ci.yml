@@ -30,11 +30,8 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
-      - name: Build with Gradle
+      - name: Build with Gradle (runs tests, Spotless and SpotBugs)
         run: ./gradlew build
-
-      - name: Verify with Spotless and SpotBugs
-        run: ./gradlew check --no-configuration-cache
 
       - name: Upload test results
         uses: actions/upload-artifact@v4
@@ -70,12 +67,55 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
 
+      - name: Scan dependencies for known vulnerabilities
+        env:
+          NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
+        run: ./gradlew dependencyCheckAggregate --no-configuration-cache
+
       - name: Check for dependency updates
+        if: always()
         run: ./gradlew dependencyUpdates
+
+      - name: Upload dependency-check report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: dependency-check-report
+          path: 'build/reports/dependency-check/'
+          retention-days: 30
 
       - name: Upload dependency report
         uses: actions/upload-artifact@v4
+        if: always()
         with:
           name: dependency-updates-report
           path: 'build/dependencyUpdates/'
           retention-days: 30
+
+  windows-smoke:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21 with JavaFX
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'liberica'
+          java-version: '21'
+          java-package: 'jdk+fx'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Run the platform-sensitive tests on Windows
+        run: .\gradlew.bat :gi-common:test :gi-console:test
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: windows-test-results
+          path: '**/build/reports/tests/'
+          retention-days: 7

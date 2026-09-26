@@ -7,10 +7,12 @@
 - Gradle wrappers (`./gradlew`, per-module wrappers) and `gradle.properties` are the expected entry points; avoid invoking system Gradle directly.
 
 ## Build, Test, and Development Commands
-- `./gradlew build` — compile all modules, run tests where present.
+- `./gradlew build` — compile all modules, run tests, Spotless, and SpotBugs (both static checks are part of `check`).
+- `./check.sh` — reformat with Spotless and then run the full `check`; use this before pushing.
 - `./gradlew test` or `./gradlew :gi-fx:test` — run the full suite or a single module; tests execute on JUnit Platform.
 - `./gradlew :gi-swing:shadowJar` (likewise `:gi-fx:shadowJar`, `:gi-console:shadowJar`) — produce self-contained artifacts (`*-fatjar.jar`). Note these bundle the runtime classpath but not Groovy, which is a `compileOnly` dependency the consumer supplies.
 - `./gradlew dependencyUpdates` — check for newer dependencies with the versions plugin.
+- `./checkCVE.sh` — run a fresh aggregate CVE scan after exporting `NVD_API_KEY`.
 - Use a JDK with JavaFX when building/running `gi-fx` (e.g., Bellsoft Full JDK); `gi-swing` and `gi-console` work on any Java 21 JDK.
 
 ## Coding Style & Naming Conventions

@@ -1,0 +1,21 @@
+/** Resolve the OpenJFX native classifier for the JVM running Gradle. */
+import org.gradle.internal.os.OperatingSystem
+
+def os = OperatingSystem.current()
+def arch = System.getProperty('os.arch', '').toLowerCase(Locale.ROOT)
+def arm = arch in ['aarch64', 'arm64']
+def x64 = arch in ['x86_64', 'amd64']
+
+String classifier
+if (os.linux && (arm || x64)) {
+    classifier = arm ? 'linux-aarch64' : 'linux'
+} else if (os.macOsX && (arm || x64)) {
+    classifier = arm ? 'mac-aarch64' : 'mac'
+} else if (os.windows && x64) {
+    classifier = 'win'
+} else {
+    // Keep non-FX tasks usable; only FX dependency resolution should fail.
+    classifier = 'unknown'
+}
+
+ext.javafxClassifier = classifier

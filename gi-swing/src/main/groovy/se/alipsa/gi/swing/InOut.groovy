@@ -322,6 +322,7 @@ class InOut extends AbstractInOut {
 
   @Override
   void view(Matrix tableMatrix, String... title) {
+    if (!canViewMatrix(tableMatrix)) return
     Vector rows = new Vector(tableMatrix.rowCount())
     List<List<?>> values = []
     tableMatrix.each { r ->
@@ -339,6 +340,15 @@ class InOut extends AbstractInOut {
     jTable.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS)
     def name = title.length > 0 ? title[0] : tableMatrix.matrixName
     viewTable(jTable, rightAlignments(values, tableMatrix.columnNames().size()), name)
+  }
+
+  @PackageScope
+  static boolean canViewMatrix(Matrix tableMatrix) {
+    if (tableMatrix == null) {
+      log.warn('Cannot view table: the matrix is null')
+      return false
+    }
+    return true
   }
 
   private viewTable(JTable jTable, List<Boolean> rightAlign, String title) {

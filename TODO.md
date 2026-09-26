@@ -14,9 +14,20 @@ See `req/2026-09-25-fixes.md` for the plan and `release.md` for the changelog.
 - [x] Release: `release.sh` version read-back and partial-publish reporting
 - [x] Docs: sample scripts updated to 0.4.0 and current Matrix package names
 
+## Review fixes (2026-09-26)
+See `req/v0.4.1-fixes.md` for the plan and `release.md` for the changelog.
+- [x] Apply Java 21 toolchains to every module
+- [x] Include Spotless and SpotBugs in default `check`
+- [x] Scan module dependencies with `dependencyCheckAggregate`
+- [x] Resolve JavaFX natives per OS and architecture
+- [x] Guard null file names, password EOF, and null matrices
+- [x] Merge duplicate fat-JAR metadata
+- [x] Promote Unreleased notes and validate release versions
+- [x] Diagnose `urlExists` failures and cover both shell platforms
+
 ## Deferred
 
-- [ ] Define the intended null-handling behavior for console `display(String)`.
+- [x] Define the intended null-handling behavior for console `display(String)` — a null name behaves like `display((File) null)`.
 - [ ] Tidy the cosmetic Swing dialog title inconsistency.
 - [ ] Finish the root `test.groovy` sample update.
 - [ ] Review whether JavaFX `TableData` should remain publicly visible.

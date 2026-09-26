@@ -22,6 +22,10 @@
 #
 set -e
 
+SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
+# shellcheck source=release-lib.sh
+source "${SCRIPT_DIR}/release-lib.sh"
+
 # Colors for output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -162,16 +166,16 @@ bump_version() {
 
     case $type in
         major)
-            major=$((major + 1))
+            major=$((10#$major + 1))
             minor=0
             patch=0
             ;;
         minor)
-            minor=$((minor + 1))
+            minor=$((10#$minor + 1))
             patch=0
             ;;
         patch)
-            patch=$((patch + 1))
+            patch=$((10#$patch + 1))
             ;;
         *)
             echo -e "${RED}Invalid bump type: $type. Use major, minor, or patch${NC}"
@@ -221,44 +225,35 @@ check_readme_version() {
 # Generate release notes entry
 generate_release_notes() {
     local version=$1
-    local date=$(date +%Y-%m-%d)
+    local date
+    date=$(date +%Y-%m-%d)
     local release_notes_file="release.md"
+    local rc=0
 
     if [ ! -f "$release_notes_file" ]; then
-        echo "# Gui Interaction Release Notes" > "$release_notes_file"
-        echo "" >> "$release_notes_file"
+        printf '# Gui Interaction Release Notes\n\n' > "$release_notes_file"
     fi
+    promote_unreleased_section "$version" "$date" "$release_notes_file" || rc=$?
+    case $rc in
+        0) echo -e "${GREEN}Promoted Unreleased notes for ${version}${NC}"; return ;;
+        2) echo -e "${YELLOW}Notes for ${version} already exist${NC}"; return ;;
+        3) echo -e "${RED}Failed to update ${release_notes_file}${NC}" >&2; return 1 ;;
+    esac
 
-    # Get commits since last tag
-    local last_tag=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
-    local commits=""
+    local last_tag commits
+    last_tag=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
     if [ -n "$last_tag" ]; then
         commits=$(git log --oneline "${last_tag}..HEAD" 2>/dev/null || echo "")
     else
         commits=$(git log --oneline -20 2>/dev/null || echo "")
     fi
-
-    # Create release notes entry
-    local entry="## ${version} - ${date}\n\n"
-    if [ -n "$commits" ]; then
-        entry+="### Changes\n\n"
-        while IFS= read -r line; do
-            if [ -n "$line" ]; then
-                entry+="- ${line#* }\n"
-            fi
-        done <<< "$commits"
-    fi
-    entry+="\n"
-
-    # Insert after the release notes header
-    if [ -f "$release_notes_file" ]; then
-        local temp_file=$(mktemp)
-        head -2 "$release_notes_file" > "$temp_file"
-        echo -e "$entry" >> "$temp_file"
-        tail -n +3 "$release_notes_file" >> "$temp_file"
-        mv "$temp_file" "$release_notes_file"
-        echo -e "${GREEN}Updated ${release_notes_file}${NC}"
-    fi
+    rc=0
+    insert_release_section "$version" "$date" "$commits" "$release_notes_file" || rc=$?
+    case $rc in
+        0) echo -e "${GREEN}Updated ${release_notes_file} from commit log${NC}" ;;
+        2) echo -e "${YELLOW}${release_notes_file} already has notes for ${version}${NC}" ;;
+        *) echo -e "${RED}Failed to update ${release_notes_file}${NC}" >&2; return 1 ;;
+    esac
 }
 
 # Publish a subproject
@@ -296,6 +291,10 @@ echo ""
 
 CURRENT_VERSION=$(get_version)
 echo -e "Current version: ${YELLOW}${CURRENT_VERSION}${NC}"
+if ! validate_version "$CURRENT_VERSION"; then
+    echo -e "${RED}Aborting: build.gradle version '${CURRENT_VERSION}' is not MAJOR.MINOR.PATCH[-SNAPSHOT].${NC}" >&2
+    exit 1
+fi
 
 commit_release_version() {
     local release_version=$1
@@ -318,6 +317,10 @@ commit_release_version() {
 # then publishing a different version.
 if [ -n "$BUMP_TYPE" ]; then
     RELEASE_VERSION=$(bump_version "$CURRENT_VERSION" "$BUMP_TYPE")
+    if ! validate_version "$RELEASE_VERSION"; then
+        echo -e "${RED}Aborting: bumped version '${RELEASE_VERSION}' is malformed.${NC}" >&2
+        exit 1
+    fi
     echo -e "Bumping version to: ${GREEN}${RELEASE_VERSION}${NC}"
 elif echo "$CURRENT_VERSION" | grep -q '\-SNAPSHOT'; then
     RELEASE_VERSION="${CURRENT_VERSION%-SNAPSHOT}"
@@ -351,24 +354,28 @@ if [ "$DRY_RUN" = false ] && [ "$RELEASE_VERSION" != "$(get_version)" ]; then
     commit_release_version "$RELEASE_VERSION"
 elif [ "$DRY_RUN" = true ] && [ "$RELEASE_VERSION" != "$(get_version)" ]; then
     echo -e "${YELLOW}[DRY RUN] Would update build.gradle and README.md to ${RELEASE_VERSION}${NC}"
-elif [ "$README_NEEDS_UPDATE" = true ]; then
+else
     if [ "$DRY_RUN" = true ]; then
-        echo -e "${YELLOW}[DRY RUN] Would update README.md to match version ${CURRENT_VERSION}${NC}"
+        echo -e "${YELLOW}[DRY RUN] Would update release.md for ${CURRENT_VERSION}${NC}"
+        if [ "$README_NEEDS_UPDATE" = true ]; then
+            echo -e "${YELLOW}[DRY RUN] Would update README.md to match version ${CURRENT_VERSION}${NC}"
+        fi
     else
-        read -p "Update README.md to version ${CURRENT_VERSION}? [Y/n]: " update_readme
-        if [[ ! "$update_readme" =~ ^[Nn]$ ]]; then
-            update_readme_version "$CURRENT_VERSION"
-            if ! git diff --quiet HEAD -- README.md; then
-                if ! git add README.md; then
-                    echo -e "${RED}Error: Failed to add README.md to git. Please resolve the issue and try again.${NC}" >&2
-                    exit 1
-                fi
-                if ! git commit -m "Update README version to ${CURRENT_VERSION}" -- README.md; then
-                    echo -e "${RED}Error: Failed to commit README.md version change. Please resolve the issue and try again.${NC}" >&2
-                    exit 1
-                fi
-            else
-                echo -e "${YELLOW}README.md already matches version ${CURRENT_VERSION}; no commit needed.${NC}"
+        generate_release_notes "$CURRENT_VERSION"
+        if [ "$README_NEEDS_UPDATE" = true ]; then
+            read -p "Update README.md to version ${CURRENT_VERSION}? [Y/n]: " update_readme
+            if [[ ! "$update_readme" =~ ^[Nn]$ ]]; then
+                update_readme_version "$CURRENT_VERSION"
+            fi
+        fi
+        if ! git diff --quiet HEAD -- README.md release.md; then
+            if ! git add README.md release.md; then
+                echo -e "${RED}Failed to stage README.md and release.md for ${CURRENT_VERSION}${NC}" >&2
+                exit 1
+            fi
+            if ! git commit -m "Update release files for ${CURRENT_VERSION}" -- README.md release.md; then
+                echo -e "${RED}Failed to commit release files for ${CURRENT_VERSION}; resolve the git error before retrying${NC}" >&2
+                exit 1
             fi
         fi
     fi
