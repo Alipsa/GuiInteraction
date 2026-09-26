@@ -236,7 +236,13 @@ generate_release_notes() {
     promote_unreleased_section "$version" "$date" "$release_notes_file" || rc=$?
     case $rc in
         0) echo -e "${GREEN}Promoted Unreleased notes for ${version}${NC}"; return ;;
-        2) echo -e "${YELLOW}Notes for ${version} already exist${NC}"; return ;;
+        2)
+            echo -e "${YELLOW}Notes for ${version} already exist${NC}"
+            if has_curated_unreleased_notes "$release_notes_file"; then
+                echo -e "${YELLOW}Unreleased still has curated notes; they were not included in ${version}. Review before continuing.${NC}" >&2
+            fi
+            return
+            ;;
         3) echo -e "${RED}Failed to update ${release_notes_file}${NC}" >&2; return 1 ;;
     esac
 
@@ -362,12 +368,25 @@ fi
 if [ "$DRY_RUN" = false ] && [ "$RELEASE_VERSION" != "$(get_version)" ]; then
     commit_release_version "$RELEASE_VERSION"
 elif [ "$DRY_RUN" = true ] && [ "$RELEASE_VERSION" != "$(get_version)" ]; then
+    for file in build.gradle README.md release.md; do
+        if ! require_clean_release_file "$file"; then
+            echo -e "${RED}[DRY RUN] Release would stop before changing files.${NC}" >&2
+            exit 1
+        fi
+    done
     echo -e "${YELLOW}[DRY RUN] Would update build.gradle and README.md to ${RELEASE_VERSION}, and release.md for ${RELEASE_VERSION}${NC}"
 else
     if [ "$DRY_RUN" = true ]; then
+        if ! require_clean_release_file release.md; then
+            echo -e "${RED}[DRY RUN] Release would stop before changing files.${NC}" >&2
+            exit 1
+        fi
         echo -e "${YELLOW}[DRY RUN] Would update release.md for ${CURRENT_VERSION}${NC}"
         if [ "$README_NEEDS_UPDATE" = true ]; then
             echo -e "${YELLOW}[DRY RUN] Would update README.md to match version ${CURRENT_VERSION}${NC}"
+            if ! require_clean_release_file README.md; then
+                echo -e "${YELLOW}[DRY RUN] Accepting the README.md update would stop the release; declining it would continue.${NC}" >&2
+            fi
         fi
     else
         update_readme=false
@@ -384,7 +403,10 @@ else
                 update_readme=true
             fi
         fi
-        generate_release_notes "$CURRENT_VERSION"
+        if ! generate_release_notes "$CURRENT_VERSION"; then
+            echo -e "${RED}Release notes failed; README.md was not changed. Inspect release.md before retrying.${NC}" >&2
+            exit 1
+        fi
         if [ "$update_readme" = true ]; then
             update_readme_version "$CURRENT_VERSION"
         fi

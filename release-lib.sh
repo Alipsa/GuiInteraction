@@ -6,17 +6,23 @@ release_section_exists() {
     [ -f "$file" ] && grep -qE "^## +${version//./[.]} - " "$file"
 }
 
-# 0: promoted, 1: no curated Unreleased content, 2: version already recorded, 3: I/O error.
-promote_unreleased_section() {
-    local version=$1 date=$2 file=${3:-release.md} tmp
+has_curated_unreleased_notes() {
+    local file=${1:-release.md}
     [ -f "$file" ] || return 1
-    release_section_exists "$version" "$file" && return 2
     awk '
         /^## +Unreleased[[:space:]]*$/ { inside = 1; next }
         inside && /^## / { exit }
         inside && /[^[:space:]]/ { content = 1 }
         END { exit content ? 0 : 1 }
-    ' "$file" || return 1
+    ' "$file"
+}
+
+# 0: promoted, 1: no curated Unreleased content, 2: version already recorded, 3: I/O error.
+promote_unreleased_section() {
+    local version=$1 date=$2 file=${3:-release.md} tmp
+    [ -f "$file" ] || return 1
+    release_section_exists "$version" "$file" && return 2
+    has_curated_unreleased_notes "$file" || return 1
     tmp=$(mktemp "${file}.XXXXXX") || return 3
     awk -v heading="## ${version} - ${date}" '
         !promoted && /^## +Unreleased[[:space:]]*$/ {

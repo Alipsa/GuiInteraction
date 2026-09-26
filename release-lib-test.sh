@@ -22,6 +22,15 @@ chmod 664 "$notes"
 promote_unreleased_section 0.5.0 2026-10-01 "$notes"
 [ "$(ls -ld "$notes" | cut -c1-10)" = '-rw-rw-r--' ]
 grep -q -- '- curated' "$notes"
+if has_curated_unreleased_notes "$notes"; then
+    echo 'Empty Unreleased was reported as curated' >&2
+    exit 1
+fi
+printf '# Notes\n\n## Unreleased\n- later note\n\n## 0.5.0 - 2026-10-01\n- curated\n' > "$notes"
+has_curated_unreleased_notes "$notes"
+rc=0
+promote_unreleased_section 0.5.0 2026-10-01 "$notes" || rc=$?
+[ "$rc" -eq 2 ]
 
 before=$(cat "$notes")
 awk() { printf '# partial output\n'; return 42; }
@@ -31,13 +40,20 @@ if insert_release_section 0.6.0 2026-10-02 'def456 next' "$notes"; then
 fi
 unset -f awk
 [ "$(cat "$notes")" = "$before" ]
+printf '# Notes\n\n## Unreleased\n- curated\n' > "$notes"
+before=$(cat "$notes")
 mv() { return 42; }
-if promote_unreleased_section 0.6.0 2026-10-02 "$notes"; then
-    echo 'Failed rename unexpectedly promoted notes' >&2
+rc=0
+promote_unreleased_section 0.6.0 2026-10-02 "$notes" || rc=$?
+if [ "$rc" -ne 3 ]; then
+    echo "Failed rename returned $rc instead of 3 for promotion" >&2
     exit 1
 fi
-if insert_release_section 0.6.0 2026-10-02 'def456 next' "$notes"; then
-    echo 'Failed rename unexpectedly inserted notes' >&2
+[ "$(cat "$notes")" = "$before" ]
+rc=0
+insert_release_section 0.6.0 2026-10-02 'def456 next' "$notes" || rc=$?
+if [ "$rc" -ne 3 ]; then
+    echo "Failed rename returned $rc instead of 3 for insertion" >&2
     exit 1
 fi
 unset -f mv
