@@ -6,6 +6,7 @@ plugins {
     id 'signing'
     id("se.alipsa.nexus-release-plugin") version '2.2.0'
     id 'se.alipsa.gi.fatjar-conventions'
+    id 'se.alipsa.gi.javafx-platform'
 }
 
 description = 'Allows Gade Gui Interactive capabilities from a standalone app'
@@ -26,17 +27,7 @@ tasks.named('javadocJar', Jar) {
 }
 
 dependencies {
-  org.gradle.internal.os.OperatingSystem os = org.gradle.internal.os.OperatingSystem.current()
-
-  // check https://repo1.maven.org/maven2/org/openjfx/javafx/20/javafx-20.pom for the platform property
-  def qualifier = 'unknown'
-  if (os.isLinux()) {
-    qualifier='linux'
-  } else if (os.isWindows()) {
-    qualifier = 'win'
-  } else if (os.isMacOsX()) {
-    qualifier = 'mac-aarch64'
-  }
+  def qualifier = javafxClassifier
   def javaFxVersion = libs.versions.javafx.get()
 
   api project(':gi-common')

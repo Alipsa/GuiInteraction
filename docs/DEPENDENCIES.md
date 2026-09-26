@@ -91,9 +91,12 @@ The project includes the OWASP Dependency Check plugin to scan for known vulnera
 # https://nvd.nist.gov/developers/request-an-api-key)
 export NVD_API_KEY='your-nvd-api-key'
 
-# Run the security scan
-./gradlew dependencyCheckAnalyze --no-configuration-cache --console=plain
+# Run the security scan across the root project and all four modules
+./gradlew dependencyCheckAggregate --no-configuration-cache --console=plain
 ```
+
+Use `dependencyCheckAggregate`, not `dependencyCheckAnalyze`: the root project
+declares no dependencies, so the single-project task scans nothing.
 
 Reports are written below `build/reports/dependency-check/`. The build fails when a
 dependency has a CVSS score of 7 or higher.
@@ -132,8 +135,13 @@ Check for available updates:
 
 | GuiInteraction | Java | Groovy | JavaFX |
 |----------------|------|--------|--------|
+| 0.4.x | 21 | 5.1.x | 23 |
+| 0.3.x | 21+ | 5.0.x | 21-23 |
 | 0.2.x | 21+ | 5.0.x | 21-23 |
 | 0.1.x | 17+ | 4.0.x | 17-21 |
+
+Every module compiles with a Java 21 toolchain configured in the root build,
+so published artifacts load on Java 21 and later runtimes.
 
 ## CI/CD Integration
 
@@ -145,11 +153,18 @@ dependency-check:
   if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
 
   steps:
+    - name: Scan dependencies for known vulnerabilities
+      env:
+        NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
+      run: ./gradlew dependencyCheckAggregate --no-configuration-cache
+
     - name: Check for dependency updates
+      if: always()
       run: ./gradlew dependencyUpdates
 ```
 
-This approach keeps regular CI builds fast while still providing periodic dependency monitoring.
+This keeps regular CI fast while scanning for CVEs and dependency updates on a
+schedule. The scan needs the `NVD_API_KEY` repository secret to avoid NVD rate limits.
 
 ## Module dependency scopes
 
@@ -168,3 +183,15 @@ is `<module>-<version>-fatjar.jar`. `mergeServiceFiles()` is required: several
 transitive `ph-*` (ph-css/gsvg) jars and `tika-core` declare the same
 `META-INF/services/*` paths, and a plain `Jar` task with
 `DuplicatesStrategy.EXCLUDE` keeps only the first and silently discards the rest.
+
+Shadow merges bundled licence, notice and dependency metadata into single entries
+and excludes source-JAR `buildinfo.xml`; no duplicate archive paths remain.
+Check with `unzip -l <fatjar> | awk 'NF>=4{print $4}' | sort | uniq -d`.
+
+## JavaFX platform natives
+
+The `se.alipsa.gi.javafx-platform` convention plugin selects OpenJFX natives from
+the Gradle JVM's OS and architecture: `linux`, `linux-aarch64`, `mac`,
+`mac-aarch64`, or `win`. Unsupported architectures fail the build explicitly.
+Windows Arm64 needs an x64 JDK under emulation: an Arm64 JVM cannot load the
+published x64 Windows JavaFX binaries.

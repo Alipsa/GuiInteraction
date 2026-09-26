@@ -56,7 +56,7 @@ class Viewer {
     private static final Logger log = Logger.getLogger(Viewer.class)
 
     static final KeyCodeCombination KEY_CODE_COPY =
-            System.getProperty("os.name").toLowerCase().contains("mac") ?
+            System.getProperty("os.name", "").toLowerCase(Locale.ROOT).contains("mac") ?
                     new KeyCodeCombination(KeyCode.C, KeyCombination.META_ANY)
                     : new KeyCodeCombination(KeyCode.C, KeyCombination.CONTROL_ANY)
 
@@ -194,8 +194,21 @@ class Viewer {
     }
 
     static void viewTable(Matrix tableMatrix, String... title) {
-        String tit = title.length > 0 ? title[0] : tableMatrix.matrixName
-        viewTable(tableMatrix.columnNames(), tableMatrix.rowList(), tableMatrix.typeNames(), tit)
+        if (tableMatrix == null) {
+            log.warn('matrix is null, nothing to view')
+            return
+        }
+        viewTable(tableMatrix.columnNames(), tableMatrix.rowList(), tableMatrix.typeNames(),
+                matrixTitle(tableMatrix, title))
+    }
+
+    @PackageScope
+    static String matrixTitle(Matrix matrix, String... title) {
+        if (title.length > 0 && title[0] != null && !title[0].trim().isEmpty()) {
+            return title[0]
+        }
+        String name = matrix?.matrixName
+        return name == null || name.trim().isEmpty() ? 'Table' : name
     }
 
     static void viewTable(Grid grid, String... title) {

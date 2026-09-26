@@ -3,6 +3,8 @@ package se.alipsa.gi
 import groovy.transform.CompileStatic
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.condition.DisabledOnOs
+import org.junit.jupiter.api.condition.OS
 import org.junit.jupiter.api.io.TempDir
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
@@ -29,6 +31,25 @@ import static org.junit.jupiter.api.Assumptions.assumeFalse
 import static org.junit.jupiter.api.Assertions.*
 
 class AbstractInOutTest {
+
+  @Test
+  void theWindowsShellUsesComSpecAndFallsBackWhenItIsMissing() {
+    assertEquals(['C:\\Windows\\System32\\cmd.exe', '/d', '/s', '/c', 'dir'],
+        AbstractInOut.shellCommand('dir', true, 'C:\\Windows\\System32\\cmd.exe'))
+    assertEquals(['cmd.exe', '/d', '/s', '/c', 'dir'], AbstractInOut.shellCommand('dir', true, null))
+    assertEquals(['cmd.exe', '/d', '/s', '/c', 'dir'], AbstractInOut.shellCommand('dir', true, ''))
+  }
+
+  @Test
+  void theUnixShellRunsThroughBinSh() {
+    assertEquals(['/bin/sh', '-c', 'ls -a'], AbstractInOut.shellCommand('ls -a', false))
+    assertEquals(['/bin/sh', '-c', 'ls -a'], AbstractInOut.shellCommand('ls -a', false, 'ignored'))
+  }
+
+  @Test
+  void urlExistsStillReportsFalseWhenTheConnectionFails() {
+    assertFalse(inOut.urlExists('http://127.0.0.1:1/health', 500))
+  }
 
   @TempDir
   File tempDir
@@ -61,6 +82,7 @@ class AbstractInOutTest {
   }
 
   @Test
+  @DisabledOnOs(OS.WINDOWS)
   void shPrintsStandardOutputToSystemOut() {
     PrintStream originalOut = System.out
     ByteArrayOutputStream outBytes = new ByteArrayOutputStream()
@@ -77,6 +99,7 @@ class AbstractInOutTest {
   }
 
   @Test
+  @DisabledOnOs(OS.WINDOWS)
   void shQuietOverloadSuppressesLiveOutput() {
     PrintStream originalOut = System.out
     PrintStream originalErr = System.err
@@ -106,6 +129,7 @@ class AbstractInOutTest {
   }
 
   @Test
+  @DisabledOnOs(OS.WINDOWS)
   void shellSuccessReportsExitCodeAndResultStringIsDiagnostic() {
     ShellResult result = inOut.shell('printf hello')
 

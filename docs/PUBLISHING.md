@@ -274,3 +274,19 @@ original version.
 
 This re-runs the version/tag/test steps but publishes only the remaining modules,
 then continues on to pushing the commit and creating the GitHub release.
+
+## Release notes and version shape
+
+Write curated changes under `## Unreleased` in `release.md`. At release time,
+`release.sh` promotes that heading to `## <version> - <date>` and opens a fresh
+empty `## Unreleased` section above it. When no Unreleased heading exists, the
+script generates notes from commit subjects. Both paths are idempotent for a
+version already in the changelog, so `--skip` retries do not duplicate notes.
+
+The sourceable helpers in `release-lib.sh` can be tested against a fixture with
+`promote_unreleased_section 1.2.3 2026-01-31 /tmp/release.md` (return codes:
+0 promoted, 1 no section, 2 version already recorded).
+
+`release.sh` requires `build.gradle` to contain a
+`MAJOR.MINOR.PATCH[-SNAPSHOT]` version with no leading zeros, and validates a
+computed `--bump` version before changing release files.

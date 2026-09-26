@@ -45,4 +45,20 @@ tasks.named('shadowJar', com.github.jengelman.gradle.plugins.shadow.tasks.Shadow
     // descriptors are the only ones that matter here: a fat JAR is not a module,
     // and duplicate descriptors make jar tooling warn.
     exclude 'module-info.class', 'META-INF/versions/*/module-info.class'
+
+    // Preserve bundled licence and notice texts without duplicate archive paths.
+    transform(com.github.jengelman.gradle.plugins.shadow.transformers.MergeLicenseResourceTransformer) {
+        artifactLicense = rootProject.file('LICENSE')
+        artifactLicenseSpdxId = 'MIT'
+    }
+    transform(com.github.jengelman.gradle.plugins.shadow.transformers.ApacheNoticeResourceTransformer) {
+        projectName = 'GuiInteraction'
+    }
+    transform(com.github.jengelman.gradle.plugins.shadow.transformers.AppendingTransformer) {
+        resource = 'META-INF/DEPENDENCIES'
+    }
+    transform(com.github.jengelman.gradle.plugins.shadow.transformers.AppendingTransformer) {
+        resource = 'NOTICE'
+    }
+    exclude 'META-INF/buildinfo.xml'
 }

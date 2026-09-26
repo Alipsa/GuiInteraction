@@ -1,6 +1,13 @@
 # Gui Interaction Release Notes
 
 ## Unreleased
+- Fixed (build): pin Java 21 toolchains in all modules; run Spotless and SpotBugs in default builds; scan all modules with `dependencyCheckAggregate`.
+- Fixed (build): select JavaFX natives for the Gradle JVM's OS and architecture, rejecting unsupported combinations explicitly.
+- Fixed: console null file names and password EOF no longer throw; null matrix views are guarded and unnamed JavaFX tables use `Table` as their title.
+- Fixed: JavaFX copy shortcut detection uses locale-independent casing, and the redundant `rowsForViewer` helper was removed.
+- Fixed (packaging): merge duplicate licence, notice, and dependency metadata in fat JARs.
+- Fixed (release): promote curated Unreleased notes, preserve backslashes in commit subjects, handle release retries, and validate version shapes before mutating files.
+- Added: debug diagnostics for `urlExists` failures and Windows shell branch coverage with a CI smoke job.
 - Build: upgraded Groovy to 5.1.3, Matrix BOM to 2.6.0, CommonMark to 0.30.0, jsoup to 1.23.2, JUnit to 6.1.3, Gradle Versions to 0.64.0, Spotless to 8.10.2, and SpotBugs (plugin/engine) to 6.5.11/4.10.4.
 - Common: added `sh` and `shell` methods for executing platform shell commands. `sh` returns captured standard output and can stream output while the command runs; `shell` returns a `ShellResult` containing standard output, standard error, exit code, and success status. Both support optional timeouts. These methods execute arbitrary commands and should not receive untrusted input.
 - Breaking (packaging): fat JARs are now built with GradleUp Shadow via the `shadowJar` task instead of a hand-rolled `fatJar` task. The published artifact name is unchanged (`<module>-<version>-fatjar.jar`), but the Gradle task is now `shadowJar`.

@@ -7,6 +7,7 @@ import org.commonmark.ext.gfm.tables.TablesExtension;
 import org.commonmark.parser.Parser;
 import org.commonmark.renderer.html.HtmlRenderer;
 import org.apache.tika.Tika
+import se.alipsa.matrix.core.util.Logger
 
 import java.awt.Toolkit
 import java.awt.datatransfer.DataFlavor
@@ -24,6 +25,7 @@ import java.util.concurrent.atomic.AtomicInteger
 @CompileStatic
 abstract class AbstractInOut implements GuiInteraction {
 
+  private static final Logger log = Logger.getLogger(AbstractInOut.class)
   private static final int MAX_REDIRECTS = 5
 
   private Parser markdownParser
@@ -76,14 +78,21 @@ abstract class AbstractInOut implements GuiInteraction {
             url = new URL(url, location)
             continue
           }
-          return responseCode >= 200 && responseCode < 300
+          boolean reachable = responseCode >= 200 && responseCode < 300
+          if (!reachable && log.isDebugEnabled()) {
+            log.debug('urlExists(' + url + ') got HTTP ' + responseCode)
+          }
+          return reachable
         } finally {
           if (con != null) {
             con.disconnect()
           }
         }
       }
-    } catch (RuntimeException | IOException ignored) {
+    } catch (RuntimeException | IOException e) {
+      if (log.isDebugEnabled()) {
+        log.debug('urlExists(' + urlString + ') failed: ' + e)
+      }
       return false
     }
     return false
@@ -280,12 +289,17 @@ abstract class AbstractInOut implements GuiInteraction {
   }
 
   private static List<String> shellCommand(String command) {
-    if (isWindows()) {
-      String commandInterpreter = System.getenv('ComSpec')
-      commandInterpreter = commandInterpreter ?: 'cmd.exe'
-      return [commandInterpreter, '/d', '/s', '/c', command]
-    }
-    return ['/bin/sh', '-c', command]
+    return shellCommand(command, isWindows())
+  }
+
+  @PackageScope
+  static List<String> shellCommand(String command, boolean windows) {
+    return shellCommand(command, windows, System.getenv('ComSpec'))
+  }
+
+  @PackageScope
+  static List<String> shellCommand(String command, boolean windows, String commandInterpreter) {
+    return windows ? [commandInterpreter ?: 'cmd.exe', '/d', '/s', '/c', command] : ['/bin/sh', '-c', command]
   }
 
   @PackageScope
