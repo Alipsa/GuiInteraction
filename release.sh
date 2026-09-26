@@ -298,6 +298,12 @@ fi
 
 commit_release_version() {
     local release_version=$1
+    local file
+    for file in build.gradle README.md release.md; do
+        if ! require_clean_release_file "$file"; then
+            exit 1
+        fi
+    done
     if ! generate_release_notes "$release_version"; then
         echo -e "${RED}Release notes failed; build.gradle and README.md were not changed. Inspect release.md before retrying.${NC}" >&2
         exit 1
@@ -365,12 +371,13 @@ else
         fi
     else
         update_readme=false
+        readme_reply=''
         if ! require_clean_release_file release.md; then
             exit 1
         fi
         if [ "$README_NEEDS_UPDATE" = true ]; then
-            read -p "Update README.md to version ${CURRENT_VERSION}? [Y/n]: " update_readme
-            if [[ ! "$update_readme" =~ ^[Nn]$ ]]; then
+            read -p "Update README.md to version ${CURRENT_VERSION}? [Y/n]: " readme_reply
+            if [[ ! "$readme_reply" =~ ^[Nn]$ ]]; then
                 if ! require_clean_release_file README.md; then
                     exit 1
                 fi

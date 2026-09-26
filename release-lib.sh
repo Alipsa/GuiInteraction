@@ -17,15 +17,17 @@ promote_unreleased_section() {
         inside && /[^[:space:]]/ { content = 1 }
         END { exit content ? 0 : 1 }
     ' "$file" || return 1
-    tmp=$(mktemp) || return 3
+    tmp=$(mktemp "${file}.XXXXXX") || return 3
     awk -v heading="## ${version} - ${date}" '
         !promoted && /^## +Unreleased[[:space:]]*$/ {
             print "## Unreleased"; print ""; print heading; promoted = 1; next
         }
         { print }
     ' "$file" > "$tmp" || { rm -f "$tmp"; return 3; }
-    cat "$tmp" > "$file" || { rm -f "$tmp"; return 3; }
-    rm -f "$tmp"
+    local mode
+    mode=$(stat -c %a "$file" 2>/dev/null || stat -f %Lp "$file") || { rm -f "$tmp"; return 3; }
+    chmod "$mode" "$tmp" || { rm -f "$tmp"; return 3; }
+    mv "$tmp" "$file" || { rm -f "$tmp"; return 3; }
 }
 
 # Fallback when there are no curated notes. printf preserves backslashes in subjects.
@@ -46,7 +48,7 @@ insert_release_section() {
     if [ ! -f "$file" ]; then
         printf '# Gui Interaction Release Notes\n\n' > "$file" || { rm -f "$section"; return 3; }
     fi
-    tmp=$(mktemp) || { rm -f "$section"; return 3; }
+    tmp=$(mktemp "${file}.XXXXXX") || { rm -f "$section"; return 3; }
     awk -v section="$section" '
         !inserted && /^## +Unreleased[[:space:]]*$/ {
             print; next
@@ -63,8 +65,11 @@ insert_release_section() {
             }
         }
     ' "$file" > "$tmp" || { rm -f "$tmp" "$section"; return 3; }
-    cat "$tmp" > "$file" || { rm -f "$tmp" "$section"; return 3; }
-    rm -f "$tmp" "$section"
+    local mode
+    mode=$(stat -c %a "$file" 2>/dev/null || stat -f %Lp "$file") || { rm -f "$tmp" "$section"; return 3; }
+    chmod "$mode" "$tmp" || { rm -f "$tmp" "$section"; return 3; }
+    mv "$tmp" "$file" || { rm -f "$tmp" "$section"; return 3; }
+    rm -f "$section"
 }
 
 validate_version() {

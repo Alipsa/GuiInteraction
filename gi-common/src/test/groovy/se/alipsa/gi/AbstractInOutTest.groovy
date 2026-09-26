@@ -34,6 +34,7 @@ class AbstractInOutTest {
   @Test
   void malformedUrlDiagnosticsKeepTheTargetButNotCredentialsOrQuery() {
     assertEquals('htp://example.com/path', AbstractInOut.safeInputUrl('htp://user:secret@example.com/path?token=secret#fragment'))
+    assertEquals('example.com/path', AbstractInOut.safeInputUrl('user:secret@example.com/path?token=abc'))
     assertEquals('<null>', AbstractInOut.safeInputUrl(null))
   }
 

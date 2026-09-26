@@ -27,7 +27,7 @@ See `req/v0.4.1-fixes.md` for the plan and `release.md` for the changelog.
 
 ## Deferred
 
-- [x] Define the intended null-handling behavior for console `display(String)` — a null name behaves like `display((File) null)`.
+comm- [x] Define the intended null-handling behavior for console `display(String)` — a null name reports `File name is null` without throwing.
 - [ ] Tidy the cosmetic Swing dialog title inconsistency.
 - [ ] Finish the root `test.groovy` sample update.
 - [ ] Review whether JavaFX `TableData` should remain publicly visible.

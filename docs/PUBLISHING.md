@@ -278,14 +278,18 @@ then continues on to pushing the commit and creating the GitHub release.
 ## Release notes and version shape
 
 Write curated changes under `## Unreleased` in `release.md`. At release time,
+commit those notes before running `release.sh`: every release path requires
+`release.md` to be clean. SNAPSHOT and `--bump` releases also require clean
+`build.gradle` and `README.md`; an unchanged-version release requires a clean
+`README.md` only if you accept its prompted version update.
 `release.sh` promotes that heading to `## <version> - <date>` and opens a fresh
 empty `## Unreleased` section above it. When no Unreleased heading exists, the
 script generates notes from commit subjects. Both paths are idempotent for a
 version already in the changelog, so `--skip` retries do not duplicate notes.
 
-Run `./release-lib-test.sh` to check empty-Unreleased fallback, permission
-preservation, awk-failure handling, and release commits that leave declined
-README edits untouched. The sourceable helpers in
+Run `./release-lib-test.sh` to check empty-Unreleased fallback, atomic
+replacement and permission preservation, awk-failure handling, and release
+commits that leave declined README edits untouched. The sourceable helpers in
 `release-lib.sh` use return codes 0 for promotion, 1 for no curated content,
 2 for a version already recorded, and 3 for an I/O error.
 An empty `## Unreleased` heading uses the commit-log fallback, which inserts the

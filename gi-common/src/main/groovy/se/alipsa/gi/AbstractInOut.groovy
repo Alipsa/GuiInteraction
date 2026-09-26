@@ -119,7 +119,7 @@ abstract class AbstractInOut implements GuiInteraction {
   static String safeInputUrl(String input) {
     if (input == null) return '<null>'
     String withoutQuery = input.split('[?#]', 2)[0]
-    String withoutCredentials = withoutQuery.replaceFirst('://[^/]*@', '://')
+    String withoutCredentials = withoutQuery.replaceFirst('(^|://)[^/]*@', '$1')
     return withoutCredentials.length() <= 120 ? withoutCredentials : withoutCredentials.substring(0, 120) + '…'
   }
 

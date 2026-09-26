@@ -30,6 +30,9 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
+      - name: Check release helpers
+        run: ./release-lib-test.sh
+
       - name: Build with Gradle (runs tests, Spotless and SpotBugs)
         run: ./gradlew build
 

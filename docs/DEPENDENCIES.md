@@ -197,4 +197,6 @@ the Gradle JVM's OS and architecture: `linux`, `linux-aarch64`, `mac`,
 `mac-aarch64`, or `win`. On unsupported architectures, non-JavaFX tasks remain
 available; resolving JavaFX dependencies fails with the `unknown` classifier.
 Windows Arm64 needs an x64 JDK under emulation: an Arm64 JVM cannot load the
-published x64 Windows JavaFX binaries.
+published x64 Windows JavaFX binaries. Keep the Gradle JVM and the selected
+Java 21 toolchain on the same architecture; the classifier follows the Gradle
+JVM, while JavaFX native loading follows the toolchain running the application.
