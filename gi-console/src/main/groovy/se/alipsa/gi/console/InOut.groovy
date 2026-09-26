@@ -309,7 +309,11 @@ class InOut extends AbstractInOut {
 
   @Override
   void display(String fileName, String... title) {
-    display(fileName == null ? (File) null : new File(fileName), title)
+    if (fileName == null) {
+      println('File name null does not exist')
+      return
+    }
+    display(new File(fileName), title)
   }
 
   /**

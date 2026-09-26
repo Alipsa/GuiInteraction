@@ -27,7 +27,6 @@ import java.util.concurrent.atomic.AtomicReference
 import java.util.concurrent.TimeoutException
 import java.util.stream.Stream
 
-import static org.junit.jupiter.api.Assumptions.assumeFalse
 import static org.junit.jupiter.api.Assertions.*
 
 class AbstractInOutTest {
@@ -150,16 +149,16 @@ class AbstractInOutTest {
   }
 
   @Test
+  @DisabledOnOs(OS.WINDOWS)
   void shellTimeoutStopsACommand() {
-    assumeFalse(AbstractInOut.isWindows())
     assertThrows(TimeoutException.class) {
       inOut.shell('sleep 3', true, 100)
     }
   }
 
   @Test
+  @DisabledOnOs(OS.WINDOWS)
   void shellSupportsGlobsPipesAndRedirects(@TempDir File commandDir) {
-    assumeFalse(AbstractInOut.isWindows())
     new File(commandDir, 'matrix-one.txt').text = 'one'
     new File(commandDir, 'other.txt').text = 'two'
     File outputFile = new File(commandDir, 'out.txt')
@@ -174,8 +173,8 @@ class AbstractInOutTest {
   }
 
   @Test
+  @DisabledOnOs(OS.WINDOWS)
   void shStreamsOutputBeforeTheCommandCompletes() {
-    assumeFalse(AbstractInOut.isWindows())
     PrintStream originalOut = System.out
     ByteArrayOutputStream bytes = new ByteArrayOutputStream()
     PrintStream capturedOut = new PrintStream(bytes, true, StandardCharsets.UTF_8)

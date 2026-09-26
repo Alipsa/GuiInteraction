@@ -212,6 +212,10 @@ class Viewer {
     }
 
     static void viewTable(Grid grid, String... title) {
+        if (grid == null) {
+            log.warn('Cannot view table: the grid is null')
+            return
+        }
         viewTable(grid.getRowList(), title)
     }
 

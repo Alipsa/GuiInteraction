@@ -6,27 +6,33 @@ release_section_exists() {
     [ -f "$file" ] && grep -qE "^## +${version//./[.]} - " "$file"
 }
 
-# 0: promoted, 1: no Unreleased section, 2: version already recorded.
+# 0: promoted, 1: no curated Unreleased content, 2: version already recorded, 3: I/O error.
 promote_unreleased_section() {
     local version=$1 date=$2 file=${3:-release.md} tmp
     [ -f "$file" ] || return 1
     release_section_exists "$version" "$file" && return 2
-    grep -qE '^## +Unreleased[[:space:]]*$' "$file" || return 1
-    tmp=$(mktemp)
+    awk '
+        /^## +Unreleased[[:space:]]*$/ { inside = 1; next }
+        inside && /^## / { exit }
+        inside && /[^[:space:]]/ { content = 1 }
+        END { exit content ? 0 : 1 }
+    ' "$file" || return 1
+    tmp=$(mktemp) || return 3
     awk -v heading="## ${version} - ${date}" '
         !promoted && /^## +Unreleased[[:space:]]*$/ {
             print "## Unreleased"; print ""; print heading; promoted = 1; next
         }
         { print }
-    ' "$file" > "$tmp"
-    mv "$tmp" "$file"
+    ' "$file" > "$tmp" || { rm -f "$tmp"; return 3; }
+    cat "$tmp" > "$file" || { rm -f "$tmp"; return 3; }
+    rm -f "$tmp"
 }
 
 # Fallback when there are no curated notes. printf preserves backslashes in subjects.
 insert_release_section() {
     local version=$1 date=$2 commits=$3 file=${4:-release.md} section tmp line
     release_section_exists "$version" "$file" && return 2
-    section=$(mktemp)
+    section=$(mktemp) || return 3
     {
         printf '## %s - %s\n\n' "$version" "$date"
         if [ -n "$commits" ]; then
@@ -36,10 +42,15 @@ insert_release_section() {
             done <<< "$commits"
             printf '\n'
         fi
-    } > "$section"
-    [ -f "$file" ] || printf '# Gui Interaction Release Notes\n\n' > "$file"
-    tmp=$(mktemp)
+    } > "$section" || { rm -f "$section"; return 3; }
+    if [ ! -f "$file" ]; then
+        printf '# Gui Interaction Release Notes\n\n' > "$file" || { rm -f "$section"; return 3; }
+    fi
+    tmp=$(mktemp) || { rm -f "$section"; return 3; }
     awk -v section="$section" '
+        !inserted && /^## +Unreleased[[:space:]]*$/ {
+            print; next
+        }
         !inserted && /^## / {
             while ((getline line < section) > 0) print line
             close(section); inserted = 1
@@ -51,9 +62,9 @@ insert_release_section() {
                 close(section)
             }
         }
-    ' "$file" > "$tmp"
-    mv "$tmp" "$file"
-    rm -f "$section"
+    ' "$file" > "$tmp" || { rm -f "$tmp" "$section"; return 3; }
+    cat "$tmp" > "$file" || { rm -f "$tmp" "$section"; return 3; }
+    rm -f "$tmp" "$section"
 }
 
 validate_version() {

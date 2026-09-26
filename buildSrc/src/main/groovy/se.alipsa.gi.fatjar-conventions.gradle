@@ -51,14 +51,19 @@ tasks.named('shadowJar', com.github.jengelman.gradle.plugins.shadow.tasks.Shadow
         artifactLicense = rootProject.file('LICENSE')
         artifactLicenseSpdxId = 'MIT'
     }
-    transform(com.github.jengelman.gradle.plugins.shadow.transformers.ApacheNoticeResourceTransformer) {
-        projectName = 'GuiInteraction'
-    }
     transform(com.github.jengelman.gradle.plugins.shadow.transformers.AppendingTransformer) {
-        resource = 'META-INF/DEPENDENCIES'
+        resource = 'META-INF/NOTICE'
+    }
+    // Some bundled artifacts use these distinct paths. Merge each at its own
+    // path so their attribution survives without duplicate ZIP entries.
+    transform(com.github.jengelman.gradle.plugins.shadow.transformers.AppendingTransformer) {
+        resource = 'META-INF/NOTICE.txt'
     }
     transform(com.github.jengelman.gradle.plugins.shadow.transformers.AppendingTransformer) {
         resource = 'NOTICE'
+    }
+    transform(com.github.jengelman.gradle.plugins.shadow.transformers.AppendingTransformer) {
+        resource = 'META-INF/DEPENDENCIES'
     }
     exclude 'META-INF/buildinfo.xml'
 }

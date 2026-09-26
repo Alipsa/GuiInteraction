@@ -237,6 +237,7 @@ generate_release_notes() {
     case $rc in
         0) echo -e "${GREEN}Promoted Unreleased notes for ${version}${NC}"; return ;;
         2) echo -e "${YELLOW}Notes for ${version} already exist${NC}"; return ;;
+        3) echo -e "${RED}Failed to update ${release_notes_file}${NC}" >&2; return 1 ;;
     esac
 
     local last_tag commits
@@ -248,11 +249,11 @@ generate_release_notes() {
     fi
     rc=0
     insert_release_section "$version" "$date" "$commits" "$release_notes_file" || rc=$?
-    if [ "$rc" -eq 0 ]; then
-        echo -e "${GREEN}Updated ${release_notes_file} from commit log${NC}"
-    else
-        echo -e "${YELLOW}${release_notes_file} already has notes for ${version}${NC}"
-    fi
+    case $rc in
+        0) echo -e "${GREEN}Updated ${release_notes_file} from commit log${NC}" ;;
+        2) echo -e "${YELLOW}${release_notes_file} already has notes for ${version}${NC}" ;;
+        *) echo -e "${RED}Failed to update ${release_notes_file}${NC}" >&2; return 1 ;;
+    esac
 }
 
 # Publish a subproject
@@ -368,8 +369,14 @@ else
             fi
         fi
         if ! git diff --quiet HEAD -- README.md release.md; then
-            git add README.md release.md
-            git commit -m "Update release notes for ${CURRENT_VERSION}" -- README.md release.md
+            if ! git add README.md release.md; then
+                echo -e "${RED}Failed to stage README.md and release.md for ${CURRENT_VERSION}${NC}" >&2
+                exit 1
+            fi
+            if ! git commit -m "Update release files for ${CURRENT_VERSION}" -- README.md release.md; then
+                echo -e "${RED}Failed to commit release files for ${CURRENT_VERSION}; resolve the git error before retrying${NC}" >&2
+                exit 1
+            fi
         fi
     fi
 fi

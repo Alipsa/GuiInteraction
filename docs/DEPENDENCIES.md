@@ -92,11 +92,13 @@ The project includes the OWASP Dependency Check plugin to scan for known vulnera
 export NVD_API_KEY='your-nvd-api-key'
 
 # Run the security scan across the root project and all four modules
-./gradlew dependencyCheckAggregate --no-configuration-cache --console=plain
+./checkCVE.sh
 ```
 
 Use `dependencyCheckAggregate`, not `dependencyCheckAnalyze`: the root project
 declares no dependencies, so the single-project task scans nothing.
+The script checks for `NVD_API_KEY` and forces a fresh scan; for a direct invocation,
+run `./gradlew dependencyCheckAggregate --no-configuration-cache --console=plain`.
 
 Reports are written below `build/reports/dependency-check/`. The build fails when a
 dependency has a CVSS score of 7 or higher.

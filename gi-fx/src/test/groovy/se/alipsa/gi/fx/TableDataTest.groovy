@@ -2,6 +2,7 @@ package se.alipsa.gi.fx
 
 import org.junit.jupiter.api.Test
 import se.alipsa.matrix.core.Matrix
+import se.alipsa.matrix.core.Grid
 
 import java.text.NumberFormat
 
@@ -23,6 +24,7 @@ class TableDataTest {
   @Test
   void viewingANullMatrixIsIgnoredRatherThanThrowing() {
     assertDoesNotThrow({ Viewer.viewTable((Matrix) null) } as org.junit.jupiter.api.function.Executable)
+    assertDoesNotThrow({ Viewer.viewTable((Grid) null) } as org.junit.jupiter.api.function.Executable)
   }
 
   @Test

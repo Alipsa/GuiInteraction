@@ -285,7 +285,9 @@ version already in the changelog, so `--skip` retries do not duplicate notes.
 
 The sourceable helpers in `release-lib.sh` can be tested against a fixture with
 `promote_unreleased_section 1.2.3 2026-01-31 /tmp/release.md` (return codes:
-0 promoted, 1 no section, 2 version already recorded).
+0 promoted, 1 no curated content, 2 version already recorded, 3 I/O error).
+An empty `## Unreleased` heading uses the commit-log fallback, which inserts the
+new section beneath that heading.
 
 `release.sh` requires `build.gradle` to contain a
 `MAJOR.MINOR.PATCH[-SNAPSHOT]` version with no leading zeros, and validates a

@@ -42,12 +42,20 @@ abstract class AbstractInOut implements GuiInteraction {
     if (timeout < 0) {
       throw new IllegalArgumentException("timeout cannot be negative")
     }
+    URL originalUrl = null
+    URL url = null
     try {
-      URL url = new URL(urlString)
+      url = new URL(urlString)
+      originalUrl = url
       long deadline = timeout > 0 ?
           System.nanoTime() + TimeUnit.MILLISECONDS.toNanos(timeout) : Long.MAX_VALUE
       for (int redirect = 0; redirect <= MAX_REDIRECTS; redirect++) {
-        if (!isHttpUrl(url) || !hasTimeRemaining(timeout, deadline)) {
+        if (!isHttpUrl(url)) {
+          logUrlExistsFailure(originalUrl, url, 'non-HTTP(S) URL')
+          return false
+        }
+        if (!hasTimeRemaining(timeout, deadline)) {
+          logUrlExistsFailure(originalUrl, url, 'timeout exhausted')
           return false
         }
         HttpURLConnection con = null
@@ -56,6 +64,7 @@ abstract class AbstractInOut implements GuiInteraction {
           int responseCode = con.getResponseCode()
           if (shouldFallbackToGet(responseCode)) {
             if (!hasTimeRemaining(timeout, deadline)) {
+              logUrlExistsFailure(originalUrl, url, 'timeout exhausted before GET fallback')
               return false
             }
             con.disconnect()
@@ -63,6 +72,7 @@ abstract class AbstractInOut implements GuiInteraction {
             responseCode = con.getResponseCode()
             if (responseCode == 416) {
               if (!hasTimeRemaining(timeout, deadline)) {
+                logUrlExistsFailure(originalUrl, url, 'timeout exhausted before range retry')
                 return false
               }
               con.disconnect()
@@ -73,14 +83,16 @@ abstract class AbstractInOut implements GuiInteraction {
           if (responseCode >= 300 && responseCode < 400) {
             String location = con.getHeaderField("Location")
             if (location == null || redirect == MAX_REDIRECTS) {
+              logUrlExistsFailure(originalUrl, url,
+                  location == null ? 'redirect missing Location' : 'redirect limit exhausted')
               return false
             }
             url = new URL(url, location)
             continue
           }
           boolean reachable = responseCode >= 200 && responseCode < 300
-          if (!reachable && log.isDebugEnabled()) {
-            log.debug('urlExists(' + url + ') got HTTP ' + responseCode)
+          if (!reachable) {
+            logUrlExistsFailure(originalUrl, url, 'got HTTP ' + responseCode)
           }
           return reachable
         } finally {
@@ -90,12 +102,22 @@ abstract class AbstractInOut implements GuiInteraction {
         }
       }
     } catch (RuntimeException | IOException e) {
-      if (log.isDebugEnabled()) {
-        log.debug('urlExists(' + urlString + ') failed: ' + e)
-      }
+      logUrlExistsFailure(originalUrl, url, 'failed: ' + e.getClass().getSimpleName())
       return false
     }
+    logUrlExistsFailure(originalUrl, url, 'redirect limit exhausted')
     return false
+  }
+
+  private static void logUrlExistsFailure(URL original, URL current, String reason) {
+    if (log.isDebugEnabled()) {
+      log.debug('urlExists(' + safeUrl(original) + ' -> ' + safeUrl(current) + ') ' + reason)
+    }
+  }
+
+  private static String safeUrl(URL url) {
+    if (url == null) return '<invalid URL>'
+    return url.protocol + '://' + url.host + (url.port < 0 ? '' : ':' + url.port) + url.path
   }
 
   private static HttpURLConnection open(URL url, String method, int timeout, boolean range) {

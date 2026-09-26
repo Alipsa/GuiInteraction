@@ -37,7 +37,8 @@ class ConsolePromptTest {
 
   @Test
   void displayingANullFileNameReportsItWithoutThrowing() {
-    assertTrue(captureStdout { new InOut().display((String) null) }.contains('does not exist'))
+    assertEquals('File name null does not exist',
+        captureStdout { new InOut().display((String) null) }.trim())
   }
 
   @Test
