@@ -322,7 +322,7 @@ class InOut extends AbstractInOut {
 
   @Override
   void view(Matrix tableMatrix, String... title) {
-    if (!canViewMatrix(tableMatrix)) return
+    if (warnIfNullMatrix(tableMatrix)) return
     Vector rows = new Vector(tableMatrix.rowCount())
     List<List<?>> values = []
     tableMatrix.each { r ->
@@ -343,12 +343,12 @@ class InOut extends AbstractInOut {
   }
 
   @PackageScope
-  static boolean canViewMatrix(Matrix tableMatrix) {
+  static boolean warnIfNullMatrix(Matrix tableMatrix) {
     if (tableMatrix == null) {
       log.warn('Cannot view table: the matrix is null')
-      return false
+      return true
     }
-    return true
+    return false
   }
 
   private viewTable(JTable jTable, List<Boolean> rightAlign, String title) {

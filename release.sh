@@ -298,9 +298,12 @@ fi
 
 commit_release_version() {
     local release_version=$1
+    if ! generate_release_notes "$release_version"; then
+        echo -e "${RED}Release notes failed; build.gradle and README.md were not changed. Inspect release.md before retrying.${NC}" >&2
+        exit 1
+    fi
     update_version "$release_version"
     update_readme_version "$release_version"
-    generate_release_notes "$release_version"
 
     if ! git add build.gradle README.md release.md; then
         echo -e "${RED}Error: Failed to add files to git. Please resolve the issue and try again.${NC}" >&2
@@ -353,7 +356,7 @@ fi
 if [ "$DRY_RUN" = false ] && [ "$RELEASE_VERSION" != "$(get_version)" ]; then
     commit_release_version "$RELEASE_VERSION"
 elif [ "$DRY_RUN" = true ] && [ "$RELEASE_VERSION" != "$(get_version)" ]; then
-    echo -e "${YELLOW}[DRY RUN] Would update build.gradle and README.md to ${RELEASE_VERSION}${NC}"
+    echo -e "${YELLOW}[DRY RUN] Would update build.gradle and README.md to ${RELEASE_VERSION}, and release.md for ${RELEASE_VERSION}${NC}"
 else
     if [ "$DRY_RUN" = true ]; then
         echo -e "${YELLOW}[DRY RUN] Would update release.md for ${CURRENT_VERSION}${NC}"
@@ -361,22 +364,25 @@ else
             echo -e "${YELLOW}[DRY RUN] Would update README.md to match version ${CURRENT_VERSION}${NC}"
         fi
     else
-        generate_release_notes "$CURRENT_VERSION"
+        update_readme=false
+        if ! require_clean_release_file release.md; then
+            exit 1
+        fi
         if [ "$README_NEEDS_UPDATE" = true ]; then
             read -p "Update README.md to version ${CURRENT_VERSION}? [Y/n]: " update_readme
             if [[ ! "$update_readme" =~ ^[Nn]$ ]]; then
-                update_readme_version "$CURRENT_VERSION"
+                if ! require_clean_release_file README.md; then
+                    exit 1
+                fi
+                update_readme=true
             fi
         fi
-        if ! git diff --quiet HEAD -- README.md release.md; then
-            if ! git add README.md release.md; then
-                echo -e "${RED}Failed to stage README.md and release.md for ${CURRENT_VERSION}${NC}" >&2
-                exit 1
-            fi
-            if ! git commit -m "Update release files for ${CURRENT_VERSION}" -- README.md release.md; then
-                echo -e "${RED}Failed to commit release files for ${CURRENT_VERSION}; resolve the git error before retrying${NC}" >&2
-                exit 1
-            fi
+        generate_release_notes "$CURRENT_VERSION"
+        if [ "$update_readme" = true ]; then
+            update_readme_version "$CURRENT_VERSION"
+        fi
+        if ! commit_changed_release_files "$CURRENT_VERSION" "$update_readme"; then
+            exit 1
         fi
     fi
 fi

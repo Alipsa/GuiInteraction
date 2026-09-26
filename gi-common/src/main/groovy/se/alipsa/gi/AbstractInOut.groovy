@@ -102,11 +102,25 @@ abstract class AbstractInOut implements GuiInteraction {
         }
       }
     } catch (RuntimeException | IOException e) {
-      logUrlExistsFailure(originalUrl, url, 'failed: ' + e.getClass().getSimpleName())
+      if (originalUrl == null) {
+        if (log.isDebugEnabled()) {
+          log.debug('urlExists(' + safeInputUrl(urlString) + ') failed: ' + e.getClass().getSimpleName())
+        }
+      } else {
+        logUrlExistsFailure(originalUrl, url, 'failed: ' + e.getClass().getSimpleName())
+      }
       return false
     }
-    logUrlExistsFailure(originalUrl, url, 'redirect limit exhausted')
+    // Every reachable loop path returns; this satisfies the method's return type.
     return false
+  }
+
+  @PackageScope
+  static String safeInputUrl(String input) {
+    if (input == null) return '<null>'
+    String withoutQuery = input.split('[?#]', 2)[0]
+    String withoutCredentials = withoutQuery.replaceFirst('://[^/]*@', '://')
+    return withoutCredentials.length() <= 120 ? withoutCredentials : withoutCredentials.substring(0, 120) + '…'
   }
 
   private static void logUrlExistsFailure(URL original, URL current, String reason) {

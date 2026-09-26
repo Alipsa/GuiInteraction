@@ -31,4 +31,28 @@ if insert_release_section 0.6.0 2026-10-02 'def456 next' "$notes"; then
 fi
 unset -f awk
 [ "$(cat "$notes")" = "$before" ]
+
+repo="$fixture_dir/repo"
+mkdir "$repo"
+(
+    cd "$repo"
+    git init -q
+    git config user.name 'Release fixture'
+    git config user.email 'release-fixture@example.invalid'
+    printf 'README baseline\n' > README.md
+    printf 'Release baseline\n' > release.md
+    git add README.md release.md
+    git commit -qm 'baseline'
+    require_clean_release_file release.md
+    printf 'Unrelated README work\n' >> README.md
+    if require_clean_release_file README.md 2>/dev/null; then
+        echo 'Dirty README passed preflight' >&2
+        exit 1
+    fi
+    printf 'Release notes\n' >> release.md
+    commit_changed_release_files 0.5.0 false >/dev/null
+    [ "$(git show --pretty=format: --name-only HEAD | sed '/^$/d')" = release.md ]
+    grep -q 'Unrelated README work' README.md
+    [ "$(git status --short)" = ' M README.md' ]
+)
 echo 'release-lib fixtures passed'

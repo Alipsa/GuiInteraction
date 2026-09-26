@@ -11,8 +11,8 @@ class InOutHeadlessTest {
 
   @Test
   void aNullMatrixIsRejectedBeforeSwingIsTouched() {
-    assertFalse(InOut.canViewMatrix(null))
-    assertTrue(InOut.canViewMatrix(Matrix.builder().rows([[1]]).build()))
+    assertTrue(InOut.warnIfNullMatrix(null))
+    assertFalse(InOut.warnIfNullMatrix(Matrix.builder().rows([[1]]).build()))
   }
 
   @Test

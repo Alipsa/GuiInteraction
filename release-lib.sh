@@ -74,3 +74,34 @@ validate_version() {
         return 1
     fi
 }
+
+# Refuse to overwrite a file carrying edits from before this release run.
+require_clean_release_file() {
+    local file=$1
+    if ! git diff --quiet HEAD -- "$file"; then
+        echo "${file} has pre-existing changes; commit or move them aside before releasing." >&2
+        return 1
+    fi
+}
+
+# Commit only files this run was allowed to change. A declined README update
+# must never sweep unrelated README edits into the release commit.
+commit_changed_release_files() {
+    local version=$1 include_readme=$2
+    local -a files=()
+    if [ "$include_readme" = true ] && ! git diff --quiet HEAD -- README.md; then
+        files+=(README.md)
+    fi
+    if ! git diff --quiet HEAD -- release.md; then
+        files+=(release.md)
+    fi
+    [ "${#files[@]}" -gt 0 ] || return 0
+    if ! git add "${files[@]}"; then
+        echo "Failed to stage release files for ${version}" >&2
+        return 1
+    fi
+    if ! git commit -m "Update release files for ${version}" -- "${files[@]}"; then
+        echo "Failed to commit release files for ${version}; resolve the git error before retrying" >&2
+        return 1
+    fi
+}

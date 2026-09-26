@@ -194,6 +194,7 @@ Check with `unzip -l <fatjar> | awk 'NF>=4{print $4}' | sort | uniq -d`.
 
 The `se.alipsa.gi.javafx-platform` convention plugin selects OpenJFX natives from
 the Gradle JVM's OS and architecture: `linux`, `linux-aarch64`, `mac`,
-`mac-aarch64`, or `win`. Unsupported architectures fail the build explicitly.
+`mac-aarch64`, or `win`. On unsupported architectures, non-JavaFX tasks remain
+available; resolving JavaFX dependencies fails with the `unknown` classifier.
 Windows Arm64 needs an x64 JDK under emulation: an Arm64 JVM cannot load the
 published x64 Windows JavaFX binaries.

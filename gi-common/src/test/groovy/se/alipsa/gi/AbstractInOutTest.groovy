@@ -32,6 +32,12 @@ import static org.junit.jupiter.api.Assertions.*
 class AbstractInOutTest {
 
   @Test
+  void malformedUrlDiagnosticsKeepTheTargetButNotCredentialsOrQuery() {
+    assertEquals('htp://example.com/path', AbstractInOut.safeInputUrl('htp://user:secret@example.com/path?token=secret#fragment'))
+    assertEquals('<null>', AbstractInOut.safeInputUrl(null))
+  }
+
+  @Test
   void theWindowsShellUsesComSpecAndFallsBackWhenItIsMissing() {
     assertEquals(['C:\\Windows\\System32\\cmd.exe', '/d', '/s', '/c', 'dir'],
         AbstractInOut.shellCommand('dir', true, 'C:\\Windows\\System32\\cmd.exe'))

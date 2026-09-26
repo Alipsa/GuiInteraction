@@ -2,7 +2,7 @@
 
 ## Unreleased
 - Fixed (build): pin Java 21 toolchains in all modules; run Spotless and SpotBugs in default builds; scan all modules with `dependencyCheckAggregate`.
-- Fixed (build): select JavaFX natives for the Gradle JVM's OS and architecture, rejecting unsupported combinations explicitly.
+- Fixed (build): select JavaFX natives for the Gradle JVM's OS and architecture; unsupported combinations fail when JavaFX dependencies resolve, leaving unrelated tasks available.
 - Fixed: console null file names and password EOF no longer throw; null matrix views are guarded and unnamed JavaFX tables use `Table` as their title.
 - Fixed: JavaFX copy shortcut detection uses locale-independent casing, and the redundant `rowsForViewer` helper was removed.
 - Fixed (packaging): merge duplicate licence, notice, and dependency metadata in fat JARs.
