@@ -43,7 +43,7 @@ dependencies {
 ### Grape (Groovy Script)
 
 ```groovy
-@Grab(group:'se.alipsa.gi', module:'gi-fx', version:'0.4.1')
+@Grab('se.alipsa.gi:gi-fx:0.4.1')
 import se.alipsa.gi.fx.InOut
 
 def io = new InOut()

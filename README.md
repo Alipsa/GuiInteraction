@@ -47,7 +47,7 @@ dependencies {
 ### Groovy Script with Grape
 
 ```groovy
-@Grab(group:'se.alipsa.gi', module:'gi-swing', version:'0.4.1')
+@Grab('se.alipsa.gi:gi-swing:0.4.1')
 import se.alipsa.gi.swing.InOut
 
 def io = new InOut()
@@ -60,7 +60,7 @@ println("File chosen was $file")
 Scripts can run both in Gade and standalone by checking for the `io` variable:
 
 ```groovy
-@Grab(group:'se.alipsa.gi', module:'gi-swing', version:'0.4.1')
+@Grab('se.alipsa.gi:gi-swing:0.4.1')
 import se.alipsa.gi.swing.InOut
 
 // This makes the code run equally in Gade and in a standalone Groovy script

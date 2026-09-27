@@ -16,7 +16,7 @@ This guide provides usage examples for the GuiInteraction library.
 
 ```groovy
 // Using Grape for dependency resolution
-@Grab(group:'se.alipsa.gi', module:'gi-swing', version:'0.4.0')
+@Grab('se.alipsa.gi:gi-swing:0.4.1')
 import se.alipsa.gi.swing.InOut
 
 def io = new InOut()
@@ -26,7 +26,7 @@ Or in your `build.gradle`:
 
 ```groovy
 dependencies {
-    implementation 'se.alipsa.gi:gi-swing:0.4.0'
+    implementation 'se.alipsa.gi:gi-swing:0.4.1'
 }
 ```
 
@@ -329,10 +329,11 @@ assert FileUtils.baseName("/tmp/report#2.pdf") == "report#2.pdf"
 The library is designed to be compatible with [Gade](https://github.com/Alipsa/gade). Scripts can detect the environment:
 
 ```groovy
+@Grab('se.alipsa.gi:gi-swing:0.4.1')
+import se.alipsa.gi.swing.InOut
+
 // Check if running in Gade or standalone
 if (!binding.hasVariable('io')) {
-    @Grab(group:'se.alipsa.gi', module:'gi-swing', version:'0.4.0')
-    import se.alipsa.gi.swing.InOut
     binding.setVariable('io', new InOut())
 }
 

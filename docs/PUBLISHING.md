@@ -189,7 +189,7 @@ After releasing:
 - [ ] Push tag: `git push origin vX.Y.Z`
 - [ ] Create GitHub release: https://github.com/Alipsa/GuiInteraction/releases/new
 - [ ] Verify on Maven Central (may take 10-30 minutes): https://central.sonatype.com/search?q=se.alipsa.gi
-- [ ] Bump version to next SNAPSHOT for development
+- [ ] Immediately bump version to the next SNAPSHOT for development before other changes land on main
 
 ## Troubleshooting
 
@@ -285,6 +285,9 @@ script generates notes from commit subjects. Both paths are idempotent for a
 version already in the changelog, so `--skip` retries do not duplicate notes.
 If a retry finds additional curated notes under `## Unreleased`, the script
 warns that they are not included in the already-recorded version.
+If `release.md` already has a dated heading for the version, the script leaves
+that date unchanged. Check it against the actual publication date and re-date
+the heading before running a delayed release.
 
 Commit curated notes before running `release.sh`: every release path requires
 `release.md` to be clean. SNAPSHOT and `--bump` releases also require clean

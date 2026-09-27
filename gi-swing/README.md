@@ -13,7 +13,7 @@ This module provides Swing-based dialogs and viewers for user interaction. It wo
 ## Features
 
 - Standard Swing file and directory choosers
-- Date pickers via LGoodDatePicker and year-month pickers via swing-yearmonth-picker
+- Date and year-month pickers via `se.alipsa:swing-widgets`
 - HTML viewing via JEditorPane
 - Table display with JTable
 - Clipboard operations
@@ -43,7 +43,7 @@ dependencies {
 ### Grape (Groovy Script)
 
 ```groovy
-@Grab(group:'se.alipsa.gi', module:'gi-swing', version:'0.4.1')
+@Grab('se.alipsa.gi:gi-swing:0.4.1')
 import se.alipsa.gi.swing.InOut
 
 def io = new InOut()
@@ -89,8 +89,7 @@ dependencies {
 
 ## Dependencies
 
-- [LGoodDatePicker](https://github.com/LGoodDatePicker/LGoodDatePicker) - Date picker component
-- [swing-yearmonth-picker](https://github.com/Alipsa/swing-yearmonth-picker) - Year-month picker
+- `se.alipsa:swing-widgets` - Date and year-month picker components
 
 ## API Documentation
 

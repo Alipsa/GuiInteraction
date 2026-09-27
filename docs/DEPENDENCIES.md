@@ -18,8 +18,8 @@ The core module includes these key dependencies:
 ### gi-fx, gi-swing, gi-console
 
 UI modules add minimal additional dependencies:
-- **gi-fx**: JavaFX (provided by JVM), YearMonthPicker
-- **gi-swing**: Batik (SVG), LGoodDatePicker, Swing YearMonthPicker
+- **gi-fx**: JavaFX (supplied by the JDK or consumer), fx-yearmonth-picker
+- **gi-swing**: Matrix Charts (SVG rendering), swing-widgets (date and year-month pickers)
 - **gi-console**: JSoup (HTML parsing)
 
 ## Apache Tika Dependency Impact
@@ -49,9 +49,9 @@ PDFs or Office documents), add the full parser package:
 
 ```groovy
 dependencies {
-    implementation 'se.alipsa.gi:gi-common:0.4.0'
+    implementation 'se.alipsa.gi:gi-common:0.4.1'
     // Add full Tika parsers for document content extraction
-    implementation 'org.apache.tika:tika-parsers-standard-package:3.2.3'
+    implementation 'org.apache.tika:tika-parsers-standard-package:3.3.2'
 }
 ```
 
@@ -64,11 +64,12 @@ This adds support for:
 
 ### Fat JAR for Standalone Scripts
 
-The fat JARs (`gi-swing-fatjar`, `gi-fx-fatjar`, etc.) include all dependencies
-and are designed for standalone Groovy scripts:
+The fat JAR artifacts bundle runtime dependencies but exclude Groovy, which the
+consuming application must supply. `gi-fx` also needs JavaFX at runtime, either
+from the JDK or as separate dependencies. The artifact classifier is `fatjar`:
 
 ```groovy
-@Grab(group:'se.alipsa.gi', module:'gi-swing', version:'0.4.0', classifier:'fatjar')
+@Grab(group='se.alipsa.gi', module='gi-swing', version='0.4.1', classifier='fatjar')
 import se.alipsa.gi.swing.InOut
 ```
 
