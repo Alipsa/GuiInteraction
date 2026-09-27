@@ -336,7 +336,7 @@ import static groovy.grape.Grape.grab
 if (!binding.hasVariable('io')) {
     grab(group: 'se.alipsa.gi', module: 'gi-swing', version: '0.4.1')
     def inOutClass = this.class.classLoader.loadClass('se.alipsa.gi.swing.InOut')
-    binding.setVariable('io', inOutClass.getDeclaredConstructor().newInstance())
+    binding.setVariable('io', inOutClass.newInstance())
 }
 
 // Now 'io' works the same in both Gade and standalone
