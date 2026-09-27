@@ -1,7 +1,6 @@
 package se.alipsa.gi.swing
 
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.io.TempDir
 import se.alipsa.groovy.svg.Svg
 
 import javax.swing.JEditorPane
@@ -102,10 +101,10 @@ class InOutHelperTest {
   }
 
   @Test
-  void loadingARealPageReportsSuccess(@TempDir File tempDir) {
-    File page = new File(tempDir, 'page.html')
-    page.text = '<html><body><h1>ok</h1></body></html>'
-
+  void loadingARealPageReportsSuccess() {
+    // JEditorPane may still be reading HTML when this method returns. A fixture
+    // avoids racing JUnit's temporary-directory deletion on Windows.
+    File page = new File(getClass().getResource('/view-page.html').toURI())
     assertTrue(InOut.loadPage(new JEditorPane(), page))
   }
 
