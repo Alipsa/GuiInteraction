@@ -19,7 +19,7 @@ The core module includes these key dependencies:
 
 UI modules add minimal additional dependencies:
 - **gi-fx**: JavaFX (supplied by the JDK or consumer), fx-yearmonth-picker
-- **gi-swing**: Matrix Charts (SVG rendering), swing-widgets (date and year-month pickers)
+- **gi-swing**: swing-widgets (date and year-month pickers); SVG rendering uses Matrix Charts from `gi-common`
 - **gi-console**: JSoup (HTML parsing)
 
 ## Apache Tika Dependency Impact
@@ -66,10 +66,11 @@ This adds support for:
 
 The fat JAR artifacts bundle runtime dependencies but exclude Groovy, which the
 consuming application must supply. `gi-fx` also needs JavaFX at runtime, either
-from the JDK or as separate dependencies. The artifact classifier is `fatjar`:
+from the JDK or as separate dependencies. The artifact classifier is `fatjar`;
+disable transitive resolution to avoid loading separate copies of bundled dependencies:
 
 ```groovy
-@Grab(group='se.alipsa.gi', module='gi-swing', version='0.4.1', classifier='fatjar')
+@Grab(group='se.alipsa.gi', module='gi-swing', version='0.4.1', classifier='fatjar', transitive=false)
 import se.alipsa.gi.swing.InOut
 ```
 

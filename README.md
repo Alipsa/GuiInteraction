@@ -57,15 +57,17 @@ println("File chosen was $file")
 
 ## Gade Compatibility
 
-Scripts can run both in Gade and standalone by checking for the `io` variable:
+Scripts can run both in Gade and standalone by checking for the `io` variable.
+The dependency is loaded only when Gade has not already supplied `io`:
 
 ```groovy
-@Grab('se.alipsa.gi:gi-swing:0.4.1')
-import se.alipsa.gi.swing.InOut
+import static groovy.grape.Grape.grab
 
 // This makes the code run equally in Gade and in a standalone Groovy script
 if (!binding.hasVariable('io')) {
-    binding.setVariable('io', new InOut())
+    grab(group: 'se.alipsa.gi', module: 'gi-swing', version: '0.4.1')
+    def inOutClass = this.class.classLoader.loadClass('se.alipsa.gi.swing.InOut')
+    binding.setVariable('io', inOutClass.getDeclaredConstructor().newInstance())
 }
 
 def file = io.chooseFile("Choose a file", ".", "Pick a file please!")
