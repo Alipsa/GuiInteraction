@@ -2,6 +2,8 @@
 set -euo pipefail
 
 source "$(dirname "$0")/release-lib.sh"
+sorted_jdks=$(printf '%s\n' 21.0.9.fx-librca 21.0.11.fx-librca 21.0.12.fx-librca 21.0.12.1.fx-librca | sort_java_versions)
+[ "$sorted_jdks" = $'21.0.12.1.fx-librca\n21.0.12.fx-librca\n21.0.11.fx-librca\n21.0.9.fx-librca' ]
 fixture_dir=$(mktemp -d)
 trap 'rm -rf "$fixture_dir"' EXIT
 notes="$fixture_dir/release.md"

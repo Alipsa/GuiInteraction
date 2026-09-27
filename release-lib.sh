@@ -1,6 +1,12 @@
 #!/usr/bin/env bash
 # Sourceable changelog and version helpers for release.sh.
 
+# SDKMAN names start with numeric Java version components. Sort those components
+# in descending order without relying on GNU sort -V (unavailable on macOS).
+sort_java_versions() {
+    LC_ALL=C sort -t. -k1,1nr -k2,2nr -k3,3nr -k4,4nr
+}
+
 release_section_exists() {
     local version=$1 file=${2:-release.md}
     [ -f "$file" ] && grep -qE "^## +${version//./[.]} - " "$file"

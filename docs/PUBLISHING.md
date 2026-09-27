@@ -129,6 +129,7 @@ export ORG_GRADLE_PROJECT_signingSecretKeyRingFile=/path/to/secring.gpg
 ### Using the Release Script
 
 The easiest way to publish is using the release script:
+It selects the newest installed JavaFX-capable JDK 21 from SDKMAN.
 
 ```bash
 # Dry run (shows what would happen)

@@ -50,6 +50,11 @@ if [ -f ~/.sdkman/bin/sdkman-init.sh ]; then
     fi
 
     if [ "${#java21_fx_candidates[@]}" -gt 0 ]; then
+        sorted_java21_fx_candidates=()
+        while IFS= read -r candidate; do
+            sorted_java21_fx_candidates+=("$candidate")
+        done < <(printf '%s\n' "${java21_fx_candidates[@]}" | sort_java_versions)
+        java21_fx_candidates=("${sorted_java21_fx_candidates[@]}")
         echo "Installed JavaFX-capable JDK 21 candidates:"
         printf '  %s\n' "${java21_fx_candidates[@]}"
         echo "Using Java ${java21_fx_candidates[0]}"
