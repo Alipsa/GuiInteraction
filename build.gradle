@@ -10,7 +10,7 @@ plugins {
     id('io.github.gradle-nexus.publish-plugin') version '2.0.0'
     id "io.github.ben-manes.versions" version "0.64.0"
     id "org.owasp.dependencycheck" version "13.0.0"
-    id "com.diffplug.spotless" version "8.10.3" apply false
+    id "com.diffplug.spotless" version "8.10.3"
     id "com.github.spotbugs" version "6.5.12" apply false
 }
 
@@ -21,6 +21,15 @@ description = 'Allows Gade Gui Interactive capabilities from a standalone app'
 java {
     toolchain {
         languageVersion.set(JavaLanguageVersion.of(21))
+    }
+}
+
+spotless {
+    groovyGradle {
+        target 'build.gradle'
+        leadingTabsToSpaces(2)
+        trimTrailingWhitespace()
+        endWithNewline()
     }
 }
 
@@ -61,18 +70,22 @@ subprojects {
         reportLevel = 'medium'
         excludeFilter = rootProject.file('config/spotbugs-exclude.xml')
     }
-    tasks.withType(com.github.spotbugs.snom.SpotBugsTask).configureEach { spotbugsTask ->
-        String suffix = spotbugsTask.name.startsWith('spotbugs') ?
-            spotbugsTask.name.substring('spotbugs'.length()) : ''
-        String sourceSetName = suffix.isEmpty() ? 'main' :
-            suffix.substring(0, 1).toLowerCase(Locale.ROOT) + suffix.substring(1)
-        def sourceSet = project.sourceSets.findByName(sourceSetName)
-        if (sourceSet != null) {
-            auxClassPaths.from(sourceSet.compileClasspath, sourceSet.runtimeClasspath)
-        }
+    tasks.withType(com.github.spotbugs.snom.SpotBugsTask).configureEach {
         reports {
             html.required = true
             xml.required = false
+        }
+    }
+    // The SpotBugs plugin assigns auxClassPaths during project evaluation.
+    // Register this after it has applied so the full compile and runtime paths win.
+    afterEvaluate {
+        tasks.withType(com.github.spotbugs.snom.SpotBugsTask).configureEach { spotbugsTask ->
+            String suffix = spotbugsTask.name.substring('spotbugs'.length())
+            String sourceSetName = suffix.substring(0, 1).toLowerCase(Locale.ROOT) + suffix.substring(1)
+            def sourceSet = project.sourceSets.findByName(sourceSetName)
+            if (sourceSet != null) {
+                spotbugsTask.auxClassPaths.setFrom(sourceSet.compileClasspath, sourceSet.runtimeClasspath)
+            }
         }
     }
 }
@@ -126,7 +139,7 @@ dependencyCheck {
     // Read the NVD API key from the environment; never commit it to the repository.
     nvd.apiKey = providers.environmentVariable('NVD_API_KEY').orNull
     // Scan all configurations including test dependencies
-    scanConfigurations = ['runtimeClasspath', 'testRuntimeClasspath']
+    scanConfigurations = ['compileClasspath', 'runtimeClasspath', 'testRuntimeClasspath']
     // Fail the build if a CVSS score of 7 or higher is found (HIGH/CRITICAL)
     failBuildOnCVSS = 7.0f
     // Output formats: HTML, JSON, CSV, XML, SARIF, JUNIT, ALL

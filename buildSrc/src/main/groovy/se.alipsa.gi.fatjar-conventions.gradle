@@ -39,7 +39,7 @@ tasks.named('shadowJar', com.github.jengelman.gradle.plugins.shadow.tasks.Shadow
     mergeGroovyExtensionModules()
 
     // Exclude signature files that cause issues when repackaging signed JARs
-    exclude 'META-INF/*.RSA', 'META-INF/*.SF', 'META-INF/*.DSA'
+    exclude 'META-INF/*.RSA', 'META-INF/*.SF', 'META-INF/*.DSA', 'META-INF/INDEX.LIST'
 
     // INCLUDE writes non-merged duplicates once per source jar. Module
     // descriptors are the only ones that matter here: a fat JAR is not a module,
@@ -50,6 +50,8 @@ tasks.named('shadowJar', com.github.jengelman.gradle.plugins.shadow.tasks.Shadow
     transform(com.github.jengelman.gradle.plugins.shadow.transformers.MergeLicenseResourceTransformer) {
         artifactLicense = rootProject.file('LICENSE')
         artifactLicenseSpdxId = 'MIT'
+        caseSensitive = false
+        include 'META-INF/LICENSE*', 'LICENSE*'
     }
     transform(com.github.jengelman.gradle.plugins.shadow.transformers.AppendingTransformer) {
         resource = 'META-INF/NOTICE'

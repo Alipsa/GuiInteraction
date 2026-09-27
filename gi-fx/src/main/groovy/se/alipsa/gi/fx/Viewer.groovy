@@ -208,7 +208,12 @@ class Viewer {
             return title[0]
         }
         String name = matrix?.matrixName
-        return name == null || name.trim().isEmpty() ? 'Table' : name
+        return tableTitle(name)
+    }
+
+    @PackageScope
+    static String tableTitle(String... title) {
+        return title.length == 0 || title[0] == null || title[0].trim().isEmpty() ? 'Table' : title[0]
     }
 
     static void viewTable(Grid grid, String... title) {
@@ -220,6 +225,7 @@ class Viewer {
     }
 
     static void viewTable(List<? extends List<?>> rows, String... title) {
+        // Keep ragged and null rows intact; formatting handles them at display time.
         if (rows == null || rows.isEmpty()) {
             viewTable(Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), title)
             return
@@ -319,10 +325,7 @@ class Viewer {
             }
             tableView.setItems(data)
             Tab tab = new Tab()
-            String tabTitle = " (" + rowList.size() + " rows)"
-            if (title.length > 0) {
-                tabTitle = title[0] + tabTitle
-            }
+            String tabTitle = tableTitle(title) + " (" + rowList.size() + " rows)"
             tab.setText(tabTitle)
             ScrollPane scrollPane = new ScrollPane(tableView)
             scrollPane.setVisible(true)
@@ -332,7 +335,7 @@ class Viewer {
             SingleSelectionModel<Tab> selectionModel = viewPane.getSelectionModel()
             selectionModel.select(tab)
             Alert alert = new Alert(Alert.AlertType.INFORMATION)
-            alert.setTitle(title.length > 0 ? title[0] : tabTitle)
+            alert.setTitle(tableTitle(title))
             alert.setHeaderText(null)
             alert.setContentText(null)
             alert.getDialogPane().setContent(viewPane)

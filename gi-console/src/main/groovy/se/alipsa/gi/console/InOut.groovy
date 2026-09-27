@@ -197,7 +197,12 @@ class InOut extends AbstractInOut {
   /** End of console input is cancellation, just as it is for the other prompts. */
   @PackageScope
   static String toPassword(char[] password) {
-    return password == null ? null : new String(password)
+    if (password == null) return null
+    try {
+      return new String(password)
+    } finally {
+      Arrays.fill(password, (char) 0)
+    }
   }
 
   @Override

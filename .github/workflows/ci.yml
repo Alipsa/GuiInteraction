@@ -9,9 +9,21 @@ on:
     - cron: '0 4 * * 1'
   workflow_dispatch:
 
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
   build:
-    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 45
 
     steps:
       - name: Checkout code
@@ -27,20 +39,23 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
 
-      - name: Grant execute permission for gradlew
-        run: chmod +x gradlew
-
-      - name: Build with Gradle (runs tests, Spotless and SpotBugs)
+      - name: Build with Gradle (Linux)
+        if: runner.os == 'Linux'
         run: ./gradlew build
 
+      - name: Build with Gradle (Windows)
+        if: runner.os == 'Windows'
+        run: .\gradlew.bat build
+
       - name: Check release helpers
+        if: runner.os == 'Linux'
         run: ./release-lib-test.sh
 
       - name: Upload test results
         uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: test-results
+          name: test-results-${{ matrix.os }}
           path: '**/build/reports/tests/'
           retention-days: 7
 
@@ -48,12 +63,13 @@ jobs:
         uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: static-analysis-reports
+          name: static-analysis-reports-${{ matrix.os }}
           path: '**/build/reports/spotbugs/'
           retention-days: 7
 
   dependency-check:
     runs-on: ubuntu-latest
+    timeout-minutes: 90
     if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
 
     steps:
@@ -94,31 +110,3 @@ jobs:
           name: dependency-updates-report
           path: 'build/dependencyUpdates/'
           retention-days: 30
-
-  windows-smoke:
-    runs-on: windows-latest
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up JDK 21 with JavaFX
-        uses: actions/setup-java@v4
-        with:
-          distribution: 'liberica'
-          java-version: '21'
-          java-package: 'jdk+fx'
-
-      - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v4
-
-      - name: Run the platform-sensitive tests on Windows
-        run: .\gradlew.bat :gi-common:test :gi-console:test
-
-      - name: Upload test results
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: windows-test-results
-          path: '**/build/reports/tests/'
-          retention-days: 7

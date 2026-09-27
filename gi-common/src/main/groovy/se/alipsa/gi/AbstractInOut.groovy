@@ -102,12 +102,11 @@ abstract class AbstractInOut implements GuiInteraction {
         }
       }
     } catch (RuntimeException | IOException e) {
+      String reason = 'failed: ' + e.getClass().getSimpleName() + exceptionDetail(e)
       if (originalUrl == null) {
-        if (log.isDebugEnabled()) {
-          log.debug('urlExists(' + safeInputUrl(urlString) + ') failed: ' + e.getClass().getSimpleName())
-        }
+        if (log.isDebugEnabled()) log.debug('urlExists(' + safeInputUrl(urlString) + ') ' + reason)
       } else {
-        logUrlExistsFailure(originalUrl, url, 'failed: ' + e.getClass().getSimpleName())
+        logUrlExistsFailure(originalUrl, url, reason)
       }
       return false
     }
@@ -120,18 +119,36 @@ abstract class AbstractInOut implements GuiInteraction {
     if (input == null) return '<null>'
     String withoutQuery = input.split('[?#]', 2)[0]
     String withoutCredentials = withoutQuery.replaceFirst('(^|://)[^/]*@', '$1')
-    return withoutCredentials.length() <= 120 ? withoutCredentials : withoutCredentials.substring(0, 120) + '…'
+    String clipped = withoutCredentials.length() <= 120 ? withoutCredentials : withoutCredentials.substring(0, 120) + '…'
+    return safeLogText(clipped)
   }
 
   private static void logUrlExistsFailure(URL original, URL current, String reason) {
-    if (log.isDebugEnabled()) {
-      log.debug('urlExists(' + safeUrl(original) + ' -> ' + safeUrl(current) + ') ' + reason)
-    }
+    String message = urlFailureMessage(original, current, reason)
+    if (reason == 'non-HTTP(S) URL' || reason == 'redirect missing Location' || reason == 'redirect limit exhausted') {
+      log.warn(message)
+    } else if (log.isDebugEnabled()) log.debug(message)
+  }
+
+  @PackageScope
+  static String urlFailureMessage(URL original, URL current, String reason) {
+    return 'urlExists(' + safeUrl(original) + ' -> ' + safeUrl(current) + ') ' + safeLogText(reason)
+  }
+
+  private static String exceptionDetail(Exception e) {
+    String detail = e.message
+    if (detail == null || detail.isBlank()) return ''
+    // Exception messages can contain full URLs, including credentials or query strings.
+    return ': ' + safeLogText(detail.replaceAll('(?i)https?://[^\\s]+', '<URL>'))
+  }
+
+  private static String safeLogText(String value) {
+    return value.replace('%n', '% n').replaceAll('[\\r\\n\\t\\p{Cntrl}]', ' ')
   }
 
   private static String safeUrl(URL url) {
     if (url == null) return '<invalid URL>'
-    return url.protocol + '://' + url.host + (url.port < 0 ? '' : ':' + url.port) + url.path
+    return safeLogText(url.protocol + '://' + url.host + (url.port < 0 ? '' : ':' + url.port) + url.path)
   }
 
   private static HttpURLConnection open(URL url, String method, int timeout, boolean range) {
@@ -335,7 +352,7 @@ abstract class AbstractInOut implements GuiInteraction {
 
   @PackageScope
   static List<String> shellCommand(String command, boolean windows, String commandInterpreter) {
-    return windows ? [commandInterpreter ?: 'cmd.exe', '/d', '/s', '/c', command] : ['/bin/sh', '-c', command]
+    return windows ? [commandInterpreter?.trim() ?: 'cmd.exe', '/d', '/s', '/c', command] : ['/bin/sh', '-c', command]
   }
 
   @PackageScope

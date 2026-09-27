@@ -5,6 +5,13 @@ source "$(dirname "$0")/release-lib.sh"
 fixture_dir=$(mktemp -d)
 trap 'rm -rf "$fixture_dir"' EXIT
 notes="$fixture_dir/release.md"
+awk() {
+    if [ "${FAIL_AWK:-false}" = true ]; then
+        printf '# partial output\n'
+        return 42
+    fi
+    command awk "$@"
+}
 
 printf '# Notes\n\n## Unreleased\n\n## 0.4.1 - 2026-09-26\n- old\n' > "$notes"
 chmod 664 "$notes"
@@ -12,7 +19,7 @@ if promote_unreleased_section 0.5.0 2026-10-01 "$notes"; then
     echo 'Empty Unreleased was promoted' >&2
     exit 1
 fi
-insert_release_section 0.5.0 2026-10-01 'abc123 new change' "$notes"
+TMPDIR="$fixture_dir" insert_release_section 0.5.0 2026-10-01 'abc123 new change' "$notes"
 awk '/^## Unreleased$/ { unreleased = NR } /^## 0.5.0 / { current = NR } /^## 0.4.1 / { old = NR } END { exit !(unreleased < current && current < old) }' "$notes"
 [ "$(ls -ld "$notes" | cut -c1-10)" = '-rw-rw-r--' ]
 grep -q -- '- new change' "$notes"
@@ -33,12 +40,12 @@ promote_unreleased_section 0.5.0 2026-10-01 "$notes" || rc=$?
 [ "$rc" -eq 2 ]
 
 before=$(cat "$notes")
-awk() { printf '# partial output\n'; return 42; }
-if insert_release_section 0.6.0 2026-10-02 'def456 next' "$notes"; then
+FAIL_AWK=true
+if TMPDIR="$fixture_dir" insert_release_section 0.6.0 2026-10-02 'def456 next' "$notes"; then
     echo 'Failed awk unexpectedly succeeded' >&2
     exit 1
 fi
-unset -f awk
+FAIL_AWK=false
 [ "$(cat "$notes")" = "$before" ]
 printf '# Notes\n\n## Unreleased\n- curated\n' > "$notes"
 before=$(cat "$notes")
@@ -51,7 +58,7 @@ if [ "$rc" -ne 3 ]; then
 fi
 [ "$(cat "$notes")" = "$before" ]
 rc=0
-insert_release_section 0.6.0 2026-10-02 'def456 next' "$notes" || rc=$?
+TMPDIR="$fixture_dir" insert_release_section 0.6.0 2026-10-02 'def456 next' "$notes" || rc=$?
 if [ "$rc" -ne 3 ]; then
     echo "Failed rename returned $rc instead of 3 for insertion" >&2
     exit 1
@@ -60,6 +67,25 @@ unset -f mv
 [ "$(cat "$notes")" = "$before" ]
 if find "$fixture_dir" -maxdepth 1 -name 'release.md.*' | grep -q .; then
     echo 'Failed update left a temporary changelog behind' >&2
+    exit 1
+fi
+
+printf '# Notes\r\n\r\n## Unreleased\r\n- curated\r\n' > "$notes"
+promote_unreleased_section 0.7.0 2026-10-03 "$notes"
+if perl -ne 'exit 1 if /(?<!\r)\n/' "$notes"; then :; else
+    echo 'Promotion mixed line endings' >&2
+    exit 1
+fi
+printf '# Notes\r\n\r\n## Unreleased\r\n' > "$notes"
+TMPDIR="$fixture_dir" insert_release_section 0.7.0 2026-10-03 $'abc123 valid\nabc123\nabc123   ' "$notes"
+grep -q -- '- valid' "$notes"
+if grep -q -- '- abc123' "$notes"; then exit 1; fi
+if perl -ne 'exit 1 if /(?<!\r)\n/' "$notes"; then :; else
+    echo 'Insertion mixed line endings' >&2
+    exit 1
+fi
+if find "$fixture_dir" -maxdepth 1 -type f ! -name release.md | grep -q .; then
+    echo 'Release helper left a temporary file behind' >&2
     exit 1
 fi
 

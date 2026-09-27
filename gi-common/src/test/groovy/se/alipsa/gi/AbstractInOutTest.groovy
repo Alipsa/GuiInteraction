@@ -4,6 +4,7 @@ import groovy.transform.CompileStatic
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.condition.DisabledOnOs
+import org.junit.jupiter.api.condition.EnabledOnOs
 import org.junit.jupiter.api.condition.OS
 import org.junit.jupiter.api.io.TempDir
 import org.junit.jupiter.params.ParameterizedTest
@@ -36,6 +37,8 @@ class AbstractInOutTest {
     assertEquals('htp://example.com/path', AbstractInOut.safeInputUrl('htp://user:secret@example.com/path?token=secret#fragment'))
     assertEquals('example.com/path', AbstractInOut.safeInputUrl('user:secret@example.com/path?token=abc'))
     assertEquals('<null>', AbstractInOut.safeInputUrl(null))
+    assertEquals('http://example.com/a% nFINE: fake',
+        AbstractInOut.safeInputUrl('http://example.com/a%nFINE: fake'))
   }
 
   @Test
@@ -44,6 +47,7 @@ class AbstractInOutTest {
         AbstractInOut.shellCommand('dir', true, 'C:\\Windows\\System32\\cmd.exe'))
     assertEquals(['cmd.exe', '/d', '/s', '/c', 'dir'], AbstractInOut.shellCommand('dir', true, null))
     assertEquals(['cmd.exe', '/d', '/s', '/c', 'dir'], AbstractInOut.shellCommand('dir', true, ''))
+    assertEquals(['cmd.exe', '/d', '/s', '/c', 'dir'], AbstractInOut.shellCommand('dir', true, '   '))
   }
 
   @Test
@@ -53,8 +57,24 @@ class AbstractInOutTest {
   }
 
   @Test
+  @EnabledOnOs(OS.WINDOWS)
+  void theWindowsShellRunsThroughCmd() {
+    ShellResult result = inOut.shell('echo windows-shell')
+    assertTrue(result.stdout.contains('windows-shell'))
+  }
+
+  @Test
   void urlExistsStillReportsFalseWhenTheConnectionFails() {
     assertFalse(inOut.urlExists('http://127.0.0.1:1/health', 500))
+  }
+
+  @Test
+  void urlFailureDiagnosticKeepsRedirectChainButScrubsSecretsAndControlSequences() {
+    String message = AbstractInOut.urlFailureMessage(
+        new URL('http://user:secret@example.com/start?token=private'),
+        new URL('http://example.com/a%nFINE:fake?token=private'),
+        'redirect missing Location')
+    assertEquals('urlExists(http://example.com/start -> http://example.com/a% nFINE:fake) redirect missing Location', message)
   }
 
   @TempDir

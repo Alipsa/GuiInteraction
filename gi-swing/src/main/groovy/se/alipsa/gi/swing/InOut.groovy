@@ -338,7 +338,7 @@ class InOut extends AbstractInOut {
 
     JTable jTable = new JTable(rows, tableMatrix.columnNames() as Vector)
     jTable.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS)
-    def name = title.length > 0 ? title[0] : tableMatrix.matrixName
+    String name = tableTitle(tableMatrix.matrixName, title)
     viewTable(jTable, rightAlignments(values, tableMatrix.columnNames().size()), name)
   }
 
@@ -349,6 +349,12 @@ class InOut extends AbstractInOut {
       return true
     }
     return false
+  }
+
+  @PackageScope
+  static String tableTitle(String matrixName, String... title) {
+    if (title.length > 0 && title[0] != null && !title[0].trim().isEmpty()) return title[0]
+    return matrixName == null || matrixName.trim().isEmpty() ? 'Table' : matrixName
   }
 
   private viewTable(JTable jTable, List<Boolean> rightAlign, String title) {
@@ -370,7 +376,7 @@ class InOut extends AbstractInOut {
 
   @Override
   void view(List<List<?>> matrix, String... title) {
-    def name = title.length > 0 ? title[0] : ""
+    String name = tableTitle(null, title)
     if (matrix == null || matrix.isEmpty()) {
       viewTable(new JTable(new Vector(), new Vector()), [], name)
       return

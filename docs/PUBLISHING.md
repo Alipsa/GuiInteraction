@@ -288,8 +288,8 @@ warns that they are not included in the already-recorded version.
 Commit curated notes before running `release.sh`: every release path requires
 `release.md` to be clean. SNAPSHOT and `--bump` releases also require clean
 `build.gradle` and `README.md`; an unchanged-version release requires a clean
-`README.md` only if you accept its prompted version update. A dry run checks
-the same preconditions before previewing release-file changes.
+`README.md` only if you accept its prompted version update. A dry run previews
+release-file changes and warns about dirty files without modifying them.
 
 Run `./release-lib-test.sh` to check empty-Unreleased fallback, atomic
 replacement and permission preservation, awk-failure handling, and release

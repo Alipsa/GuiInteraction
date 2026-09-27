@@ -19,6 +19,9 @@ class TableDataTest {
     assertEquals('Table', Viewer.matrixTitle(null))
     assertEquals('chosen', Viewer.matrixTitle(named, 'chosen'))
     assertEquals('from matrix', Viewer.matrixTitle(named, '   '))
+    assertEquals('Table', Viewer.tableTitle((String) null))
+    assertEquals('Table', Viewer.tableTitle('   '))
+    assertEquals('chosen', Viewer.tableTitle('chosen'))
   }
 
   @Test

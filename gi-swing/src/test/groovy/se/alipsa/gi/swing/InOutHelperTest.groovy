@@ -19,6 +19,14 @@ import static org.junit.jupiter.api.Assertions.assertTrue
 class InOutHelperTest {
 
   @Test
+  void anUnnamedTableGetsAReadableWindowTitle() {
+    assertEquals('Table', InOut.tableTitle(null))
+    assertEquals('Table', InOut.tableTitle('   ', (String) null))
+    assertEquals('from matrix', InOut.tableTitle('from matrix', ' '))
+    assertEquals('chosen', InOut.tableTitle(null, 'chosen'))
+  }
+
+  @Test
   void aMissingInitialDirectoryBecomesNullRatherThanThrowing() {
     assertNull(InOut.toInitialDirectory(null))
     assertNull(InOut.toInitialDirectory(''))

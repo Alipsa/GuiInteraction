@@ -19,7 +19,9 @@ class ConsolePromptTest {
   @Test
   void anEofPasswordIsCancellationRatherThanACrash() {
     assertNull(InOut.toPassword(null))
-    assertEquals('s3cret', InOut.toPassword('s3cret'.toCharArray()))
+    char[] password = 's3cret'.toCharArray()
+    assertEquals('s3cret', InOut.toPassword(password))
+    assertTrue(password.every { it == (char) 0 })
   }
 
   @Test

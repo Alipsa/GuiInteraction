@@ -23,6 +23,7 @@
 set -e
 
 SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
+cd "$SCRIPT_DIR"
 # shellcheck source=release-lib.sh
 source "${SCRIPT_DIR}/release-lib.sh"
 
@@ -39,13 +40,13 @@ if [ -f ~/.sdkman/bin/sdkman-init.sh ]; then
     sdk_java_dir="${SDKMAN_CANDIDATES_DIR:-$HOME/.sdkman/candidates}/java"
     java21_fx_candidates=()
     if [ -d "$sdk_java_dir" ]; then
-        while IFS= read -r candidate; do
-            java21_fx_candidates+=("$candidate")
-        done < <(
-            find "$sdk_java_dir" -mindepth 1 -maxdepth 1 -type d -printf '%f\n' |
-                awk 'tolower($0) ~ /^21([.-]|$)/ && tolower($0) ~ /fx/' |
-                sort -V -r
-        )
+        for candidate_path in "$sdk_java_dir"/*; do
+            [ -d "$candidate_path" ] || continue
+            candidate=${candidate_path##*/}
+            if [[ "${candidate,,}" =~ ^21([.-]|$) ]] && [[ "${candidate,,}" == *fx* ]]; then
+                java21_fx_candidates+=("$candidate")
+            fi
+        done
     fi
 
     if [ "${#java21_fx_candidates[@]}" -gt 0 ]; then
@@ -213,7 +214,8 @@ update_readme_version() {
 # Check if README.md has the correct version
 check_readme_version() {
     local expected_version=$1
-    local readme_versions=$(grep -oE '(gi-(swing|fx|console):)[0-9]+\.[0-9]+\.[0-9]+(-SNAPSHOT)?' README.md | head -1 | sed -E 's/gi-(swing|fx|console)://')
+    local readme_versions
+    readme_versions=$(grep -oE '(gi-(swing|fx|console):)[0-9]+\.[0-9]+\.[0-9]+(-SNAPSHOT)?' README.md | head -1 | sed -E 's/gi-(swing|fx|console)://')
 
     if [ "$readme_versions" != "$expected_version" ]; then
         echo -e "${RED}Warning: README.md contains version '${readme_versions}' but releasing '${expected_version}'${NC}"
@@ -351,12 +353,12 @@ CURRENT_VERSION="$RELEASE_VERSION"
 
 # Check if version has already been released (git tag exists)
 TAG="v${CURRENT_VERSION}"
-if git rev-parse "$TAG" >/dev/null 2>&1 || git ls-remote --tags origin | grep -q "refs/tags/$TAG$"; then
+if git rev-parse "$TAG" >/dev/null 2>&1 || git ls-remote --tags origin 2>/dev/null | grep -q "refs/tags/$TAG$"; then
     if [ "$DRY_RUN" = true ]; then
         echo -e "${YELLOW}Warning: Tag $TAG already exists. This version may have already been released.${NC}"
     else
         echo -e "${RED}Warning: Version ${CURRENT_VERSION} appears to have already been released (tag $TAG exists).${NC}"
-        read -p "Continue anyway? [y/N]: " confirm
+        read -r -p "Continue anyway? [y/N]: " confirm
         if [[ ! "$confirm" =~ ^[Yy]$ ]]; then
             echo -e "${RED}Aborting release.${NC}"
             exit 1
@@ -370,16 +372,14 @@ if [ "$DRY_RUN" = false ] && [ "$RELEASE_VERSION" != "$(get_version)" ]; then
 elif [ "$DRY_RUN" = true ] && [ "$RELEASE_VERSION" != "$(get_version)" ]; then
     for file in build.gradle README.md release.md; do
         if ! require_clean_release_file "$file"; then
-            echo -e "${RED}[DRY RUN] Release would stop before changing files.${NC}" >&2
-            exit 1
+            echo -e "${YELLOW}[DRY RUN] A real release would stop before changing ${file}.${NC}" >&2
         fi
     done
     echo -e "${YELLOW}[DRY RUN] Would update build.gradle and README.md to ${RELEASE_VERSION}, and release.md for ${RELEASE_VERSION}${NC}"
 else
     if [ "$DRY_RUN" = true ]; then
         if ! require_clean_release_file release.md; then
-            echo -e "${RED}[DRY RUN] Release would stop before changing files.${NC}" >&2
-            exit 1
+            echo -e "${YELLOW}[DRY RUN] A real release would stop before changing release.md.${NC}" >&2
         fi
         echo -e "${YELLOW}[DRY RUN] Would update release.md for ${CURRENT_VERSION}${NC}"
         if [ "$README_NEEDS_UPDATE" = true ]; then
@@ -395,7 +395,7 @@ else
             exit 1
         fi
         if [ "$README_NEEDS_UPDATE" = true ]; then
-            read -p "Update README.md to version ${CURRENT_VERSION}? [Y/n]: " readme_reply
+            read -r -p "Update README.md to version ${CURRENT_VERSION}? [Y/n]: " readme_reply
             if [[ ! "$readme_reply" =~ ^[Nn]$ ]]; then
                 if ! require_clean_release_file README.md; then
                     exit 1

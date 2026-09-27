@@ -18,13 +18,19 @@ has_curated_unreleased_notes() {
 }
 
 # 0: promoted, 1: no curated Unreleased content, 2: version already recorded, 3: I/O error.
-promote_unreleased_section() {
+promote_unreleased_section() (
     local version=$1 date=$2 file=${3:-release.md} tmp
     [ -f "$file" ] || return 1
     release_section_exists "$version" "$file" && return 2
     has_curated_unreleased_notes "$file" || return 1
     tmp=$(mktemp "${file}.XXXXXX") || return 3
-    awk -v heading="## ${version} - ${date}" '
+    trap 'rm -f "$tmp"' EXIT
+    trap 'exit 130' INT TERM
+    local ending=$'\n'
+    grep -q $'\r' "$file" && ending=$'\r\n'
+    awk -v heading="## ${version} - ${date}" -v ending="$ending" '
+        BEGIN { ORS = ending }
+        { sub(/\r$/, "") }
         !promoted && /^## +Unreleased[[:space:]]*$/ {
             print "## Unreleased"; print ""; print heading; promoted = 1; next
         }
@@ -34,39 +40,47 @@ promote_unreleased_section() {
     mode=$(stat -c %a "$file" 2>/dev/null || stat -f %Lp "$file") || { rm -f "$tmp"; return 3; }
     chmod "$mode" "$tmp" || { rm -f "$tmp"; return 3; }
     mv "$tmp" "$file" || { rm -f "$tmp"; return 3; }
-}
+)
 
 # Fallback when there are no curated notes. printf preserves backslashes in subjects.
-insert_release_section() {
-    local version=$1 date=$2 commits=$3 file=${4:-release.md} section tmp line
+insert_release_section() (
+    local version=$1 date=$2 commits=$3 file=${4:-release.md} section tmp='' line
     release_section_exists "$version" "$file" && return 2
     section=$(mktemp) || return 3
+    trap 'rm -f "$section" "$tmp"' EXIT
+    trap 'exit 130' INT TERM
+    local ending=$'\n'
+    if [ -f "$file" ] && grep -q $'\r' "$file"; then ending=$'\r\n'; fi
     {
-        printf '## %s - %s\n\n' "$version" "$date"
+        printf '## %s - %s%s%s' "$version" "$date" "$ending" "$ending"
         if [ -n "$commits" ]; then
-            printf '### Changes\n\n'
+            printf '### Changes%s%s' "$ending" "$ending"
             while IFS= read -r line; do
-                [ -n "$line" ] && printf -- '- %s\n' "${line#* }"
+                [[ "$line" == *' '* ]] || continue
+                local subject=${line#* }
+                [[ "$subject" =~ [^[:space:]] ]] && printf -- '- %s%s' "$subject" "$ending"
             done <<< "$commits"
-            printf '\n'
+            printf '%s' "$ending"
         fi
     } > "$section" || { rm -f "$section"; return 3; }
     if [ ! -f "$file" ]; then
         printf '# Gui Interaction Release Notes\n\n' > "$file" || { rm -f "$section"; return 3; }
     fi
     tmp=$(mktemp "${file}.XXXXXX") || { rm -f "$section"; return 3; }
-    awk -v section="$section" '
+    awk -v section="$section" -v ending="$ending" '
+        BEGIN { ORS = ending }
+        { sub(/\r$/, "") }
         !inserted && /^## +Unreleased[[:space:]]*$/ {
             print; next
         }
         !inserted && /^## / {
-            while ((getline line < section) > 0) print line
+            while ((getline line < section) > 0) { sub(/\r$/, "", line); print line }
             close(section); inserted = 1
         }
         { print }
         END {
             if (!inserted) {
-                while ((getline line < section) > 0) print line
+                while ((getline line < section) > 0) { sub(/\r$/, "", line); print line }
                 close(section)
             }
         }
@@ -76,7 +90,7 @@ insert_release_section() {
     chmod "$mode" "$tmp" || { rm -f "$tmp" "$section"; return 3; }
     mv "$tmp" "$file" || { rm -f "$tmp" "$section"; return 3; }
     rm -f "$section"
-}
+)
 
 validate_version() {
     local version=${1%-SNAPSHOT}
