@@ -13,7 +13,7 @@ This module provides JavaFX-based dialogs and viewers for user interaction. It o
 
 ## Features
 
-- Native JavaFX dialogs for file/directory selection
+- JavaFX dialogs for file/directory selection
 - Rich date and year-month pickers with calendar UI
 - WebView-based HTML rendering
 - Markdown viewing with full formatting support
@@ -26,7 +26,7 @@ This module provides JavaFX-based dialogs and viewers for user interaction. It o
 
 ```groovy
 dependencies {
-    implementation 'se.alipsa.gi:gi-fx:0.4.0'
+    implementation 'se.alipsa.gi:gi-fx:0.4.1'
 }
 ```
 
@@ -36,14 +36,14 @@ dependencies {
 <dependency>
     <groupId>se.alipsa.gi</groupId>
     <artifactId>gi-fx</artifactId>
-    <version>0.4.0</version>
+    <version>0.4.1</version>
 </dependency>
 ```
 
 ### Grape (Groovy Script)
 
 ```groovy
-@Grab(group:'se.alipsa.gi', module:'gi-fx', version:'0.4.0')
+@Grab(group:'se.alipsa.gi', module:'gi-fx', version:'0.4.1')
 import se.alipsa.gi.fx.InOut
 
 def io = new InOut()
@@ -71,11 +71,11 @@ io.viewMarkdown("# Title\n\nSome **bold** text", "Document")
 
 ## Fat JAR
 
-A fat JAR (with all dependencies bundled) is available:
+A fat JAR bundles runtime dependencies; the consuming application supplies Groovy and JavaFX:
 
 ```groovy
 dependencies {
-    implementation 'se.alipsa.gi:gi-fx:0.4.0:fatjar'
+    implementation 'se.alipsa.gi:gi-fx:0.4.1:fatjar'
 }
 ```
 

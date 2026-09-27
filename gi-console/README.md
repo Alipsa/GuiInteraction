@@ -26,7 +26,7 @@ This module provides console-based (text mode) interaction capabilities. It's de
 
 ```groovy
 dependencies {
-    implementation 'se.alipsa.gi:gi-console:0.4.0'
+    implementation 'se.alipsa.gi:gi-console:0.4.1'
 }
 ```
 
@@ -36,14 +36,14 @@ dependencies {
 <dependency>
     <groupId>se.alipsa.gi</groupId>
     <artifactId>gi-console</artifactId>
-    <version>0.4.0</version>
+    <version>0.4.1</version>
 </dependency>
 ```
 
 ### Grape (Groovy Script)
 
 ```groovy
-@Grab(group:'se.alipsa.gi', module:'gi-console', version:'0.4.0')
+@Grab(group:'se.alipsa.gi', module:'gi-console', version:'0.4.1')
 import se.alipsa.gi.console.InOut
 
 def io = new InOut()
@@ -76,11 +76,11 @@ io.view("<h1>Hello</h1><p>Welcome!</p>", "Greeting")
 
 ## Fat JAR
 
-A fat JAR (with all dependencies bundled) is available:
+A fat JAR bundles runtime dependencies; the consuming application supplies Groovy:
 
 ```groovy
 dependencies {
-    implementation 'se.alipsa.gi:gi-console:0.4.0:fatjar'
+    implementation 'se.alipsa.gi:gi-console:0.4.1:fatjar'
 }
 ```
 
@@ -88,7 +88,7 @@ dependencies {
 
 - **Clipboard**: Clipboard access is unavailable in headless environments; clipboard methods log the issue and return `null` or no-op.
 - **Password Input**: Uses masked input through `System.console()` when available. In IDEs and some CI environments, it falls back to visible stdin input and logs a warning.
-- **Charts/Images**: `display(Chart)` and `display(File)` for images print a message instead of showing graphics
+- **Charts/Images**: chart display prints a message instead of showing graphics; `display(File)` asks the desktop application to open an existing file when the platform supports it
 - **Swing Components**: `display(JComponent)` is not supported
 - **File Choosers**: User manually types file paths instead of browsing
 

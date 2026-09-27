@@ -13,7 +13,7 @@ This module provides Swing-based dialogs and viewers for user interaction. It wo
 ## Features
 
 - Standard Swing file and directory choosers
-- Date and year-month pickers (via LGoodDatePicker)
+- Date pickers via LGoodDatePicker and year-month pickers via swing-yearmonth-picker
 - HTML viewing via JEditorPane
 - Table display with JTable
 - Clipboard operations
@@ -26,7 +26,7 @@ This module provides Swing-based dialogs and viewers for user interaction. It wo
 
 ```groovy
 dependencies {
-    implementation 'se.alipsa.gi:gi-swing:0.4.0'
+    implementation 'se.alipsa.gi:gi-swing:0.4.1'
 }
 ```
 
@@ -36,14 +36,14 @@ dependencies {
 <dependency>
     <groupId>se.alipsa.gi</groupId>
     <artifactId>gi-swing</artifactId>
-    <version>0.4.0</version>
+    <version>0.4.1</version>
 </dependency>
 ```
 
 ### Grape (Groovy Script)
 
 ```groovy
-@Grab(group:'se.alipsa.gi', module:'gi-swing', version:'0.4.0')
+@Grab(group:'se.alipsa.gi', module:'gi-swing', version:'0.4.1')
 import se.alipsa.gi.swing.InOut
 
 def io = new InOut()
@@ -75,11 +75,11 @@ io.view([
 
 ## Fat JAR
 
-A fat JAR (with all dependencies bundled) is available:
+A fat JAR bundles runtime dependencies; the consuming application supplies Groovy:
 
 ```groovy
 dependencies {
-    implementation 'se.alipsa.gi:gi-swing:0.4.0:fatjar'
+    implementation 'se.alipsa.gi:gi-swing:0.4.1:fatjar'
 }
 ```
 

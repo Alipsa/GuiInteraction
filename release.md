@@ -1,14 +1,16 @@
 # Gui Interaction Release Notes
 
 ## Unreleased
+
+## 0.4.1 - 2026-09-27
 - Fixed (build): pin Java 21 toolchains in all modules; run Spotless and SpotBugs in default builds; scan all modules with `dependencyCheckAggregate`.
-- Fixed (build): select JavaFX natives for the Gradle JVM's OS and architecture; unsupported combinations fail when JavaFX dependencies resolve, leaving unrelated tasks available.
-- Fixed: console null file names and password EOF no longer throw; null matrix views are guarded and unnamed JavaFX tables use `Table` as their title.
+- Fixed (build): select JavaFX natives for the host OS and Java 21 toolchain architecture; unsupported combinations fail when JavaFX dependencies resolve, leaving unrelated tasks available.
+- Fixed: console null file names and password EOF no longer throw; null matrix views are guarded and unnamed Swing and JavaFX tables use `Table` as their title.
 - Fixed: JavaFX copy shortcut detection uses locale-independent casing, and the redundant `rowsForViewer` helper was removed.
 - Fixed (packaging): merge duplicate licence, notice, and dependency metadata in fat JARs.
 - Fixed (release): promote curated Unreleased notes, preserve backslashes in commit subjects, handle release retries, and validate version shapes before mutating files.
-- Added: debug diagnostics for `urlExists` failures and Windows shell branch coverage with a CI smoke job.
-- Build: upgraded Groovy to 5.1.3, Matrix BOM to 2.6.0, CommonMark to 0.30.0, jsoup to 1.23.2, JUnit to 6.1.3, Gradle Versions to 0.64.0, Spotless to 8.10.2, and SpotBugs (plugin/engine) to 6.5.11/4.10.4.
+- Added: `urlExists` warnings for unsupported schemes and broken redirects, with debug diagnostics for connection and HTTP failures. Logged URLs redact credentials, including malformed URL paths.
+- Build: upgraded Groovy to 5.1.3, Matrix BOM to 2.6.0, CommonMark to 0.30.0, jsoup to 1.23.2, JUnit to 6.1.3, Gradle Versions to 0.64.0, Spotless to 8.10.3, and SpotBugs (plugin/engine) to 6.5.12/4.10.4.
 - Common: added `sh` and `shell` methods for executing platform shell commands. `sh` returns captured standard output and can stream output while the command runs; `shell` returns a `ShellResult` containing standard output, standard error, exit code, and success status. Both support optional timeouts. These methods execute arbitrary commands and should not receive untrusted input.
 - Breaking (packaging): fat JARs are now built with GradleUp Shadow via the `shadowJar` task instead of a hand-rolled `fatJar` task. The published artifact name is unchanged (`<module>-<version>-fatjar.jar`), but the Gradle task is now `shadowJar`.
 - Fixed: fat JARs dropped all but the first copy of each `META-INF/services` entry, disabling most ph-css/gsvg service registrations and part of Tika's. Service files are now merged.
@@ -25,10 +27,12 @@
 - Fixed: console `display(File)` called `Desktop.open` without checking that the OPEN action is supported, and threw on a null file. Both are now reported on stdout.
 - Fixed: console input now honors `stdin.encoding` (JDK 25+) or the platform console's charset (JDK 17+) instead of always using the JVM default.
 - Fixed: `saveToClipboard(File)` wrote `Lost ownership` to stdout when clipboard ownership changed.
-- Build: CI now runs `./gradlew check --no-configuration-cache`, which is the only invocation under which Spotless and SpotBugs are applied. The scheduled dependency-check job is reachable again.
+- Build: CI builds and tests all modules on Linux and Windows, including Spotless and SpotBugs. The dependency-check job runs on a schedule or by manual dispatch.
 - Build: `release.sh` verifies the version was actually written to `build.gradle`, names the modules already published when a release fails partway, validates/explicitly confirms `--skip <module,...>` before resuming without re-publishing them, and rejects `--skip` with `--bump`.
 - Fixed: publishing `gi-console`, `gi-fx`, or `gi-swing` failed with "multiple artifacts with the identical extension and classifier" because the Shadow migration both declared the fat-jar artifact explicitly and let Shadow's own publication variant add it. The explicit declaration is removed; Shadow's variant is sufficient.
 - Fixed: fat jars now also merge `META-INF/groovy/org.codehaus.groovy.runtime.ExtensionModule`, so bundling multiple Groovy extension-module jars (e.g. `matrix-core` and `matrix-groovy-ext`) no longer silently hides one's extension methods behind the other's.
+- Fixed (release): choose the newest installed JavaFX-capable SDKMAN JDK 21 when several versions are available.
+- Fixed (test): load the Swing HTML page test from a stable fixture so Windows can complete it without a temporary-file deletion race.
 
 ## 0.4.0 - 2026-08-03
 - Breaking: `FileUtils.getResourceUrl` returns `null` for paths that do not exist; use `File` for output targets that will be created later.
