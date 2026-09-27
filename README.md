@@ -30,7 +30,7 @@ GuiInteraction enables standalone Groovy applications to have the same user inte
 
 ```groovy
 dependencies {
-    implementation 'se.alipsa.gi:gi-swing:0.4.0'  // or gi-fx, gi-console
+    implementation 'se.alipsa.gi:gi-swing:0.4.1'  // or gi-fx, gi-console
 }
 ```
 
@@ -40,14 +40,14 @@ dependencies {
 <dependency>
     <groupId>se.alipsa.gi</groupId>
     <artifactId>gi-swing</artifactId>
-    <version>0.4.0</version>
+    <version>0.4.1</version>
 </dependency>
 ```
 
 ### Groovy Script with Grape
 
 ```groovy
-@Grab(group:'se.alipsa.gi', module:'gi-swing', version:'0.4.0')
+@Grab('se.alipsa.gi:gi-swing:0.4.1')
 import se.alipsa.gi.swing.InOut
 
 def io = new InOut()
@@ -57,14 +57,17 @@ println("File chosen was $file")
 
 ## Gade Compatibility
 
-Scripts can run both in Gade and standalone by checking for the `io` variable:
+Scripts can run both in Gade and standalone by checking for the `io` variable.
+The dependency is loaded only when Gade has not already supplied `io`:
 
 ```groovy
+import static groovy.grape.Grape.grab
+
 // This makes the code run equally in Gade and in a standalone Groovy script
 if (!binding.hasVariable('io')) {
-    @Grab(group:'se.alipsa.gi', module:'gi-swing', version:'0.4.0')
-    import se.alipsa.gi.swing.InOut
-    binding.setVariable('io', new InOut())
+    grab(group: 'se.alipsa.gi', module: 'gi-swing', version: '0.4.1')
+    def inOutClass = this.class.classLoader.loadClass('se.alipsa.gi.swing.InOut')
+    binding.setVariable('io', inOutClass.newInstance())
 }
 
 def file = io.chooseFile("Choose a file", ".", "Pick a file please!")
@@ -80,6 +83,9 @@ println("File chosen was $file")
 - [gi-console](gi-console/) - Console implementation
 
 ## Building from Source
+
+Install a JDK 21 toolchain before building. Gradle uses that toolchain even if
+the Gradle daemon runs on a newer JDK.
 
 ```bash
 ./gradlew build
@@ -109,7 +115,7 @@ refresh needs an API key and can be rate limited; it is not a PR gate. Run
 
 ## Requirements
 
-- JDK 21 or later
+- Java 21 or later to use the published libraries; JDK 21 to build from source
 - For gi-fx: JDK with JavaFX support (e.g., BellSoft Liberica Full JDK)
 
 ## License

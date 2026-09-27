@@ -16,7 +16,7 @@ This guide provides usage examples for the GuiInteraction library.
 
 ```groovy
 // Using Grape for dependency resolution
-@Grab(group:'se.alipsa.gi', module:'gi-swing', version:'0.4.0')
+@Grab('se.alipsa.gi:gi-swing:0.4.1')
 import se.alipsa.gi.swing.InOut
 
 def io = new InOut()
@@ -26,7 +26,7 @@ Or in your `build.gradle`:
 
 ```groovy
 dependencies {
-    implementation 'se.alipsa.gi:gi-swing:0.4.0'
+    implementation 'se.alipsa.gi:gi-swing:0.4.1'
 }
 ```
 
@@ -326,14 +326,17 @@ assert FileUtils.baseName("/tmp/report#2.pdf") == "report#2.pdf"
 
 ## Gade Compatibility
 
-The library is designed to be compatible with [Gade](https://github.com/Alipsa/gade). Scripts can detect the environment:
+The library is designed to be compatible with [Gade](https://github.com/Alipsa/gade).
+Scripts can detect the environment and load gi-swing only when `io` is absent:
 
 ```groovy
+import static groovy.grape.Grape.grab
+
 // Check if running in Gade or standalone
 if (!binding.hasVariable('io')) {
-    @Grab(group:'se.alipsa.gi', module:'gi-swing', version:'0.4.0')
-    import se.alipsa.gi.swing.InOut
-    binding.setVariable('io', new InOut())
+    grab(group: 'se.alipsa.gi', module: 'gi-swing', version: '0.4.1')
+    def inOutClass = this.class.classLoader.loadClass('se.alipsa.gi.swing.InOut')
+    binding.setVariable('io', inOutClass.newInstance())
 }
 
 // Now 'io' works the same in both Gade and standalone
