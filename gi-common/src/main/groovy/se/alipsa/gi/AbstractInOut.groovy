@@ -7,6 +7,7 @@ import org.commonmark.ext.gfm.tables.TablesExtension;
 import org.commonmark.parser.Parser;
 import org.commonmark.renderer.html.HtmlRenderer;
 import org.apache.tika.Tika
+import se.alipsa.matrix.core.util.Logger
 
 import java.awt.Toolkit
 import java.awt.datatransfer.DataFlavor
@@ -24,6 +25,7 @@ import java.util.concurrent.atomic.AtomicInteger
 @CompileStatic
 abstract class AbstractInOut implements GuiInteraction {
 
+  private static final Logger log = Logger.getLogger(AbstractInOut.class)
   private static final int MAX_REDIRECTS = 5
 
   private Parser markdownParser
@@ -40,12 +42,20 @@ abstract class AbstractInOut implements GuiInteraction {
     if (timeout < 0) {
       throw new IllegalArgumentException("timeout cannot be negative")
     }
+    URL originalUrl = null
+    URL url = null
     try {
-      URL url = new URL(urlString)
+      url = new URL(urlString)
+      originalUrl = url
       long deadline = timeout > 0 ?
           System.nanoTime() + TimeUnit.MILLISECONDS.toNanos(timeout) : Long.MAX_VALUE
       for (int redirect = 0; redirect <= MAX_REDIRECTS; redirect++) {
-        if (!isHttpUrl(url) || !hasTimeRemaining(timeout, deadline)) {
+        if (!isHttpUrl(url)) {
+          logUrlExistsFailure(originalUrl, url, 'non-HTTP(S) URL')
+          return false
+        }
+        if (!hasTimeRemaining(timeout, deadline)) {
+          logUrlExistsFailure(originalUrl, url, 'timeout exhausted')
           return false
         }
         HttpURLConnection con = null
@@ -54,6 +64,7 @@ abstract class AbstractInOut implements GuiInteraction {
           int responseCode = con.getResponseCode()
           if (shouldFallbackToGet(responseCode)) {
             if (!hasTimeRemaining(timeout, deadline)) {
+              logUrlExistsFailure(originalUrl, url, 'timeout exhausted before GET fallback')
               return false
             }
             con.disconnect()
@@ -61,6 +72,7 @@ abstract class AbstractInOut implements GuiInteraction {
             responseCode = con.getResponseCode()
             if (responseCode == 416) {
               if (!hasTimeRemaining(timeout, deadline)) {
+                logUrlExistsFailure(originalUrl, url, 'timeout exhausted before range retry')
                 return false
               }
               con.disconnect()
@@ -71,22 +83,79 @@ abstract class AbstractInOut implements GuiInteraction {
           if (responseCode >= 300 && responseCode < 400) {
             String location = con.getHeaderField("Location")
             if (location == null || redirect == MAX_REDIRECTS) {
+              logUrlExistsFailure(originalUrl, url,
+                  location == null ? 'redirect missing Location' : 'redirect limit exhausted')
               return false
             }
             url = new URL(url, location)
             continue
           }
-          return responseCode >= 200 && responseCode < 300
+          boolean reachable = responseCode >= 200 && responseCode < 300
+          if (!reachable) {
+            logUrlExistsFailure(originalUrl, url, 'got HTTP ' + responseCode)
+          }
+          return reachable
         } finally {
           if (con != null) {
             con.disconnect()
           }
         }
       }
-    } catch (RuntimeException | IOException ignored) {
+    } catch (RuntimeException | IOException e) {
+      String reason = 'failed: ' + e.getClass().getSimpleName() + exceptionDetail(e)
+      if (originalUrl == null) {
+        if (log.isDebugEnabled()) log.debug('urlExists(' + safeInputUrl(urlString) + ') ' + reason)
+      } else {
+        logUrlExistsFailure(originalUrl, url, reason)
+      }
       return false
     }
+    // Every reachable loop path returns; this satisfies the method's return type.
     return false
+  }
+
+  @PackageScope
+  static String safeInputUrl(String input) {
+    if (input == null) return '<null>'
+    String withoutQuery = input.split('[?#]', 2)[0]
+    String withoutCredentials = redactUserInfo(withoutQuery)
+    String clipped = withoutCredentials.length() <= 120 ? withoutCredentials : withoutCredentials.substring(0, 120) + '…'
+    return safeLogText(clipped)
+  }
+
+  private static void logUrlExistsFailure(URL original, URL current, String reason) {
+    String message = urlFailureMessage(original, current, reason)
+    if (reason == 'non-HTTP(S) URL' || reason == 'redirect missing Location' || reason == 'redirect limit exhausted') {
+      log.warn(message)
+    } else if (log.isDebugEnabled()) log.debug(message)
+  }
+
+  @PackageScope
+  static String urlFailureMessage(URL original, URL current, String reason) {
+    return 'urlExists(' + safeUrl(original) + ' -> ' + safeUrl(current) + ') ' + safeLogText(reason)
+  }
+
+  private static String exceptionDetail(Exception e) {
+    String detail = e.message
+    if (detail == null || detail.isBlank()) return ''
+    // Exception messages can contain full URLs, including credentials or query strings.
+    String withoutUrls = detail.replaceAll('(?i)[a-z][a-z0-9+.-]*:/+[^\\s]+', '<URL>')
+    return ': ' + safeLogText(redactUserInfo(withoutUrls))
+  }
+
+  private static String redactUserInfo(String value) {
+    // Malformed URLs can put user info after one slash or in URL.path.
+    return value.replaceAll('(^|:/+|/)[^/]*@', '$1')
+  }
+
+  private static String safeLogText(String value) {
+    return value.replace('%n', '% n').replaceAll('[\\r\\n\\t\\p{Cntrl}]', ' ')
+  }
+
+  private static String safeUrl(URL url) {
+    if (url == null) return '<invalid URL>'
+    String withoutQuery = url.protocol + '://' + url.host + (url.port < 0 ? '' : ':' + url.port) + url.path
+    return safeLogText(redactUserInfo(withoutQuery))
   }
 
   private static HttpURLConnection open(URL url, String method, int timeout, boolean range) {
@@ -280,12 +349,17 @@ abstract class AbstractInOut implements GuiInteraction {
   }
 
   private static List<String> shellCommand(String command) {
-    if (isWindows()) {
-      String commandInterpreter = System.getenv('ComSpec')
-      commandInterpreter = commandInterpreter ?: 'cmd.exe'
-      return [commandInterpreter, '/d', '/s', '/c', command]
-    }
-    return ['/bin/sh', '-c', command]
+    return shellCommand(command, isWindows())
+  }
+
+  @PackageScope
+  static List<String> shellCommand(String command, boolean windows) {
+    return shellCommand(command, windows, System.getenv('ComSpec'))
+  }
+
+  @PackageScope
+  static List<String> shellCommand(String command, boolean windows, String commandInterpreter) {
+    return windows ? [commandInterpreter?.trim() ?: 'cmd.exe', '/d', '/s', '/c', command] : ['/bin/sh', '-c', command]
   }
 
   @PackageScope

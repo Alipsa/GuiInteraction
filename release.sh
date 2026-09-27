@@ -22,6 +22,11 @@
 #
 set -e
 
+SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
+cd "$SCRIPT_DIR"
+# shellcheck source=release-lib.sh
+source "${SCRIPT_DIR}/release-lib.sh"
+
 # Colors for output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -35,16 +40,21 @@ if [ -f ~/.sdkman/bin/sdkman-init.sh ]; then
     sdk_java_dir="${SDKMAN_CANDIDATES_DIR:-$HOME/.sdkman/candidates}/java"
     java21_fx_candidates=()
     if [ -d "$sdk_java_dir" ]; then
-        while IFS= read -r candidate; do
-            java21_fx_candidates+=("$candidate")
-        done < <(
-            find "$sdk_java_dir" -mindepth 1 -maxdepth 1 -type d -printf '%f\n' |
-                awk 'tolower($0) ~ /^21([.-]|$)/ && tolower($0) ~ /fx/' |
-                sort -V -r
-        )
+        for candidate_path in "$sdk_java_dir"/*; do
+            [ -d "$candidate_path" ] || continue
+            candidate=${candidate_path##*/}
+            if [[ "${candidate,,}" =~ ^21([.-]|$) ]] && [[ "${candidate,,}" == *fx* ]]; then
+                java21_fx_candidates+=("$candidate")
+            fi
+        done
     fi
 
     if [ "${#java21_fx_candidates[@]}" -gt 0 ]; then
+        sorted_java21_fx_candidates=()
+        while IFS= read -r candidate; do
+            sorted_java21_fx_candidates+=("$candidate")
+        done < <(printf '%s\n' "${java21_fx_candidates[@]}" | sort_java_versions)
+        java21_fx_candidates=("${sorted_java21_fx_candidates[@]}")
         echo "Installed JavaFX-capable JDK 21 candidates:"
         printf '  %s\n' "${java21_fx_candidates[@]}"
         echo "Using Java ${java21_fx_candidates[0]}"
@@ -162,16 +172,16 @@ bump_version() {
 
     case $type in
         major)
-            major=$((major + 1))
+            major=$((10#$major + 1))
             minor=0
             patch=0
             ;;
         minor)
-            minor=$((minor + 1))
+            minor=$((10#$minor + 1))
             patch=0
             ;;
         patch)
-            patch=$((patch + 1))
+            patch=$((10#$patch + 1))
             ;;
         *)
             echo -e "${RED}Invalid bump type: $type. Use major, minor, or patch${NC}"
@@ -209,7 +219,8 @@ update_readme_version() {
 # Check if README.md has the correct version
 check_readme_version() {
     local expected_version=$1
-    local readme_versions=$(grep -oE '(gi-(swing|fx|console):)[0-9]+\.[0-9]+\.[0-9]+(-SNAPSHOT)?' README.md | head -1 | sed -E 's/gi-(swing|fx|console)://')
+    local readme_versions
+    readme_versions=$(grep -oE '(gi-(swing|fx|console):)[0-9]+\.[0-9]+\.[0-9]+(-SNAPSHOT)?' README.md | head -1 | sed -E 's/gi-(swing|fx|console)://')
 
     if [ "$readme_versions" != "$expected_version" ]; then
         echo -e "${RED}Warning: README.md contains version '${readme_versions}' but releasing '${expected_version}'${NC}"
@@ -221,44 +232,41 @@ check_readme_version() {
 # Generate release notes entry
 generate_release_notes() {
     local version=$1
-    local date=$(date +%Y-%m-%d)
+    local date
+    date=$(date +%Y-%m-%d)
     local release_notes_file="release.md"
+    local rc=0
 
     if [ ! -f "$release_notes_file" ]; then
-        echo "# Gui Interaction Release Notes" > "$release_notes_file"
-        echo "" >> "$release_notes_file"
+        printf '# Gui Interaction Release Notes\n\n' > "$release_notes_file"
     fi
+    promote_unreleased_section "$version" "$date" "$release_notes_file" || rc=$?
+    case $rc in
+        0) echo -e "${GREEN}Promoted Unreleased notes for ${version}${NC}"; return ;;
+        2)
+            echo -e "${YELLOW}Notes for ${version} already exist${NC}"
+            if has_curated_unreleased_notes "$release_notes_file"; then
+                echo -e "${YELLOW}Unreleased still has curated notes; they were not included in ${version}. Review before continuing.${NC}" >&2
+            fi
+            return
+            ;;
+        3) echo -e "${RED}Failed to update ${release_notes_file}${NC}" >&2; return 1 ;;
+    esac
 
-    # Get commits since last tag
-    local last_tag=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
-    local commits=""
+    local last_tag commits
+    last_tag=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
     if [ -n "$last_tag" ]; then
         commits=$(git log --oneline "${last_tag}..HEAD" 2>/dev/null || echo "")
     else
         commits=$(git log --oneline -20 2>/dev/null || echo "")
     fi
-
-    # Create release notes entry
-    local entry="## ${version} - ${date}\n\n"
-    if [ -n "$commits" ]; then
-        entry+="### Changes\n\n"
-        while IFS= read -r line; do
-            if [ -n "$line" ]; then
-                entry+="- ${line#* }\n"
-            fi
-        done <<< "$commits"
-    fi
-    entry+="\n"
-
-    # Insert after the release notes header
-    if [ -f "$release_notes_file" ]; then
-        local temp_file=$(mktemp)
-        head -2 "$release_notes_file" > "$temp_file"
-        echo -e "$entry" >> "$temp_file"
-        tail -n +3 "$release_notes_file" >> "$temp_file"
-        mv "$temp_file" "$release_notes_file"
-        echo -e "${GREEN}Updated ${release_notes_file}${NC}"
-    fi
+    rc=0
+    insert_release_section "$version" "$date" "$commits" "$release_notes_file" || rc=$?
+    case $rc in
+        0) echo -e "${GREEN}Updated ${release_notes_file} from commit log${NC}" ;;
+        2) echo -e "${YELLOW}${release_notes_file} already has notes for ${version}${NC}" ;;
+        *) echo -e "${RED}Failed to update ${release_notes_file}${NC}" >&2; return 1 ;;
+    esac
 }
 
 # Publish a subproject
@@ -296,12 +304,25 @@ echo ""
 
 CURRENT_VERSION=$(get_version)
 echo -e "Current version: ${YELLOW}${CURRENT_VERSION}${NC}"
+if ! validate_version "$CURRENT_VERSION"; then
+    echo -e "${RED}Aborting: build.gradle version '${CURRENT_VERSION}' is not MAJOR.MINOR.PATCH[-SNAPSHOT].${NC}" >&2
+    exit 1
+fi
 
 commit_release_version() {
     local release_version=$1
+    local file
+    for file in build.gradle README.md release.md; do
+        if ! require_clean_release_file "$file"; then
+            exit 1
+        fi
+    done
+    if ! generate_release_notes "$release_version"; then
+        echo -e "${RED}Release notes failed; build.gradle and README.md were not changed. Inspect release.md before retrying.${NC}" >&2
+        exit 1
+    fi
     update_version "$release_version"
     update_readme_version "$release_version"
-    generate_release_notes "$release_version"
 
     if ! git add build.gradle README.md release.md; then
         echo -e "${RED}Error: Failed to add files to git. Please resolve the issue and try again.${NC}" >&2
@@ -318,6 +339,10 @@ commit_release_version() {
 # then publishing a different version.
 if [ -n "$BUMP_TYPE" ]; then
     RELEASE_VERSION=$(bump_version "$CURRENT_VERSION" "$BUMP_TYPE")
+    if ! validate_version "$RELEASE_VERSION"; then
+        echo -e "${RED}Aborting: bumped version '${RELEASE_VERSION}' is malformed.${NC}" >&2
+        exit 1
+    fi
     echo -e "Bumping version to: ${GREEN}${RELEASE_VERSION}${NC}"
 elif echo "$CURRENT_VERSION" | grep -q '\-SNAPSHOT'; then
     RELEASE_VERSION="${CURRENT_VERSION%-SNAPSHOT}"
@@ -333,12 +358,12 @@ CURRENT_VERSION="$RELEASE_VERSION"
 
 # Check if version has already been released (git tag exists)
 TAG="v${CURRENT_VERSION}"
-if git rev-parse "$TAG" >/dev/null 2>&1 || git ls-remote --tags origin | grep -q "refs/tags/$TAG$"; then
+if git rev-parse "$TAG" >/dev/null 2>&1 || git ls-remote --tags origin 2>/dev/null | grep -q "refs/tags/$TAG$"; then
     if [ "$DRY_RUN" = true ]; then
         echo -e "${YELLOW}Warning: Tag $TAG already exists. This version may have already been released.${NC}"
     else
         echo -e "${RED}Warning: Version ${CURRENT_VERSION} appears to have already been released (tag $TAG exists).${NC}"
-        read -p "Continue anyway? [y/N]: " confirm
+        read -r -p "Continue anyway? [y/N]: " confirm
         if [[ ! "$confirm" =~ ^[Yy]$ ]]; then
             echo -e "${RED}Aborting release.${NC}"
             exit 1
@@ -350,26 +375,48 @@ fi
 if [ "$DRY_RUN" = false ] && [ "$RELEASE_VERSION" != "$(get_version)" ]; then
     commit_release_version "$RELEASE_VERSION"
 elif [ "$DRY_RUN" = true ] && [ "$RELEASE_VERSION" != "$(get_version)" ]; then
-    echo -e "${YELLOW}[DRY RUN] Would update build.gradle and README.md to ${RELEASE_VERSION}${NC}"
-elif [ "$README_NEEDS_UPDATE" = true ]; then
+    for file in build.gradle README.md release.md; do
+        if ! require_clean_release_file "$file"; then
+            echo -e "${YELLOW}[DRY RUN] A real release would stop before changing ${file}.${NC}" >&2
+        fi
+    done
+    echo -e "${YELLOW}[DRY RUN] Would update build.gradle and README.md to ${RELEASE_VERSION}, and release.md for ${RELEASE_VERSION}${NC}"
+else
     if [ "$DRY_RUN" = true ]; then
-        echo -e "${YELLOW}[DRY RUN] Would update README.md to match version ${CURRENT_VERSION}${NC}"
-    else
-        read -p "Update README.md to version ${CURRENT_VERSION}? [Y/n]: " update_readme
-        if [[ ! "$update_readme" =~ ^[Nn]$ ]]; then
-            update_readme_version "$CURRENT_VERSION"
-            if ! git diff --quiet HEAD -- README.md; then
-                if ! git add README.md; then
-                    echo -e "${RED}Error: Failed to add README.md to git. Please resolve the issue and try again.${NC}" >&2
-                    exit 1
-                fi
-                if ! git commit -m "Update README version to ${CURRENT_VERSION}" -- README.md; then
-                    echo -e "${RED}Error: Failed to commit README.md version change. Please resolve the issue and try again.${NC}" >&2
-                    exit 1
-                fi
-            else
-                echo -e "${YELLOW}README.md already matches version ${CURRENT_VERSION}; no commit needed.${NC}"
+        if ! require_clean_release_file release.md; then
+            echo -e "${YELLOW}[DRY RUN] A real release would stop before changing release.md.${NC}" >&2
+        fi
+        echo -e "${YELLOW}[DRY RUN] Would update release.md for ${CURRENT_VERSION}${NC}"
+        if [ "$README_NEEDS_UPDATE" = true ]; then
+            echo -e "${YELLOW}[DRY RUN] Would update README.md to match version ${CURRENT_VERSION}${NC}"
+            if ! require_clean_release_file README.md; then
+                echo -e "${YELLOW}[DRY RUN] Accepting the README.md update would stop the release; declining it would continue.${NC}" >&2
             fi
+        fi
+    else
+        update_readme=false
+        readme_reply=''
+        if ! require_clean_release_file release.md; then
+            exit 1
+        fi
+        if [ "$README_NEEDS_UPDATE" = true ]; then
+            read -r -p "Update README.md to version ${CURRENT_VERSION}? [Y/n]: " readme_reply
+            if [[ ! "$readme_reply" =~ ^[Nn]$ ]]; then
+                if ! require_clean_release_file README.md; then
+                    exit 1
+                fi
+                update_readme=true
+            fi
+        fi
+        if ! generate_release_notes "$CURRENT_VERSION"; then
+            echo -e "${RED}Release notes failed; README.md was not changed. Inspect release.md before retrying.${NC}" >&2
+            exit 1
+        fi
+        if [ "$update_readme" = true ]; then
+            update_readme_version "$CURRENT_VERSION"
+        fi
+        if ! commit_changed_release_files "$CURRENT_VERSION" "$update_readme"; then
+            exit 1
         fi
     fi
 fi

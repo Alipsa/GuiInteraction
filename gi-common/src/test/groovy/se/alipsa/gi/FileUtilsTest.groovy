@@ -7,6 +7,12 @@ import static org.junit.jupiter.api.Assertions.*
 
 class FileUtilsTest {
 
+  @Test
+  void aNullOrEmptyResourceNameResolvesToNullInsteadOfThrowing() {
+    assertNull(FileUtils.getResourceUrl(null))
+    assertNull(FileUtils.getResourceUrl(''))
+  }
+
   @TempDir
   File tempDir
 

@@ -85,14 +85,27 @@ println("File chosen was $file")
 ./gradlew build
 ```
 
-When `org.gradle.configuration-cache=true` is enabled, `build` skips applying Spotless and SpotBugs because their current Gradle tasks are not configuration-cache compatible on Gradle 9. CI therefore runs both commands, and so should you before pushing:
+`build` runs tests, Spotless, and SpotBugs, including when Gradle's configuration
+cache is enabled. Before pushing, you can run the formatting-and-check wrapper:
 
 ```bash
-./gradlew build
-./gradlew check --no-configuration-cache
+./check.sh
 ```
 
-`check.sh` runs the second command with `spotlessApply` so formatting is fixed rather than merely reported.
+`check.sh` tests the release helpers, then runs `spotlessApply` and `check`.
+
+`urlExists` reports unsupported URL schemes and broken redirect chains as
+warnings. Connection and HTTP failures are logged at debug level. To see those
+details, set the matrix logger to DEBUG and enable `FINE` for the underlying
+Java Util Logging configuration.
+
+Table views use `Table` as the window or tab title when neither a nonblank
+explicit title nor a matrix name is available.
+
+CI builds all four modules on Linux and Windows. The full dependency CVE scan
+runs on the weekly schedule or by manual dispatch because its NVD database
+refresh needs an API key and can be rate limited; it is not a PR gate. Run
+`./checkCVE.sh` with `NVD_API_KEY` set for a fresh scan before release.
 
 ## Requirements
 

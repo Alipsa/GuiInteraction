@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-./gradlew spotlessApply check --no-configuration-cache --console=plain
+cd -- "$(dirname -- "${BASH_SOURCE[0]}")"
+./release-lib-test.sh
+./gradlew spotlessApply check --console=plain

@@ -3,6 +3,9 @@ package se.alipsa.gi
 import groovy.transform.CompileStatic
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.condition.DisabledOnOs
+import org.junit.jupiter.api.condition.EnabledOnOs
+import org.junit.jupiter.api.condition.OS
 import org.junit.jupiter.api.io.TempDir
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
@@ -25,10 +28,61 @@ import java.util.concurrent.atomic.AtomicReference
 import java.util.concurrent.TimeoutException
 import java.util.stream.Stream
 
-import static org.junit.jupiter.api.Assumptions.assumeFalse
 import static org.junit.jupiter.api.Assertions.*
 
 class AbstractInOutTest {
+
+  @Test
+  void malformedUrlDiagnosticsKeepTheTargetButNotCredentialsOrQuery() {
+    assertEquals('htp://example.com/path', AbstractInOut.safeInputUrl('htp://user:secret@example.com/path?token=secret#fragment'))
+    assertEquals('htp:/host/path', AbstractInOut.safeInputUrl('htp:/user:secret@host/path?token=secret'))
+    assertEquals('https:/host/path', AbstractInOut.safeInputUrl('https:/user:secret@host/path?token=secret'))
+    assertEquals('example.com/path', AbstractInOut.safeInputUrl('user:secret@example.com/path?token=abc'))
+    assertEquals('<null>', AbstractInOut.safeInputUrl(null))
+    assertEquals('http://example.com/a% nFINE: fake',
+        AbstractInOut.safeInputUrl('http://example.com/a%nFINE: fake'))
+  }
+
+  @Test
+  void theWindowsShellUsesComSpecAndFallsBackWhenItIsMissing() {
+    assertEquals(['C:\\Windows\\System32\\cmd.exe', '/d', '/s', '/c', 'dir'],
+        AbstractInOut.shellCommand('dir', true, 'C:\\Windows\\System32\\cmd.exe'))
+    assertEquals(['cmd.exe', '/d', '/s', '/c', 'dir'], AbstractInOut.shellCommand('dir', true, null))
+    assertEquals(['cmd.exe', '/d', '/s', '/c', 'dir'], AbstractInOut.shellCommand('dir', true, ''))
+    assertEquals(['cmd.exe', '/d', '/s', '/c', 'dir'], AbstractInOut.shellCommand('dir', true, '   '))
+  }
+
+  @Test
+  void theUnixShellRunsThroughBinSh() {
+    assertEquals(['/bin/sh', '-c', 'ls -a'], AbstractInOut.shellCommand('ls -a', false))
+    assertEquals(['/bin/sh', '-c', 'ls -a'], AbstractInOut.shellCommand('ls -a', false, 'ignored'))
+  }
+
+  @Test
+  @EnabledOnOs(OS.WINDOWS)
+  void theWindowsShellRunsThroughCmd() {
+    ShellResult result = inOut.shell('echo windows-shell')
+    assertTrue(result.stdout.contains('windows-shell'))
+  }
+
+  @Test
+  void urlExistsStillReportsFalseWhenTheConnectionFails() {
+    assertFalse(inOut.urlExists('http://127.0.0.1:1/health', 500))
+  }
+
+  @Test
+  void urlFailureDiagnosticKeepsRedirectChainButScrubsSecretsAndControlSequences() {
+    String message = AbstractInOut.urlFailureMessage(
+        new URL('http://user:secret@example.com/start?token=private'),
+        new URL('http://example.com/a%nFINE:fake?token=private'),
+        'redirect missing Location')
+    assertEquals('urlExists(http://example.com/start -> http://example.com/a% nFINE:fake) redirect missing Location', message)
+    assertEquals('urlExists(https:///host/start -> https:///other/end) redirect missing Location',
+        AbstractInOut.urlFailureMessage(
+            new URL('https:/user:secret@host/start?token=private'),
+            new URL('https:/other:password@other/end?token=private'),
+            'redirect missing Location'))
+  }
 
   @TempDir
   File tempDir
@@ -61,6 +115,7 @@ class AbstractInOutTest {
   }
 
   @Test
+  @DisabledOnOs(OS.WINDOWS)
   void shPrintsStandardOutputToSystemOut() {
     PrintStream originalOut = System.out
     ByteArrayOutputStream outBytes = new ByteArrayOutputStream()
@@ -77,6 +132,7 @@ class AbstractInOutTest {
   }
 
   @Test
+  @DisabledOnOs(OS.WINDOWS)
   void shQuietOverloadSuppressesLiveOutput() {
     PrintStream originalOut = System.out
     PrintStream originalErr = System.err
@@ -106,6 +162,7 @@ class AbstractInOutTest {
   }
 
   @Test
+  @DisabledOnOs(OS.WINDOWS)
   void shellSuccessReportsExitCodeAndResultStringIsDiagnostic() {
     ShellResult result = inOut.shell('printf hello')
 
@@ -126,16 +183,16 @@ class AbstractInOutTest {
   }
 
   @Test
+  @DisabledOnOs(OS.WINDOWS)
   void shellTimeoutStopsACommand() {
-    assumeFalse(AbstractInOut.isWindows())
     assertThrows(TimeoutException.class) {
       inOut.shell('sleep 3', true, 100)
     }
   }
 
   @Test
+  @DisabledOnOs(OS.WINDOWS)
   void shellSupportsGlobsPipesAndRedirects(@TempDir File commandDir) {
-    assumeFalse(AbstractInOut.isWindows())
     new File(commandDir, 'matrix-one.txt').text = 'one'
     new File(commandDir, 'other.txt').text = 'two'
     File outputFile = new File(commandDir, 'out.txt')
@@ -150,8 +207,8 @@ class AbstractInOutTest {
   }
 
   @Test
+  @DisabledOnOs(OS.WINDOWS)
   void shStreamsOutputBeforeTheCommandCompletes() {
-    assumeFalse(AbstractInOut.isWindows())
     PrintStream originalOut = System.out
     ByteArrayOutputStream bytes = new ByteArrayOutputStream()
     PrintStream capturedOut = new PrintStream(bytes, true, StandardCharsets.UTF_8)

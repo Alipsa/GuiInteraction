@@ -9,9 +9,21 @@ on:
     - cron: '0 4 * * 1'
   workflow_dispatch:
 
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
   build:
-    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 45
 
     steps:
       - name: Checkout code
@@ -27,20 +39,23 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
 
-      - name: Grant execute permission for gradlew
-        run: chmod +x gradlew
-
-      - name: Build with Gradle
+      - name: Build with Gradle (Linux)
+        if: runner.os == 'Linux'
         run: ./gradlew build
 
-      - name: Verify with Spotless and SpotBugs
-        run: ./gradlew check --no-configuration-cache
+      - name: Build with Gradle (Windows)
+        if: runner.os == 'Windows'
+        run: .\gradlew.bat build
+
+      - name: Check release helpers
+        if: runner.os == 'Linux'
+        run: ./release-lib-test.sh
 
       - name: Upload test results
         uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: test-results
+          name: test-results-${{ matrix.os }}
           path: '**/build/reports/tests/'
           retention-days: 7
 
@@ -48,12 +63,13 @@ jobs:
         uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: static-analysis-reports
+          name: static-analysis-reports-${{ matrix.os }}
           path: '**/build/reports/spotbugs/'
           retention-days: 7
 
   dependency-check:
     runs-on: ubuntu-latest
+    timeout-minutes: 90
     if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
 
     steps:
@@ -70,11 +86,26 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
 
+      - name: Scan dependencies for known vulnerabilities
+        env:
+          NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
+        run: ./gradlew dependencyCheckAggregate --no-configuration-cache
+
       - name: Check for dependency updates
+        if: always()
         run: ./gradlew dependencyUpdates
+
+      - name: Upload dependency-check report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: dependency-check-report
+          path: 'build/reports/dependency-check/'
+          retention-days: 30
 
       - name: Upload dependency report
         uses: actions/upload-artifact@v4
+        if: always()
         with:
           name: dependency-updates-report
           path: 'build/dependencyUpdates/'

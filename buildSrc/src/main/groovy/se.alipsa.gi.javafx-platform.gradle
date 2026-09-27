@@ -1,0 +1,47 @@
+/** Resolve the OpenJFX native classifier for the JVM running Gradle. */
+import org.gradle.internal.os.OperatingSystem
+
+def os = OperatingSystem.current()
+def launcherMetadata = javaToolchains.launcherFor {
+    languageVersion = JavaLanguageVersion.of(21)
+}.get().metadata
+def arch = System.getProperty('os.arch', '').toLowerCase(Locale.ROOT)
+if (!launcherMetadata.currentJvm) {
+    // The JavaFX tests run with the toolchain JVM, which can have another
+    // architecture than the Gradle daemon (for example under Rosetta).
+    def releaseFile = launcherMetadata.installationPath.file('release').asFile
+    if (releaseFile.isFile()) {
+        def match = releaseFile.text =~ /(?m)^OS_ARCH="?([^"\r\n]+)"?$/
+        if (match.find()) arch = match.group(1).toLowerCase(Locale.ROOT)
+    }
+}
+def arm = arch in ['aarch64', 'arm64']
+def x64 = arch in ['x86_64', 'amd64']
+
+String classifier
+if (os.linux && (arm || x64)) {
+    classifier = arm ? 'linux-aarch64' : 'linux'
+} else if (os.macOsX && (arm || x64)) {
+    classifier = arm ? 'mac-aarch64' : 'mac'
+} else if (os.windows && x64) {
+    classifier = 'win'
+} else {
+    // Keep non-FX tasks usable; only FX dependency resolution should fail.
+    classifier = 'unknown'
+}
+
+if (classifier == 'unknown') {
+    def unsupportedMessage = "No OpenJFX natives for ${os.name} (os.arch=${arch}). " +
+        'Supported: Linux x64/aarch64, macOS x64/aarch64, Windows x64. ' +
+        'On Windows Arm64 use an x64 JDK under emulation; an Arm64 JVM cannot load x64 natives. ' +
+        'gi-fx and gi-swing cannot resolve OpenJFX.'
+    configurations.configureEach { configuration ->
+        configuration.incoming.beforeResolve {
+            if (configuration.allDependencies.any { it.group == 'org.openjfx' }) {
+                throw new GradleException(unsupportedMessage)
+            }
+        }
+    }
+}
+
+ext.javafxClassifier = classifier

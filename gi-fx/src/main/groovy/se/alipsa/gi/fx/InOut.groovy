@@ -442,16 +442,9 @@ class InOut extends AbstractInOut {
 
     @Override
     void view(List<List<?>> matrix, String... title) {
-        List<List<?>> rows = rowsForViewer(matrix)
         Platform.runLater {
-            Viewer.viewTable(rows, title)
+            Viewer.viewTable(matrix, title)
         }
-    }
-
-    /** Preserves ragged and null rows for the JavaFX table renderer. */
-    @PackageScope
-    static List<List<?>> rowsForViewer(List<List<?>> matrix) {
-        return matrix
     }
 
     @Override

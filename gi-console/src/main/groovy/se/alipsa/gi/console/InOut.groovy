@@ -194,13 +194,23 @@ class InOut extends AbstractInOut {
     }
   }
 
+  /** End of console input is cancellation, just as it is for the other prompts. */
+  @PackageScope
+  static String toPassword(char[] password) {
+    if (password == null) return null
+    try {
+      return new String(password)
+    } finally {
+      Arrays.fill(password, (char) 0)
+    }
+  }
+
   @Override
   String promptPassword(String title, String message) {
     println title
     def console = System.console()
     if (console != null) {
-      char[] ch = console.readPassword("$message : ")
-      return new String(ch)
+      return toPassword(console.readPassword("$message : "))
     }
     // Fallback for IDEs/CI where System.console() is unavailable
     // Warning: input will be visible (not masked)
@@ -260,6 +270,10 @@ class InOut extends AbstractInOut {
 
   @Override
   void view(Matrix tableMatrix, String... title) {
+    if (tableMatrix == null) {
+      println('Nothing to view: the matrix is null')
+      return
+    }
     println tableMatrix.content()
   }
 
@@ -300,6 +314,10 @@ class InOut extends AbstractInOut {
 
   @Override
   void display(String fileName, String... title) {
+    if (fileName == null) {
+      println('File name is null')
+      return
+    }
     display(new File(fileName), title)
   }
 

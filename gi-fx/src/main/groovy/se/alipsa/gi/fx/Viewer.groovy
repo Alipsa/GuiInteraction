@@ -56,7 +56,7 @@ class Viewer {
     private static final Logger log = Logger.getLogger(Viewer.class)
 
     static final KeyCodeCombination KEY_CODE_COPY =
-            System.getProperty("os.name").toLowerCase().contains("mac") ?
+            System.getProperty("os.name", "").toLowerCase(Locale.ROOT).contains("mac") ?
                     new KeyCodeCombination(KeyCode.C, KeyCombination.META_ANY)
                     : new KeyCodeCombination(KeyCode.C, KeyCombination.CONTROL_ANY)
 
@@ -194,15 +194,38 @@ class Viewer {
     }
 
     static void viewTable(Matrix tableMatrix, String... title) {
-        String tit = title.length > 0 ? title[0] : tableMatrix.matrixName
-        viewTable(tableMatrix.columnNames(), tableMatrix.rowList(), tableMatrix.typeNames(), tit)
+        if (tableMatrix == null) {
+            log.warn('matrix is null, nothing to view')
+            return
+        }
+        viewTable(tableMatrix.columnNames(), tableMatrix.rowList(), tableMatrix.typeNames(),
+                matrixTitle(tableMatrix, title))
+    }
+
+    @PackageScope
+    static String matrixTitle(Matrix matrix, String... title) {
+        if (title.length > 0 && title[0] != null && !title[0].trim().isEmpty()) {
+            return title[0]
+        }
+        String name = matrix?.matrixName
+        return tableTitle(name)
+    }
+
+    @PackageScope
+    static String tableTitle(String... title) {
+        return title.length == 0 || title[0] == null || title[0].trim().isEmpty() ? 'Table' : title[0]
     }
 
     static void viewTable(Grid grid, String... title) {
+        if (grid == null) {
+            log.warn('Cannot view table: the grid is null')
+            return
+        }
         viewTable(grid.getRowList(), title)
     }
 
     static void viewTable(List<? extends List<?>> rows, String... title) {
+        // Keep ragged and null rows intact; formatting handles them at display time.
         if (rows == null || rows.isEmpty()) {
             viewTable(Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), title)
             return
@@ -302,10 +325,7 @@ class Viewer {
             }
             tableView.setItems(data)
             Tab tab = new Tab()
-            String tabTitle = " (" + rowList.size() + " rows)"
-            if (title.length > 0) {
-                tabTitle = title[0] + tabTitle
-            }
+            String tabTitle = tableTitle(title) + " (" + rowList.size() + " rows)"
             tab.setText(tabTitle)
             ScrollPane scrollPane = new ScrollPane(tableView)
             scrollPane.setVisible(true)
@@ -315,7 +335,7 @@ class Viewer {
             SingleSelectionModel<Tab> selectionModel = viewPane.getSelectionModel()
             selectionModel.select(tab)
             Alert alert = new Alert(Alert.AlertType.INFORMATION)
-            alert.setTitle(title.length > 0 ? title[0] : tabTitle)
+            alert.setTitle(tableTitle(title))
             alert.setHeaderText(null)
             alert.setContentText(null)
             alert.getDialogPane().setContent(viewPane)
