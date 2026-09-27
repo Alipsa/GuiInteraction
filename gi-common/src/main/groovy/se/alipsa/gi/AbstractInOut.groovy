@@ -118,7 +118,7 @@ abstract class AbstractInOut implements GuiInteraction {
   static String safeInputUrl(String input) {
     if (input == null) return '<null>'
     String withoutQuery = input.split('[?#]', 2)[0]
-    String withoutCredentials = withoutQuery.replaceFirst('(^|://)[^/]*@', '$1')
+    String withoutCredentials = redactUserInfo(withoutQuery)
     String clipped = withoutCredentials.length() <= 120 ? withoutCredentials : withoutCredentials.substring(0, 120) + '…'
     return safeLogText(clipped)
   }
@@ -139,7 +139,13 @@ abstract class AbstractInOut implements GuiInteraction {
     String detail = e.message
     if (detail == null || detail.isBlank()) return ''
     // Exception messages can contain full URLs, including credentials or query strings.
-    return ': ' + safeLogText(detail.replaceAll('(?i)https?://[^\\s]+', '<URL>'))
+    String withoutUrls = detail.replaceAll('(?i)[a-z][a-z0-9+.-]*:/+[^\\s]+', '<URL>')
+    return ': ' + safeLogText(redactUserInfo(withoutUrls))
+  }
+
+  private static String redactUserInfo(String value) {
+    // Malformed URLs can put user info after one slash or in URL.path.
+    return value.replaceAll('(^|:/+|/)[^/]*@', '$1')
   }
 
   private static String safeLogText(String value) {
@@ -148,7 +154,8 @@ abstract class AbstractInOut implements GuiInteraction {
 
   private static String safeUrl(URL url) {
     if (url == null) return '<invalid URL>'
-    return safeLogText(url.protocol + '://' + url.host + (url.port < 0 ? '' : ':' + url.port) + url.path)
+    String withoutQuery = url.protocol + '://' + url.host + (url.port < 0 ? '' : ':' + url.port) + url.path
+    return safeLogText(redactUserInfo(withoutQuery))
   }
 
   private static HttpURLConnection open(URL url, String method, int timeout, boolean range) {

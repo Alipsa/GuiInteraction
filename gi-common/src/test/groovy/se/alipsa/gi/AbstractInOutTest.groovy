@@ -35,6 +35,8 @@ class AbstractInOutTest {
   @Test
   void malformedUrlDiagnosticsKeepTheTargetButNotCredentialsOrQuery() {
     assertEquals('htp://example.com/path', AbstractInOut.safeInputUrl('htp://user:secret@example.com/path?token=secret#fragment'))
+    assertEquals('htp:/host/path', AbstractInOut.safeInputUrl('htp:/user:secret@host/path?token=secret'))
+    assertEquals('https:/host/path', AbstractInOut.safeInputUrl('https:/user:secret@host/path?token=secret'))
     assertEquals('example.com/path', AbstractInOut.safeInputUrl('user:secret@example.com/path?token=abc'))
     assertEquals('<null>', AbstractInOut.safeInputUrl(null))
     assertEquals('http://example.com/a% nFINE: fake',
@@ -75,6 +77,11 @@ class AbstractInOutTest {
         new URL('http://example.com/a%nFINE:fake?token=private'),
         'redirect missing Location')
     assertEquals('urlExists(http://example.com/start -> http://example.com/a% nFINE:fake) redirect missing Location', message)
+    assertEquals('urlExists(https:///host/start -> https:///other/end) redirect missing Location',
+        AbstractInOut.urlFailureMessage(
+            new URL('https:/user:secret@host/start?token=private'),
+            new URL('https:/other:password@other/end?token=private'),
+            'redirect missing Location'))
   }
 
   @TempDir
